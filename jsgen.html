@@ -12,6 +12,9 @@
             function isDigitOrSign(ch) {
                 return /[\d]/.test(ch);
             }
+            function isSymbolChar(ch) {
+                return /\S/.test(ch) && ch !== '(' && ch !== ')';
+            }
             function readString(state) {
                 skip(state);
                 var start = state.pos;
@@ -38,7 +41,7 @@
             }
             function readSymbol(state) {
                 var start = state.pos;
-                while (/\S/.test(current(state)) && current(state) !== '(' && current(state) !== ')') {
+                while (isSymbolChar(current(state))) {
                     if (isDone(state)) {
                         throw new Error('unexpected end of input');
                     }
@@ -56,7 +59,7 @@
                     var children = [];
                     skip(state);
                     var child = parse(state);
-                    while (child) {
+                    while (child !== undefined) {
                         children.push(child);
                         child = parse(state);
                     }
@@ -96,7 +99,17 @@
                 }
                 return false;
             }
-            function translate(code) {
+            function pushLocal(name, locals) {
+                return locals.slice(0).push(name);
+            }
+            function nameKlToJs(name) {
+                return name; // TODO: translate names to be js-acceptable so we can have direct references
+            }
+            function nameJsToKl(name) {
+                return name;
+            }
+            function translate(code, locals) {
+                if (!locals) locals = [];
                 if (isNumber(code)) {
                     return '' + code;
                 }
@@ -104,31 +117,49 @@
                     return '"' + code + '"';
                 }
                 if (isSymbol(code)) {
-                    return code.name;
+                    if (locals.includes(code.name)) {
+                        return code.name;
+                    }
+                    return '(new Sym("' + code.name + '"))';
                 }
                 if (code.length == 0) {
                     return null;
                 }
                 if (code.length == 4 && eq(code[0], new Sym('if'))) {
-                    return '((' + translate(code[1]) + ') ? (' + translate(code[2]) + ') : (' + translate(code[3]) + '))';
+                    return '((' + translate(code[1], locals) + ') ? (' + translate(code[2], locals) + ') : (' + translate(code[3], locals) + '))';
+                }
+                if (code.length == 4 && eq(code[0], new Sym('let'))) {
+                    // TODO: scoping on let bindings
+                }
+                if (code.length == 4 && eq(code[0], new Sym('defun'))) {
+                    // TODO: translate variable names
+                    var paramNames = code[2].map(function (expr) { return expr.name; });
+                    return '(kl.functions["' + code[1].name + '"]=function(' + paramNames.join() + '){return(' + translate(code[3], paramNames) + ');})'
+                }
+                if (code.length == 3 && eq(code[0], new Sym('lambda'))) {
+                    return '(function (' + code[1].name + '){return(' + translate(code[2], [code[1].name]) +');})';
+                }
+                if (code.length == 2 && eq(code[0], new Sym('freeze'))) {
+                    return '(function (){return(' + translate(code[1]) +');})';
                 }
                 if (isSymbol(code[0])) {
                     var op = code[0].name;
-                    if (op == '+') {
-                        return '(' + translate(code[1]) + ' + ' + translate(code[2]) + ')';
-                    }
-                    if (op == '-') {
-                        return '(' + translate(code[1]) + ' - ' + translate(code[2]) + ')';
-                    }
-                    if (op == '*') {
-                        return '(' + translate(code[1]) + ' * ' + translate(code[2]) + ')';
-                    }
-                    if (op == '/') {
-                        return '(' + translate(code[1]) + ' / ' + translate(code[2]) + ')';
-                    }
-                    return op + '(' + code.slice(1).map(translate).join() + ')';
+                    // TODO: optimize by inlining code?
+                    // if (op == '+') {
+                    //     return '(' + translate(code[1]) + ' + ' + translate(code[2]) + ')';
+                    // }
+                    // if (op == '-') {
+                    //     return '(' + translate(code[1]) + ' - ' + translate(code[2]) + ')';
+                    // }
+                    // if (op == '*') {
+                    //     return '(' + translate(code[1]) + ' * ' + translate(code[2]) + ')';
+                    // }
+                    // if (op == '/') {
+                    //     return '(' + translate(code[1]) + ' / ' + translate(code[2]) + ')';
+                    // }
+                    return 'kl.functions["' + op + '"](' + code.slice(1).map(function (expr) { return translate(expr, locals); }).join() + ')';
                 }
-                return "can't translate: " + code;
+                return '(' + translate(code[0], locals) + ')(' + code.slice(1).map(function (expr) { return translate(expr, locals); }).join() + ')';
             }
             function doParse() {
                 var textarea = document.getElementById('code');
@@ -142,6 +173,17 @@
                 var textarea = document.getElementById('code');
                 console.log(eval(translate(parse(new State(textarea.value)))));
             }
+            kl = {
+                symbols: {},
+                functions: {}
+            };
+            kl.functions['+'] = function (x, y) { return (x | 0) + (y | 0); }
+            kl.functions['-'] = function (x, y) { return (x | 0) - (y | 0); }
+            kl.functions['*'] = function (x, y) { return (x | 0) * (y | 0); }
+            kl.functions['/'] = function (x, y) { return (x | 0) / (y | 0); }
+            kl.functions['='] = eq;
+            kl.functions['set'] = function (sym, x) { return kl.symbols[sym.name] = x; }
+            kl.functions['value'] = function (sym) { return kl.symbols[sym.name]; }
         </script>
     </head>
     <body>

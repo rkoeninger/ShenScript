@@ -3,6 +3,7 @@
         <script>
             function getOperatingSystem() {
                 if (navigator) {
+                    if (navigator.platform.toLowerCase() === 'win32') return "Windows";
                     if (navigator.appVersion.indexOf("Win") != -1) return "Windows";
                     if (navigator.appVersion.indexOf("Mac") != -1) return "macOS";
                     if (navigator.appVersion.indexOf("X11") != -1) return "Unix";
@@ -110,10 +111,10 @@
                     return x.name === y.name;
                 }
                 if (isNumber(x) && isNumber(y)) {
-                    return x == y;
+                    return x === y;
                 }
                 if (isString(x) && isString(y)) {
-                    return x == y;
+                    return x === y;
                 }
                 return false;
             }
@@ -234,26 +235,26 @@
             kl.symbols[nameKlToJs('*sterror*')] = ''; // TODO: console
             kl.symbols[nameKlToJs('*home-directory*')] = ''; // TODO: current url
             kl.functions[nameKlToJs('if')] = function (c, x, y) { return c ? x : y; };
-            kl.functions[nameKlToJs('and')] = function (x, y) { return x && y; };
-            kl.functions[nameKlToJs('or')] = function (x, y) { return x || y; };
+            kl.functions[nameKlToJs('and')] = function (x, y) { return asKlBool(x && y); };
+            kl.functions[nameKlToJs('or')] = function (x, y) { return asKlBool(x || y); };
             kl.functions[nameKlToJs('+')] = function (x, y) { return x + y; };
             kl.functions[nameKlToJs('-')] = function (x, y) { return x - y; };
             kl.functions[nameKlToJs('*')] = function (x, y) { return x * y; };
             kl.functions[nameKlToJs('/')] = function (x, y) { return x / y; };
-            kl.functions[nameKlToJs('<')] = function (x, y) { return x < y; };
-            kl.functions[nameKlToJs('>')] = function (x, y) { return x > y; };
-            kl.functions[nameKlToJs('<=')] = function (x, y) { return x <= y; };
-            kl.functions[nameKlToJs('>=')] = function (x, y) { return x >= y; };
-            kl.functions[nameKlToJs('=')] = eq;
-            kl.functions[nameKlToJs('number?')] = function (x) { return typeof x === 'number'; };
+            kl.functions[nameKlToJs('<')] = function (x, y) { return asKlBool(x < y); };
+            kl.functions[nameKlToJs('>')] = function (x, y) { return asKlBool(x > y); };
+            kl.functions[nameKlToJs('<=')] = function (x, y) { return asKlBool(x <= y); };
+            kl.functions[nameKlToJs('>=')] = function (x, y) { return asKlBool(x >= y); };
+            kl.functions[nameKlToJs('=')] = function (x, y) { return asKlBool(eq(x, y)); };
+            kl.functions[nameKlToJs('number?')] = function (x) { return asKlBool(typeof x === 'number'); };
             kl.functions[nameKlToJs('cons')] = function (x, y) { return new Cons(x, y); };
-            kl.functions[nameKlToJs('cons?')] = function (x) { return x instanceof Cons; };
+            kl.functions[nameKlToJs('cons?')] = function (x) { return asKlBool(x instanceof Cons); };
             kl.functions[nameKlToJs('hd')] = function (x) { return x.hd; };
             kl.functions[nameKlToJs('tl')] = function (x) { return x.tl; };
             kl.functions[nameKlToJs('set')] = function (sym, x) { return kl.symbols[sym.name] = x; };
             kl.functions[nameKlToJs('value')] = function (sym) { return kl.symbols[sym.name]; };
             kl.functions[nameKlToJs('intern')] = function (x) { return new Sym(x); };
-            kl.functions[nameKlToJs('string?')] = function (x) { return typeof x === 'string'; };
+            kl.functions[nameKlToJs('string?')] = function (x) { return asKlBool(typeof x === 'string'); };
             kl.functions[nameKlToJs('str')] = function (x) { return "" + x; };
             kl.functions[nameKlToJs('pos')] = function (s, x) { return s[x]; };
             kl.functions[nameKlToJs('tlstr')] = function (s) { return s.slice(1); };
@@ -263,7 +264,7 @@
             kl.functions[nameKlToJs('absvector')] = function (n) { var a = []; a.length = x; return a; };
             kl.functions[nameKlToJs('<-address')] = function (a, i) { return a[i]; };
             kl.functions[nameKlToJs('address->')] = function (a, i, x) { a[i] = x; return a; };
-            kl.functions[nameKlToJs('absvector?')] = function (a) { return a.constructor === Array };
+            kl.functions[nameKlToJs('absvector?')] = function (a) { return asKlBool(a.constructor === Array); };
             kl.functions[nameKlToJs('type')] = function (x, t) { return x; };
             kl.functions[nameKlToJs('eval-kl')] = function (x) { return eval(translate(x)); };
             kl.functions[nameKlToJs('simple-error')] = function (x) { throw new Error(x); };

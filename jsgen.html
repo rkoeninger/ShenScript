@@ -1,0 +1,153 @@
+<html>
+    <head>
+        <script>
+            function skipWhitespace(state) {
+                while (!isDone(state) && /\s/.test(current(state))) {
+                    skip(state);
+                }
+            }
+            function current(state) { return state.text[state.pos]; }
+            function isDone(state) { return state.pos >= state.text.length; }
+            function skip(state) { state.pos++; }
+            function isDigitOrSign(ch) {
+                return /[\d]/.test(ch);
+            }
+            function readString(state) {
+                skip(state);
+                var start = state.pos;
+                while (current(state) !== '"') {
+                    if (isDone(state)) {
+                        throw new Error('unexpected end of input');
+                    }
+                    skip(state);
+                }
+                var end = state.pos;
+                skip(state);
+                return state.text.substring(start, end);
+            }
+            function readNumber(state) {
+                var start = state.pos;
+                while (isDigitOrSign(current(state))) {
+                    if (isDone(state)) {
+                        throw new Error('unexpected end of input');
+                    }
+                    skip(state);
+                }
+                var end = state.pos;
+                return parseFloat(state.text.substring(start, end));
+            }
+            function readSymbol(state) {
+                var start = state.pos;
+                while (/\S/.test(current(state)) && current(state) !== '(' && current(state) !== ')') {
+                    if (isDone(state)) {
+                        throw new Error('unexpected end of input');
+                    }
+                    skip(state);
+                }
+                var end = state.pos;
+                return new Sym(state.text.substring(start, end));
+            }
+            function parse(state) {
+                skipWhitespace(state);
+                if (isDone(state)) {
+                    throw new Error('unexpected end of input');
+                }
+                if (current(state) === '(') {
+                    var children = [];
+                    skip(state);
+                    var child = parse(state);
+                    while (child) {
+                        children.push(child);
+                        child = parse(state);
+                    }
+                    return children;
+                }
+                if (current(state) === ')') {
+                    skip(state);
+                    return undefined;
+                }
+                if (current(state) === '"') {
+                    return readString(state);
+                }
+                if (isDigitOrSign(current(state))) {
+                    return readNumber(state);
+                }
+                return readSymbol(state);
+            }
+            function State(text) {
+                this.text = text;
+                this.pos = 0;
+            }
+            function Sym(name) {
+                this.name = name;
+            }
+            function isSymbol(x) { return x instanceof Sym; }
+            function isNumber(x) { return typeof x == 'number'; }
+            function isString(x) { return typeof x == 'string'; }
+            function eq(x, y) {
+                if (isSymbol(x) && isSymbol(y)) {
+                    return x.name === y.name;
+                }
+                if (isNumber(x) && isNumber(y)) {
+                    return x == y;
+                }
+                if (isString(x) && isString(y)) {
+                    return x == y;
+                }
+                return false;
+            }
+            function translate(code) {
+                if (isNumber(code)) {
+                    return '' + code;
+                }
+                if (isString(code)) {
+                    return '"' + code + '"';
+                }
+                if (isSymbol(code)) {
+                    return code.name;
+                }
+                if (code.length == 0) {
+                    return null;
+                }
+                if (code.length == 4 && eq(code[0], new Sym('if'))) {
+                    return '((' + translate(code[1]) + ') ? (' + translate(code[2]) + ') : (' + translate(code[3]) + '))';
+                }
+                if (isSymbol(code[0])) {
+                    var op = code[0].name;
+                    if (op == '+') {
+                        return '(' + translate(code[1]) + ' + ' + translate(code[2]) + ')';
+                    }
+                    if (op == '-') {
+                        return '(' + translate(code[1]) + ' - ' + translate(code[2]) + ')';
+                    }
+                    if (op == '*') {
+                        return '(' + translate(code[1]) + ' * ' + translate(code[2]) + ')';
+                    }
+                    if (op == '/') {
+                        return '(' + translate(code[1]) + ' / ' + translate(code[2]) + ')';
+                    }
+                    return op + '(' + code.slice(1).map(translate).join() + ')';
+                }
+                return "can't translate: " + code;
+            }
+            function doParse() {
+                var textarea = document.getElementById('code');
+                console.log(parse(new State(textarea.value)));
+            }
+            function doTranslate() {
+                var textarea = document.getElementById('code');
+                console.log(translate(parse(new State(textarea.value))));
+            }
+            function doRun() {
+                var textarea = document.getElementById('code');
+                console.log(eval(translate(parse(new State(textarea.value)))));
+            }
+        </script>
+    </head>
+    <body>
+        <textarea id="code"></textarea>
+        <button onclick="doParse();">Parse</button>
+        <button onclick="doTranslate();">Translate</button>
+        <button onclick="doRun();">Run</button>
+    </body>
+</html>

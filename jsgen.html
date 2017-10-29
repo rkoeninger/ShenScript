@@ -84,6 +84,10 @@
             function Sym(name) {
                 this.name = name;
             }
+            function Cons(hd, tl) {
+                this.hd = hd;
+                this.tl = tl;
+            }
             function isSymbol(x) { return x instanceof Sym; }
             function isNumber(x) { return typeof x == 'number'; }
             function isString(x) { return typeof x == 'string'; }
@@ -99,14 +103,54 @@
                 }
                 return false;
             }
+            function asJsBool(x) {
+                if (isSymbol(x)) {
+                    if (x.name === 'true') return true;
+                    if (x.name === 'false') return false;
+                }
+                throw new Error("not a boolean");
+            }
+            function asKlBool(x) {
+                return x ? new Sym('true') : new Sym('false');
+            }
             function pushLocal(name, locals) {
                 return locals.slice(0).push(name);
             }
             function nameKlToJs(name) {
-                return name; // TODO: translate names to be js-acceptable so we can have direct references
+                var result = "";
+                for (var i = 0; i < name.length; ++i) {
+                    switch (name[i]) {
+                        case '$': { result += '$do'; break; }
+                        case '+': { result += "$pl"; break; }
+                        case '-': { result += "$mi"; break; }
+                        case '*': { result += "$st"; break; }
+                        case '/': { result += "$sl"; break; }
+                        case '<': { result += "$lt"; break; }
+                        case '>': { result += "$gt"; break; }
+                        case '=': { result += "$eq"; break; }
+                        case '?': { result += "$qu"; break; }
+                        default:  { result += name[i]; break; }
+                    }
+                }
+                return result;
             }
             function nameJsToKl(name) {
-                return name;
+                var result = "";
+                for (var i = 0; i < name.length;) {
+                    switch (name.slice(i, i + 3)) {
+                        case '$do': { result += '$'; i += 3; break; }
+                        case '$pl': { result += '+'; i += 3; break; }
+                        case '$mi': { result += '-'; i += 3; break; }
+                        case '$st': { result += '*'; i += 3; break; }
+                        case '$sl': { result += '/'; i += 3; break; }
+                        case '$lt': { result += '<'; i += 3; break; }
+                        case '$gt': { result += '>'; i += 3; break; }
+                        case '$eq': { result += '='; i += 3; break; }
+                        case '$qu': { result += '?'; i += 3; break; }
+                        default:  { result += name[i]; i++; break; }
+                    }
+                }
+                return result;
             }
             function translate(code, locals) {
                 if (!locals) locals = [];
@@ -118,49 +162,106 @@
                 }
                 if (isSymbol(code)) {
                     if (locals.includes(code.name)) {
-                        return code.name;
+                        return nameKlToJs(code.name);
                     }
                     return '(new Sym("' + code.name + '"))';
                 }
                 if (code.length == 0) {
                     return null;
                 }
+                if (code.length == 3 && eq(code[0], new Sym('and'))) {
+                    return 'asKlBool(asJsBool(' + translate(code[1], locals) + ') && asJsBool(' + translate(code[2], locals) + '))';
+                }
+                if (code.length == 3 && eq(code[0], new Sym('or'))) {
+                    return 'asKlBool(asJsBool(' + translate(code[1], locals) + ') || asJsBool(' + translate(code[2], locals) + '))';
+                }
+
+                // TODO: cond
+
                 if (code.length == 4 && eq(code[0], new Sym('if'))) {
-                    return '((' + translate(code[1], locals) + ') ? (' + translate(code[2], locals) + ') : (' + translate(code[3], locals) + '))';
+                    return '(asJsBool(' + translate(code[1], locals) + ') ? (' + translate(code[2], locals) + ') : (' + translate(code[3], locals) + '))';
                 }
                 if (code.length == 4 && eq(code[0], new Sym('let'))) {
                     // TODO: scoping on let bindings
+                    //nameKlToJs(code[1].name)
                 }
                 if (code.length == 4 && eq(code[0], new Sym('defun'))) {
-                    // TODO: translate variable names
                     var paramNames = code[2].map(function (expr) { return expr.name; });
-                    return '(kl.functions["' + code[1].name + '"]=function(' + paramNames.join() + '){return(' + translate(code[3], paramNames) + ');})'
+                    return '(kl.functions.' + nameKlToJs(code[1].name) + '=function(' + paramNames.join() + '){return(' + translate(code[3], paramNames) + ');})'
                 }
                 if (code.length == 3 && eq(code[0], new Sym('lambda'))) {
-                    return '(function (' + code[1].name + '){return(' + translate(code[2], [code[1].name]) +');})';
+                    return '(function (' + nameKlToJs(code[1].name) + '){return(' + translate(code[2], [code[1].name]) +');})';
                 }
                 if (code.length == 2 && eq(code[0], new Sym('freeze'))) {
                     return '(function (){return(' + translate(code[1]) +');})';
                 }
-                if (isSymbol(code[0])) {
-                    var op = code[0].name;
-                    // TODO: optimize by inlining code?
-                    // if (op == '+') {
-                    //     return '(' + translate(code[1]) + ' + ' + translate(code[2]) + ')';
-                    // }
-                    // if (op == '-') {
-                    //     return '(' + translate(code[1]) + ' - ' + translate(code[2]) + ')';
-                    // }
-                    // if (op == '*') {
-                    //     return '(' + translate(code[1]) + ' * ' + translate(code[2]) + ')';
-                    // }
-                    // if (op == '/') {
-                    //     return '(' + translate(code[1]) + ' / ' + translate(code[2]) + ')';
-                    // }
-                    return 'kl.functions["' + op + '"](' + code.slice(1).map(function (expr) { return translate(expr, locals); }).join() + ')';
+                if (code.length == 3 && eq(code[0], new Sym('trap-error'))) {
+                    return '(function(){try { return (' + translate(code[1], locals) + '); } catch ($err) { return (' + translate(code[2], locals) + ')($err); }})()';
                 }
-                return '(' + translate(code[0], locals) + ')(' + code.slice(1).map(function (expr) { return translate(expr, locals); }).join() + ')';
+
+                var translatedArgs = code.slice(1).map(function (expr) { return translate(expr, locals); }).join();
+                if (isSymbol(code[0])) {
+                    return 'kl.functions.' + nameKlToJs(code[0].name) + '(' + translatedArgs + ')';
+                }
+                return '(' + translate(code[0], locals) + ')(' + translatedArgs + ')';
             }
+            kl = {
+                symbols: {},
+                functions: {}
+            };
+            kl.symbols[nameKlToJs('*language*')] = 'JavaScript';
+            kl.symbols[nameKlToJs('*implementation*')] = 'node.js'; // TODO: identify impl
+            kl.symbols[nameKlToJs('*release*')] = 'v1.2.3'; // TODO: identify ver
+            kl.symbols[nameKlToJs('*os*')] = 'shen os'; // TODO: identify os
+            kl.symbols[nameKlToJs('*port*')] = '0.1';
+            kl.symbols[nameKlToJs('*porters*')] = 'Robert Koeninger';
+            kl.symbols[nameKlToJs('*stinput*')] = ''; // TODO: console
+            kl.symbols[nameKlToJs('*stoutput*')] = ''; // TODO: console
+            kl.symbols[nameKlToJs('*sterror*')] = ''; // TODO: console
+            kl.symbols[nameKlToJs('*home-directory*')] = ''; // TODO: current url
+            kl.functions[nameKlToJs('if')] = function (c, x, y) { return c ? x : y; };
+            kl.functions[nameKlToJs('and')] = function (x, y) { return x && y; };
+            kl.functions[nameKlToJs('or')] = function (x, y) { return x || y; };
+            kl.functions[nameKlToJs('+')] = function (x, y) { return x + y; };
+            kl.functions[nameKlToJs('-')] = function (x, y) { return x - y; };
+            kl.functions[nameKlToJs('*')] = function (x, y) { return x * y; };
+            kl.functions[nameKlToJs('/')] = function (x, y) { return x / y; };
+            kl.functions[nameKlToJs('<')] = function (x, y) { return x < y; };
+            kl.functions[nameKlToJs('>')] = function (x, y) { return x > y; };
+            kl.functions[nameKlToJs('<=')] = function (x, y) { return x <= y; };
+            kl.functions[nameKlToJs('>=')] = function (x, y) { return x >= y; };
+            kl.functions[nameKlToJs('=')] = eq;
+            kl.functions[nameKlToJs('number?')] = function (x) { return typeof x === 'number'; };
+            kl.functions[nameKlToJs('cons')] = function (x, y) { return new Cons(x, y); };
+            kl.functions[nameKlToJs('cons?')] = function (x) { return x instanceof Cons; };
+            kl.functions[nameKlToJs('hd')] = function (x) { return x.hd; };
+            kl.functions[nameKlToJs('tl')] = function (x) { return x.tl; };
+            kl.functions[nameKlToJs('set')] = function (sym, x) { return kl.symbols[sym.name] = x; };
+            kl.functions[nameKlToJs('value')] = function (sym) { return kl.symbols[sym.name]; };
+            kl.functions[nameKlToJs('intern')] = function (x) { return new Sym(x); };
+            kl.functions[nameKlToJs('string?')] = function (x) { return typeof x === 'string'; };
+            kl.functions[nameKlToJs('str')] = function (x) { return "" + x; };
+            kl.functions[nameKlToJs('pos')] = function (s, x) { return s[x]; };
+            kl.functions[nameKlToJs('tlstr')] = function (s) { return s.slice(1); };
+            kl.functions[nameKlToJs('cn')] = function (x, y) { return "" + x + y; };
+            kl.functions[nameKlToJs('string->n')] = function (x) { return x.charCodeAt(0); };
+            kl.functions[nameKlToJs('n->string')] = function (x) { return String.fromCharCode(x); };
+            kl.functions[nameKlToJs('absvector')] = function (n) { var a = []; a.length = x; return a; };
+            kl.functions[nameKlToJs('<-address')] = function (a, i) { return a[i]; };
+            kl.functions[nameKlToJs('address->')] = function (a, i, x) { a[i] = x; return a; };
+            kl.functions[nameKlToJs('absvector?')] = function (a) { return a.constructor === Array };
+            kl.functions[nameKlToJs('type')] = function (x, t) { return x; };
+            kl.functions[nameKlToJs('eval-kl')] = function (x) { return eval(translate(x)); };
+            kl.functions[nameKlToJs('simple-error')] = function (x) { throw new Error(x); };
+            kl.functions[nameKlToJs('error-to-string')] = function (x) { return x.message; };
+            // TODO: get-time
+            // TODO: open
+            // TODO: close
+            // TODO: read-byte
+            // TODO: write-byte
+
+            // TODO: kl name and inline template can be set as properties on function objects
+
             function doParse() {
                 var textarea = document.getElementById('code');
                 console.log(parse(new State(textarea.value)));
@@ -173,17 +274,6 @@
                 var textarea = document.getElementById('code');
                 console.log(eval(translate(parse(new State(textarea.value)))));
             }
-            kl = {
-                symbols: {},
-                functions: {}
-            };
-            kl.functions['+'] = function (x, y) { return (x | 0) + (y | 0); }
-            kl.functions['-'] = function (x, y) { return (x | 0) - (y | 0); }
-            kl.functions['*'] = function (x, y) { return (x | 0) * (y | 0); }
-            kl.functions['/'] = function (x, y) { return (x | 0) / (y | 0); }
-            kl.functions['='] = eq;
-            kl.functions['set'] = function (sym, x) { return kl.symbols[sym.name] = x; }
-            kl.functions['value'] = function (sym) { return kl.symbols[sym.name]; }
         </script>
     </head>
     <body>

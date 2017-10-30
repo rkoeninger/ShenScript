@@ -104,6 +104,7 @@
                 this.tl = tl;
             }
             function isSymbol(x) { return x instanceof Sym; }
+            function isCons(x) { return x instanceof Cons; }
             function isNumber(x) { return typeof x == 'number'; }
             function isString(x) { return typeof x == 'string'; }
             function eq(x, y) {
@@ -127,6 +128,12 @@
             }
             function asKlBool(x) {
                 return x ? new Sym('true') : new Sym('false');
+            }
+            function asKlValue(x) {
+                if (x === true) return new Sym('true');
+                if (x === false) return new Sym('false');
+                if (isString(x) || isNumber(x) || isSymbol(x) || isCons(x)) return x;
+                return x || null;
             }
             function pushLocal(name, locals) {
                 return locals.slice(0).push(name);
@@ -213,9 +220,17 @@
                 if (code.length == 3 && eq(code[0], new Sym('trap-error'))) {
                     return '(function(){try { return (' + translate(code[1], locals) + '); } catch ($err) { return (' + translate(code[2], locals) + ')($err); }})()';
                 }
-
                 var translatedArgs = code.slice(1).map(function (expr) { return translate(expr, locals); }).join();
                 if (isSymbol(code[0])) {
+                    if (code[0].name === 'js.') {
+                        if (code.length === 1) {
+                            return 'null';
+                        }
+                        return '(function(){' + code.slice(1).map(function (s, i) { return i === code.length - 2 ? 'return asKlValue(' + s + ')' : s; }).join(';') + ';})()';
+                    }
+                    if (code[0].name.indexOf('js.') === 0) {
+                        return code[0].name.slice(3) + '(' + translatedArgs + ')';
+                    }
                     return 'kl.functions.' + nameKlToJs(code[0].name) + '(' + translatedArgs + ')';
                 }
                 return '(' + translate(code[0], locals) + ')(' + translatedArgs + ')';
@@ -248,7 +263,7 @@
             kl.functions[nameKlToJs('=')] = function (x, y) { return asKlBool(eq(x, y)); };
             kl.functions[nameKlToJs('number?')] = function (x) { return asKlBool(typeof x === 'number'); };
             kl.functions[nameKlToJs('cons')] = function (x, y) { return new Cons(x, y); };
-            kl.functions[nameKlToJs('cons?')] = function (x) { return asKlBool(x instanceof Cons); };
+            kl.functions[nameKlToJs('cons?')] = function (x) { return asKlBool(isCons(x)); };
             kl.functions[nameKlToJs('hd')] = function (x) { return x.hd; };
             kl.functions[nameKlToJs('tl')] = function (x) { return x.tl; };
             kl.functions[nameKlToJs('set')] = function (sym, x) { return kl.symbols[sym.name] = x; };

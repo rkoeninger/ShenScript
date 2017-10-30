@@ -171,6 +171,9 @@ function nameJsToKl(name) {
     }
     return result;
 }
+
+// TODO: include current function name in context object
+
 function translate(code, locals) {
     if (!locals) locals = [];
     if (isNumber(code)) {
@@ -194,11 +197,20 @@ function translate(code, locals) {
     if (code.length == 3 && eq(code[0], new Sym('or'))) {
         return 'asKlBool(asJsBool(' + translate(code[1], locals) + ') || asJsBool(' + translate(code[2], locals) + '))';
     }
-
-    // TODO: cond
-
+    if (eq(code[0], new Sym('cond'))) {
+        function condRecur(i) {
+            if (i < code.length) {
+                var condition = code[i][0];
+                var consequent = code[i][1];
+                return '(asJsBool(' + translate(condition, locals) + ')?(' + translate(consequent, locals) + '):(' + condRecur(i + 1) + '))'
+            } else {
+                return 'kl.fns.' + nameKlToJs('simple-error') + '("No clause was true")';
+            }
+        }
+        return condRecur(1);
+    }
     if (code.length == 4 && eq(code[0], new Sym('if'))) {
-        return '(asJsBool(' + translate(code[1], locals) + ') ? (' + translate(code[2], locals) + ') : (' + translate(code[3], locals) + '))';
+        return '(asJsBool(' + translate(code[1], locals) + ')?(' + translate(code[2], locals) + '):(' + translate(code[3], locals) + '))';
     }
     if (code.length == 4 && eq(code[0], new Sym('let'))) {
         // TODO: scoping on let bindings
@@ -206,7 +218,7 @@ function translate(code, locals) {
     }
     if (code.length == 4 && eq(code[0], new Sym('defun'))) {
         var paramNames = code[2].map(function (expr) { return expr.name; });
-        return '(kl.functions.' + nameKlToJs(code[1].name) + '=function(' + paramNames.join() + '){return(' + translate(code[3], paramNames) + ');})'
+        return '(kl.fns.' + nameKlToJs(code[1].name) + '=function(' + paramNames.join() + '){return(' + translate(code[3], paramNames) + ');})'
     }
     if (code.length == 3 && eq(code[0], new Sym('lambda'))) {
         return '(function (' + nameKlToJs(code[1].name) + '){return(' + translate(code[2], [code[1].name]) +');})';
@@ -228,13 +240,13 @@ function translate(code, locals) {
         if (code[0].name.indexOf('js.') === 0) {
             return code[0].name.slice(3) + '(' + translatedArgs + ')';
         }
-        return 'kl.functions.' + nameKlToJs(code[0].name) + '(' + translatedArgs + ')';
+        return 'kl.fns.' + nameKlToJs(code[0].name) + '(' + translatedArgs + ')';
     }
     return '(' + translate(code[0], locals) + ')(' + translatedArgs + ')';
 }
 kl = {
     symbols: {},
-    functions: {}
+    fns: {}
 };
 kl.symbols[nameKlToJs('*language*')] = 'JavaScript';
 kl.symbols[nameKlToJs('*implementation*')] = 'node.js'; // TODO: identify impl
@@ -246,41 +258,41 @@ kl.symbols[nameKlToJs('*stinput*')] = ''; // TODO: console
 kl.symbols[nameKlToJs('*stoutput*')] = ''; // TODO: console
 kl.symbols[nameKlToJs('*sterror*')] = ''; // TODO: console
 kl.symbols[nameKlToJs('*home-directory*')] = ''; // TODO: current url
-kl.functions[nameKlToJs('if')] = function (c, x, y) { return c ? x : y; };
-kl.functions[nameKlToJs('and')] = function (x, y) { return asKlBool(x && y); };
-kl.functions[nameKlToJs('or')] = function (x, y) { return asKlBool(x || y); };
-kl.functions[nameKlToJs('+')] = function (x, y) { return x + y; };
-kl.functions[nameKlToJs('-')] = function (x, y) { return x - y; };
-kl.functions[nameKlToJs('*')] = function (x, y) { return x * y; };
-kl.functions[nameKlToJs('/')] = function (x, y) { return x / y; };
-kl.functions[nameKlToJs('<')] = function (x, y) { return asKlBool(x < y); };
-kl.functions[nameKlToJs('>')] = function (x, y) { return asKlBool(x > y); };
-kl.functions[nameKlToJs('<=')] = function (x, y) { return asKlBool(x <= y); };
-kl.functions[nameKlToJs('>=')] = function (x, y) { return asKlBool(x >= y); };
-kl.functions[nameKlToJs('=')] = function (x, y) { return asKlBool(eq(x, y)); };
-kl.functions[nameKlToJs('number?')] = function (x) { return asKlBool(typeof x === 'number'); };
-kl.functions[nameKlToJs('cons')] = function (x, y) { return new Cons(x, y); };
-kl.functions[nameKlToJs('cons?')] = function (x) { return asKlBool(isCons(x)); };
-kl.functions[nameKlToJs('hd')] = function (x) { return x.hd; };
-kl.functions[nameKlToJs('tl')] = function (x) { return x.tl; };
-kl.functions[nameKlToJs('set')] = function (sym, x) { return kl.symbols[sym.name] = x; };
-kl.functions[nameKlToJs('value')] = function (sym) { return kl.symbols[sym.name]; };
-kl.functions[nameKlToJs('intern')] = function (x) { return new Sym(x); };
-kl.functions[nameKlToJs('string?')] = function (x) { return asKlBool(typeof x === 'string'); };
-kl.functions[nameKlToJs('str')] = function (x) { return "" + x; };
-kl.functions[nameKlToJs('pos')] = function (s, x) { return s[x]; };
-kl.functions[nameKlToJs('tlstr')] = function (s) { return s.slice(1); };
-kl.functions[nameKlToJs('cn')] = function (x, y) { return "" + x + y; };
-kl.functions[nameKlToJs('string->n')] = function (x) { return x.charCodeAt(0); };
-kl.functions[nameKlToJs('n->string')] = function (x) { return String.fromCharCode(x); };
-kl.functions[nameKlToJs('absvector')] = function (n) { var a = []; a.length = x; return a; };
-kl.functions[nameKlToJs('<-address')] = function (a, i) { return a[i]; };
-kl.functions[nameKlToJs('address->')] = function (a, i, x) { a[i] = x; return a; };
-kl.functions[nameKlToJs('absvector?')] = function (a) { return asKlBool(a.constructor === Array); };
-kl.functions[nameKlToJs('type')] = function (x, t) { return x; };
-kl.functions[nameKlToJs('eval-kl')] = function (x) { return eval(translate(x)); };
-kl.functions[nameKlToJs('simple-error')] = function (x) { throw new Error(x); };
-kl.functions[nameKlToJs('error-to-string')] = function (x) { return x.message; };
+kl.fns[nameKlToJs('if')] = function (c, x, y) { return c ? x : y; };
+kl.fns[nameKlToJs('and')] = function (x, y) { return asKlBool(x && y); };
+kl.fns[nameKlToJs('or')] = function (x, y) { return asKlBool(x || y); };
+kl.fns[nameKlToJs('+')] = function (x, y) { return x + y; };
+kl.fns[nameKlToJs('-')] = function (x, y) { return x - y; };
+kl.fns[nameKlToJs('*')] = function (x, y) { return x * y; };
+kl.fns[nameKlToJs('/')] = function (x, y) { return x / y; };
+kl.fns[nameKlToJs('<')] = function (x, y) { return asKlBool(x < y); };
+kl.fns[nameKlToJs('>')] = function (x, y) { return asKlBool(x > y); };
+kl.fns[nameKlToJs('<=')] = function (x, y) { return asKlBool(x <= y); };
+kl.fns[nameKlToJs('>=')] = function (x, y) { return asKlBool(x >= y); };
+kl.fns[nameKlToJs('=')] = function (x, y) { return asKlBool(eq(x, y)); };
+kl.fns[nameKlToJs('number?')] = function (x) { return asKlBool(typeof x === 'number'); };
+kl.fns[nameKlToJs('cons')] = function (x, y) { return new Cons(x, y); };
+kl.fns[nameKlToJs('cons?')] = function (x) { return asKlBool(isCons(x)); };
+kl.fns[nameKlToJs('hd')] = function (x) { return x.hd; };
+kl.fns[nameKlToJs('tl')] = function (x) { return x.tl; };
+kl.fns[nameKlToJs('set')] = function (sym, x) { return kl.symbols[sym.name] = x; };
+kl.fns[nameKlToJs('value')] = function (sym) { return kl.symbols[sym.name]; };
+kl.fns[nameKlToJs('intern')] = function (x) { return new Sym(x); };
+kl.fns[nameKlToJs('string?')] = function (x) { return asKlBool(typeof x === 'string'); };
+kl.fns[nameKlToJs('str')] = function (x) { return "" + x; };
+kl.fns[nameKlToJs('pos')] = function (s, x) { return s[x]; };
+kl.fns[nameKlToJs('tlstr')] = function (s) { return s.slice(1); };
+kl.fns[nameKlToJs('cn')] = function (x, y) { return "" + x + y; };
+kl.fns[nameKlToJs('string->n')] = function (x) { return x.charCodeAt(0); };
+kl.fns[nameKlToJs('n->string')] = function (x) { return String.fromCharCode(x); };
+kl.fns[nameKlToJs('absvector')] = function (n) { var a = []; a.length = x; return a; };
+kl.fns[nameKlToJs('<-address')] = function (a, i) { return a[i]; };
+kl.fns[nameKlToJs('address->')] = function (a, i, x) { a[i] = x; return a; };
+kl.fns[nameKlToJs('absvector?')] = function (a) { return asKlBool(a.constructor === Array); };
+kl.fns[nameKlToJs('type')] = function (x, t) { return x; };
+kl.fns[nameKlToJs('eval-kl')] = function (x) { return eval(translate(x)); };
+kl.fns[nameKlToJs('simple-error')] = function (x) { throw new Error(x); };
+kl.fns[nameKlToJs('error-to-string')] = function (x) { return x.message; };
 // TODO: get-time
 // TODO: open
 // TODO: close

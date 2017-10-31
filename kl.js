@@ -104,20 +104,46 @@ function readSymbol(state) {
     var end = state.pos;
     return new Sym(state.text.substring(start, end));
 }
+function arrayToCons(x) {
+    var result = null;
+    for (var i = x.length - 1; i >= 0; i--) result = new Cons(x[i], result);
+    return result;
+}
+function consToArray(x, array) {
+    if (!array) array = [];
+    if (isCons(x)) {
+        array.push(x.hd);
+        return consToArray(x.tl, array);
+    }
+    if (x !== null) {
+        throw new Error('not a valid list');
+    }
+    return array;
+}
+function consLength(x) {
+    var length = 0;
+    while (isCons(x)) {
+        x = x.tl;
+        length++;
+    }
+    if (x !== null) {
+        throw new Error('not a valid list');
+    }
+    return length;
+}
 function parse(state) {
     skipWhitespace(state);
     if (isDone(state)) {
         throw new Error('unexpected end of input');
     }
     if (current(state) === '(') {
-        var children = [];
         skip(state);
-        var child = parse(state);
+        var child = parse(state), children = [];
         while (child !== undefined) {
             children.push(child);
             child = parse(state);
         }
-        return children;
+        return arrayToCons(children);
     }
     if (current(state) === ')') {
         skip(state);
@@ -158,6 +184,9 @@ function eq(x, y) {
     }
     if (isString(x) && isString(y)) {
         return x === y;
+    }
+    if (isCons(x) && isCons(y)) {
+        return eq(x.hd, y.hd) && eq(x.tl, y.tl);
     }
     return false;
 }
@@ -219,8 +248,12 @@ function nameJsToKl(name) {
 
 // TODO: include current function name in context object
 
+// Value{Num, Str, Sym, Cons} -> JsString
 function translate(code, locals) {
     if (!locals) locals = [];
+    if (code === null) {
+        return 'null';
+    }
     if (isNumber(code)) {
         return '' + code;
     }
@@ -233,61 +266,56 @@ function translate(code, locals) {
         }
         return '(new Sym("' + code.name + '"))';
     }
-    if (code.length == 0) {
-        return null;
+    if (consLength(code) === 3 && eq(code.hd, new Sym('and'))) {
+        return 'asKlBool(asJsBool(' + translate(code.tl.hd, locals) + ') && asJsBool(' + translate(code.tl.tl.hd, locals) + '))';
     }
-    if (code.length == 3 && eq(code[0], new Sym('and'))) {
-        return 'asKlBool(asJsBool(' + translate(code[1], locals) + ') && asJsBool(' + translate(code[2], locals) + '))';
+    if (consLength(code) === 3 && eq(code.hd, new Sym('or'))) {
+        return 'asKlBool(asJsBool(' + translate(code.tl.hd, locals) + ') || asJsBool(' + translate(code.tl.tl.hd, locals) + '))';
     }
-    if (code.length == 3 && eq(code[0], new Sym('or'))) {
-        return 'asKlBool(asJsBool(' + translate(code[1], locals) + ') || asJsBool(' + translate(code[2], locals) + '))';
-    }
-    if (eq(code[0], new Sym('cond'))) {
-        function condRecur(i) {
-            if (i < code.length) {
-                var condition = code[i][0];
-                var consequent = code[i][1];
-                return '(asJsBool(' + translate(condition, locals) + ')?(' + translate(consequent, locals) + '):(' + condRecur(i + 1) + '))'
-            } else {
+    if (eq(code.hd, new Sym('cond'))) {
+        function condRecur(code) {
+            if (code === null) {
                 return 'kl.fns.' + nameKlToJs('simple-error') + '("No clause was true")';
+            } else {
+                return '(asJsBool(' + translate(code.hd.hd, locals) + ')?(' + translate(code.hd.tl.hd, locals) + '):(' + condRecur(code.tl) + '))';
             }
         }
-        return condRecur(1);
+        return condRecur(code.tl);
     }
-    if (code.length == 4 && eq(code[0], new Sym('if'))) {
-        return '(asJsBool(' + translate(code[1], locals) + ')?(' + translate(code[2], locals) + '):(' + translate(code[3], locals) + '))';
+    if (consLength(code) === 4 && eq(code.hd, new Sym('if'))) {
+        return '(asJsBool(' + translate(code.tl.hd, locals) + ')?(' + translate(code.tl.tl.hd, locals) + '):(' + translate(code.tl.tl.tl.hd, locals) + '))';
     }
-    if (code.length == 4 && eq(code[0], new Sym('let'))) {
+    if (consLength(code) === 4 && eq(code.hd, new Sym('let'))) {
         // TODO: scoping on let bindings
         //nameKlToJs(code[1].name)
     }
-    if (code.length == 4 && eq(code[0], new Sym('defun'))) {
-        var paramNames = code[2].map(function (expr) { return expr.name; });
-        return '(kl.fns.' + nameKlToJs(code[1].name) + '=function(' + paramNames.join() + '){return(' + translate(code[3], paramNames) + ');})'
+    if (consLength(code) === 4 && eq(code.hd, new Sym('defun'))) {
+        var paramNames = consToArray(code.tl.tl.hd).map(function (expr) { return expr.name; });
+        return '(kl.fns.' + nameKlToJs(code.tl.hd.name) + '=function(' + paramNames.join() + '){return(' + translate(code.tl.tl.tl.hd, paramNames) + ');})'
     }
-    if (code.length == 3 && eq(code[0], new Sym('lambda'))) {
-        return '(function (' + nameKlToJs(code[1].name) + '){return(' + translate(code[2], [code[1].name]) +');})';
+    if (consLength(code) === 3 && eq(code.hd, new Sym('lambda'))) {
+        return '(function (' + nameKlToJs(code.tl.hd.name) + '){return(' + translate(code.tl.tl.hd, [code.tl.hd.name]) +');})';
     }
-    if (code.length == 2 && eq(code[0], new Sym('freeze'))) {
-        return '(function (){return(' + translate(code[1]) +');})';
+    if (consLength(code) === 2 && eq(code.hd, new Sym('freeze'))) {
+        return '(function (){return(' + translate(code.tl.hd) +');})';
     }
-    if (code.length == 3 && eq(code[0], new Sym('trap-error'))) {
-        return '(function(){try { return (' + translate(code[1], locals) + '); } catch ($err) { return (' + translate(code[2], locals) + ')($err); }})()';
+    if (consLength(code) === 3 && eq(code.hd, new Sym('trap-error'))) {
+        return '(function(){try { return (' + translate(code.tl.hd, locals) + '); } catch ($err) { return (' + translate(code.tl.tl.hd, locals) + ')($err); }})()';
     }
-    var translatedArgs = code.slice(1).map(function (expr) { return translate(expr, locals); }).join();
-    if (isSymbol(code[0])) {
-        if (code[0].name === 'js.') {
-            if (code.length === 1) {
+    var translatedArgs = consToArray(code.tl).map(function (expr) { return translate(expr, locals); }).join();
+    if (isSymbol(code.hd)) {
+        if (code.hd.name === 'js.') {
+            if (consLength(code.length) === 1) {
                 return 'null';
             }
-            return '(function(){' + code.slice(1).map(function (s, i) { return i === code.length - 2 ? 'return asKlValue(' + s + ')' : s; }).join(';') + ';})()';
+            return '(function(){' + consToArray(code.tl).map(function (s, i) { return i === code.length - 2 ? 'return asKlValue(' + s + ')' : s; }).join(';') + ';})()';
         }
-        if (code[0].name.indexOf('js.') === 0) {
-            return code[0].name.slice(3) + '(' + translatedArgs + ')';
+        if (code.hd.name.indexOf('js.') === 0) {
+            return code.hd.name.slice(3) + '(' + translatedArgs + ')';
         }
-        return 'kl.fns.' + nameKlToJs(code[0].name) + '(' + translatedArgs + ')';
+        return 'kl.fns.' + nameKlToJs(code.hd.name) + '(' + translatedArgs + ')';
     }
-    return '(' + translate(code[0], locals) + ')(' + translatedArgs + ')';
+    return '(' + translate(code.hd, locals) + ')(' + translatedArgs + ')';
 }
 kl = {
     startTime: new Date().getTime(),

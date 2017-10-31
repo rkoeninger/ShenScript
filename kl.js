@@ -386,7 +386,11 @@ function translate(code, context) {
 
         // KL function call
         var name = nameKlToJs(code.hd.name);
-        return `kl.fns.${name}(${translatedArgs})`;
+        if (context.locals.includes(code.hd.name)) {
+            return `${name}(${translatedArgs})`;
+        } else {
+            return `kl.fns.${name}(${translatedArgs})`;
+        }
     }
 
     // Application of function value

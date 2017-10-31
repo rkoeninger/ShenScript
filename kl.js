@@ -3,13 +3,55 @@ function getOperatingSystem() {
         if (navigator.platform.toLowerCase() === 'win32') return "Windows";
         if (navigator.appVersion.indexOf("Win") != -1) return "Windows";
         if (navigator.appVersion.indexOf("Mac") != -1) return "macOS";
-        if (navigator.appVersion.indexOf("X11") != -1) return "Unix";
+        if (navigator.appVersion.indexOf("iPhone") != -1) return "iOS";
+        if (navigator.appVersion.indexOf("iPad") != -1) return "iOS";
+        if (navigator.appVersion.indexOf("iOS") != -1) return "iOS";
         if (navigator.appVersion.indexOf("Linux") != -1) return "Linux";
+        if (navigator.appVersion.indexOf("Android") != -1) return "Android";
+        if (navigator.appVersion.indexOf("X11") != -1) return "Unix";
     }
     if (process) {
         if (process.platform === 'win32') return 'Windows';
         if (process.platform === 'darwin') return 'macOS';
         if (process.platform === 'linux') return 'Linux';
+    }
+    return "Unknown";
+}
+function getImplementation() {
+    if (window) {
+        if (navigator.appVersion.indexOf('Edge') != -1) return 'Edge';
+        if (navigator.appVersion.indexOf('Trident') != -1) return 'Internet Explorer';
+        if (navigator.appVersion.indexOf('Chrome') != -1) return 'Chrome';
+        if (navigator.appVersion.indexOf('Opera') != -1) return 'Opera';
+        if (navigator.appVersion.indexOf('Firefox') != -1) return 'Firefox';
+        if (navigator.appVersion.indexOf('Safari') != -1) return 'Safari';
+        if (navigator.appVersion.indexOf('Vivaldi') != -1) return 'Vivaldi';
+        if (navigator.appVersion.indexOf('Android') != -1) return 'Android';
+    }
+    if (process) {
+        return 'Node.js';
+    }
+    return "Unknown";
+}
+function getRelease() {
+    if (window) {
+        var ua = navigator.userAgent,
+            tem,
+            M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+        if (/trident/i.test(M[1])) {
+            tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+            return (tem[1] || '');
+        }
+        if (M[1] === 'Chrome'){
+            tem = ua.match(/\b(OPR|Edge)\/(\d+)/);
+            if (tem != null) return tem[2];
+        }
+        M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
+        if ((tem = ua.match(/version\/(\d+)/i)) != null) M.splice(1, 1, tem[1]);
+        return M[1];
+    }
+    if (process) {
+        return process.version.slice(1);
     }
     return "Unknown";
 }
@@ -92,6 +134,9 @@ function parse(state) {
 function State(text) {
     this.text = text;
     this.pos = 0;
+}
+function Thunk(run) {
+    this.run = run;
 }
 function Sym(name) {
     this.name = name;
@@ -250,8 +295,8 @@ kl = {
     fns: {}
 };
 kl.symbols[nameKlToJs('*language*')] = 'JavaScript';
-kl.symbols[nameKlToJs('*implementation*')] = 'node.js'; // TODO: identify impl
-kl.symbols[nameKlToJs('*release*')] = 'v1.2.3'; // TODO: identify ver
+kl.symbols[nameKlToJs('*implementation*')] = getImplementation();
+kl.symbols[nameKlToJs('*release*')] = getRelease();
 kl.symbols[nameKlToJs('*os*')] = getOperatingSystem();
 kl.symbols[nameKlToJs('*port*')] = '0.1';
 kl.symbols[nameKlToJs('*porters*')] = 'Robert Koeninger';
@@ -276,8 +321,8 @@ kl.fns[nameKlToJs('cons')] = function (x, y) { return new Cons(x, y); };
 kl.fns[nameKlToJs('cons?')] = function (x) { return asKlBool(isCons(x)); };
 kl.fns[nameKlToJs('hd')] = function (x) { return x.hd; };
 kl.fns[nameKlToJs('tl')] = function (x) { return x.tl; };
-kl.fns[nameKlToJs('set')] = function (sym, x) { return kl.symbols[sym.name] = x; };
-kl.fns[nameKlToJs('value')] = function (sym) { return kl.symbols[sym.name]; };
+kl.fns[nameKlToJs('set')] = function (sym, x) { return kl.symbols[nameKlToJs(sym.name)] = x; };
+kl.fns[nameKlToJs('value')] = function (sym) { return kl.symbols[nameKlToJs(sym.name)]; };
 kl.fns[nameKlToJs('intern')] = function (x) { return new Sym(x); };
 kl.fns[nameKlToJs('string?')] = function (x) { return asKlBool(typeof x === 'string'); };
 kl.fns[nameKlToJs('str')] = function (x) { return "" + x; };

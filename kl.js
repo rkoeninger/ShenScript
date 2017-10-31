@@ -269,42 +269,50 @@ function nameJsToKl(name) {
 
 // TODO: include current function name in context object
 
+function ifExpr(condition, consequent, alternative) {
+    return `asJsBool(${condition})?(${consequent}):(${alternative})`;
+}
+
 // Value{Num, Str, Sym, Cons} -> JsString
 function translate(code, context) {
     if (!context) context = new Context();
-    if (code === null) {
-        return 'null';
-    }
-    if (isNumber(code)) {
-        return '' + code;
-    }
-    if (isString(code)) {
-        return '"' + code + '"';
-    }
+    if (code === null) return 'null';
+    if (isNumber(code)) return '' + code;
+    if (isString(code)) return `"${code}"`;
     if (isSymbol(code)) {
         if (context.locals.includes(code.name)) {
             return nameKlToJs(code.name);
         }
-        return `(new Sym(${code.name}))`;
+        return `new Sym("${code.name}")`;
     }
     if (consLength(code) === 3 && eq(code.hd, new Sym('and'))) {
-        return 'asKlBool(asJsBool(' + translate(code.tl.hd, context) + ') && asJsBool(' + translate(code.tl.tl.hd, context) + '))';
+        var left = translate(code.tl.hd, context);
+        var right = translate(code.tl.tl.hd, context);
+        return `asKlBool(asJsBool(${left}) && asJsBool(${right}))`;
     }
     if (consLength(code) === 3 && eq(code.hd, new Sym('or'))) {
-        return 'asKlBool(asJsBool(' + translate(code.tl.hd, context) + ') || asJsBool(' + translate(code.tl.tl.hd, context) + '))';
+        var left = translate(code.tl.hd, context);
+        var right = translate(code.tl.tl.hd, context);
+        return `asKlBool(asJsBool(${left}) || asJsBool(${right}))`;
     }
     if (eq(code.hd, new Sym('cond'))) {
         function condRecur(code) {
             if (code === null) {
                 return `kl.fns.${nameKlToJs('simple-error')}("No clause was true")`;
-            } else {    
-                return '(asJsBool(' + translate(code.hd.hd, context) + ')?(' + translate(code.hd.tl.hd, context) + '):(' + condRecur(code.tl) + '))';
+            } else {
+                return ifExpr(
+                    translate(code.hd.hd, context),
+                    translate(code.hd.tl.hd, context),
+                    condRecur(code.tl));
             }
         }
         return condRecur(code.tl);
     }
     if (consLength(code) === 4 && eq(code.hd, new Sym('if'))) {
-        return '(asJsBool(' + translate(code.tl.hd, context) + ')?(' + translate(code.tl.tl.hd, context) + '):(' + translate(code.tl.tl.tl.hd, context) + '))';
+        return ifExpr(
+            translate(code.tl.hd, context),
+            translate(code.tl.tl.hd, context),
+            translate(code.tl.tl.tl.hd, context));
     }
     if (consLength(code) === 4 && eq(code.hd, new Sym('let'))) {
         // TODO: improve scoping on let bindings
@@ -312,47 +320,78 @@ function translate(code, context) {
         var varName = code.tl.hd.name;
         var value = translate(code.tl.tl.hd, context);
         var body = translate(code.tl.tl.tl.hd, context.pushLocal(varName));
-        return `(function(){var ${nameKlToJs(varName)}=${value};return ${body};}())`;
+        return `function () {
+                  var ${nameKlToJs(varName)} = ${value};
+                  return ${body};
+                }()`;
     }
     if (consLength(code) === 4 && eq(code.hd, new Sym('defun'))) {
         var defunName = code.tl.hd.name;
-        var paramNames = consToArray(code.tl.tl.hd).map(function (expr) { return expr.name; });
-        return '(kl.fns.' + nameKlToJs(defunName) + '=function(' + paramNames.map(nameKlToJs).join() + '){return(' + translate(code.tl.tl.tl.hd, context.putLocals(paramNames, defunName)) + ');})'
+        var paramNames = consToArray(code.tl.tl.hd).map((expr) => expr.name);
+        var body = translate(code.tl.tl.tl.hd, context.putLocals(paramNames, defunName));
+        return `kl.fns.${nameKlToJs(defunName)} = function (${paramNames.map(nameKlToJs).join()}) {
+                  return ${body};
+                }`;
     }
     if (consLength(code) === 3 && eq(code.hd, new Sym('lambda'))) {
         var param = nameKlToJs(code.tl.hd.name);
         var body = translate(code.tl.tl.hd, context.putLocals([code.tl.hd.name]));
-        return `(function(${param}){return(${body});})`;
+        return `function (${param}) {
+                  return ${body};
+                }`;
     }
     if (consLength(code) === 2 && eq(code.hd, new Sym('freeze'))) {
         var body = translate(code.tl.hd);
-        return `(function(){return(${body});})`;
+        return `function () {
+                  return ${body};
+                }`;
     }
     if (consLength(code) === 3 && eq(code.hd, new Sym('trap-error'))) {
         var body = translate(code.tl.hd, context);
         var handler = translate(code.tl.tl.hd, context);
-        return `(function() {
+        return `function () {
                   try {
                     return ${body};
                   } catch ($err) {
                     return ${handler}($err);
                   }
-                })()`;
+                }()`;
     }
-    var translatedArgs = consToArray(code.tl).map(function (expr) { return translate(expr, context); }).join();
+
+    // TODO: flatten do expressions into semicolon separated sequence
+
+    var translatedArgs = consToArray(code.tl).map((expr) => translate(expr, context)).join();
+
     if (isSymbol(code.hd)) {
+
+        // JS-injection form
         if (code.hd.name === 'js.') {
             if (consLength(code.length) === 1) {
                 return 'null';
             }
-            return '(function(){' + consToArray(code.tl).map(function (s, i) { return i === code.length - 2 ? 'return asKlValue(' + s + ')' : s; }).join(';') + ';})()';
+            var statements = consToArray(code.tl);
+            var butLastStatements = statements.slice(0, statements.length - 1).join(';');
+            var lastStatement = statements[statements.length - 1];
+            return `function () {
+                      ${butLastStatements};
+                      return asKlValue(${lastStatement});
+                    }()`;
         }
+
+        // JS-namespace function call
         if (code.hd.name.indexOf('js.') === 0) {
-            return code.hd.name.slice(3) + '(' + translatedArgs + ')';
+            var name = code.hd.name.slice(3);
+            return `${name}(${translatedArgs})`;
         }
-        return 'kl.fns.' + nameKlToJs(code.hd.name) + '(' + translatedArgs + ')';
+
+        // KL function call
+        var name = nameKlToJs(code.hd.name);
+        return `kl.fns.${name}(${translatedArgs})`;
     }
-    return '(' + translate(code.hd, context) + ')(' + translatedArgs + ')';
+
+    // Application of function value
+    var f = translate(code.hd, context);
+    return `(${f})(${translatedArgs})`;
 }
 kl = {
     startTime: new Date().getTime(),

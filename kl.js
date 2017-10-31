@@ -245,6 +245,7 @@ function translate(code, locals) {
     return '(' + translate(code[0], locals) + ')(' + translatedArgs + ')';
 }
 kl = {
+    startTime: new Date().getTime(),
     symbols: {},
     fns: {}
 };
@@ -293,7 +294,11 @@ kl.fns[nameKlToJs('type')] = function (x, t) { return x; };
 kl.fns[nameKlToJs('eval-kl')] = function (x) { return eval(translate(x)); };
 kl.fns[nameKlToJs('simple-error')] = function (x) { throw new Error(x); };
 kl.fns[nameKlToJs('error-to-string')] = function (x) { return x.message; };
-// TODO: get-time
+kl.fns[nameKlToJs('get-time')] = function (x) {
+    if (x.name === 'unix') return new Date().getTime();
+    if (x.name === 'run') return new Date().getTime() - kl.startTime;
+    throw new Error("get-time only accepts 'unix or 'run");
+};
 // TODO: open
 // TODO: close
 // TODO: read-byte

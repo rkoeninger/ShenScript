@@ -207,7 +207,9 @@ function asKlValue(x) {
     return x || null;
 }
 function pushLocal(name, locals) {
-    return locals.slice(0).push(name);
+    locals = locals.slice(0);
+    locals.push(name);
+    return locals;
 }
 function nameKlToJs(name) {
     var result = "";
@@ -286,8 +288,12 @@ function translate(code, locals) {
         return '(asJsBool(' + translate(code.tl.hd, locals) + ')?(' + translate(code.tl.tl.hd, locals) + '):(' + translate(code.tl.tl.tl.hd, locals) + '))';
     }
     if (consLength(code) === 4 && eq(code.hd, new Sym('let'))) {
-        // TODO: scoping on let bindings
-        //nameKlToJs(code[1].name)
+        // TODO: improve scoping on let bindings
+        //       a new function scope isn't necessary for unique variables
+        var varName = nameKlToJs(code.tl.hd.name);
+        var value = translate(code.tl.tl.hd, locals);
+        var body = translate(code.tl.tl.tl.hd, pushLocal(code.tl.hd.name, locals));
+        return `(function(){var ${varName}=${value};return ${body};}())`;
     }
     if (consLength(code) === 4 && eq(code.hd, new Sym('defun'))) {
         var paramNames = consToArray(code.tl.tl.hd).map(function (expr) { return expr.name; });

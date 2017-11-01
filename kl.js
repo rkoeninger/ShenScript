@@ -82,6 +82,9 @@ function readString(state) {
     skip(state);
     return state.text.substring(start, end);
 }
+
+// TODO: read fractional and negative numbers
+
 function readNumber(state) {
     var start = state.pos;
     while (isDigitOrSign(current(state))) {
@@ -181,6 +184,21 @@ function Context() {
         return context;
     }
 }
+
+/* Type mapping:
+ *
+ * KL Type            JS Type
+ * -------            -------
+ * Empty              null
+ * Number             number
+ * String             string
+ * Symbol             Sym
+ * Cons               Cons
+ * Function           function
+ * AbsVector          array
+ * Stream             Stream
+ */
+
 class Thunk {
     constructor(run) {
         this.run = run;
@@ -197,16 +215,20 @@ class Cons {
         this.tl = tl;
     }
 }
+class Stream {
+    constructor(name) {
+        this.name = name;
+    }
+}
+consoleStream = new Stream('console');
 isSymbol   = x => x && x.constructor === Sym;
 isCons     = x => x && x.constructor === Cons;
 isArray    = x => x && x.constructor === Array;
 isError    = x => x && x.constructor === Error;
+isStream   = x => x && x.constructor === Stream;
 isNumber   = x => typeof x === 'number';
 isString   = x => typeof x === 'string';
 isFunction = x => typeof x === 'function';
-// TODO: isStream = x => x && x.constructor === Stream;
-// streams have identity equality
-// toStr(x: Stream) => `<Stream ${name/path/url}>`
 function eq(x, y) {
     if (x === y) return true;
     if (isSymbol(x) && isSymbol(y)) return x.name === y.name;
@@ -228,6 +250,7 @@ function toStr(x) {
     if (isFunction(x)) return `<Function ${x.name}>`;
     if (isArray(x)) return `<Vector ${x.length}>`;
     if (isError(x)) return `<Error "${x.message}">`;
+    if (isStream(x)) return `<Stream ${x.name}>`;
     return '' + x;
 }
 function asJsBool(x) {
@@ -237,26 +260,27 @@ function asJsBool(x) {
     }
     throw new Error('not a boolean');
 }
-function asKlBool(x) {
-    return x ? new Sym('true') : new Sym('false');
-}
-function asKlNumber(x) {
-    if (isNumber(x)) {
-        return x;
+err = x => { throw new Error(x); };
+asKlBool = x => new Sym(x ? 'true' : 'false');
+asKlNumber = x => isNumber(x) ? x : err('not a number');
+asKlString = x => isString(x) ? x : err('not a string');
+asKlSymbol = x => isSymbol(x) ? x : err('not a symbol');
+asKlVector = x => isArray(x) ? x : err('not an absvector');
+asKlCons = x => isCons(x) ? x : err('not a cons');
+asKlError = x => isError(x) ? x : err('not an error');
+asKlStream = x => isStream(x) ? x : err('not a stream');
+asKlFunction = x => isFunction(x) ? x : err('not a function');
+function asIndexOf(i, a) {
+    if (isNumber(i)) {
+        if (i % 1 === 0) {
+            if (i >= 0 && i < a.length) {
+                return i;
+            }
+            throw new Error('not in bounds: ' + i);
+        }
+        throw new Error('not an integer: ' + i);
     }
-    throw new Error('not a number');
-}
-function asKlString(x) {
-    if (isString(x)) {
-        return x;
-    }
-    throw new Error('not a string');
-}
-function asKlError(x) {
-    if (isError(x)) {
-        return x;
-    }
-    throw new Error('not an error');
+    throw new Error('not a valid index: ' + i);
 }
 function asKlValue(x) {
     if (x === true) return new Sym('true');
@@ -312,6 +336,9 @@ function flattenDo(expr) {
 }
 // Value{Num, Str, Sym, Cons} -> JsString
 function translate(code, context) {
+    if (isArray(code) || isFunction(code) || isError(code) || isStream(code)) {
+        err('vectors, functions, errors and streams are not valid syntax');
+    }
     if (!context) context = new Context();
     if (code === null) return 'null';
     if (isNumber(code)) return '' + code;
@@ -368,9 +395,9 @@ function translate(code, context) {
         var defunName = code.tl.hd.name;
         var paramNames = consToArray(code.tl.tl.hd).map((expr) => expr.name);
         var body = translate(code.tl.tl.tl.hd, context.putLocals(paramNames, defunName));
-        return `kl.fns.${nameKlToJs(defunName)} = function (${paramNames.map(nameKlToJs).join()}) {
+        return `kl.defun('${defunName}', function (${paramNames.map(nameKlToJs).join()}) {
                   return ${body};
-                }`;
+                })`;
     }
     if (consLength(code) === 3 && eq(code.hd, new Sym('lambda'))) {
         var param = nameKlToJs(code.tl.hd.name);
@@ -404,6 +431,12 @@ function translate(code, context) {
                   ${butLastStatements};
                   return ${lastStatement};
                 })()`;
+    }
+    if (consLength(code) === 3 && eq(code.hd, new Sym('set')) && isSymbol(code.tl.hd) && !context.locals.includes(code.tl.hd.name)) {
+        return `kl.symbols.${nameKlToJs(code.tl.hd.name)} = ${translate(code.tl.tl.hd, context)}`;
+    }
+    if (consLength(code) === 2 && eq(code.hd, new Sym('value')) && isSymbol(code.tl.hd) && !context.locals.includes(code.tl.hd.name) && kl.isSymbolDefined(code.tl.hd.name)) {
+        return `kl.symbols.${nameKlToJs(code.tl.hd.name)}`;
     }
 
     var translatedArgs = consToArray(code.tl).map((expr) => translate(expr, context)).join();
@@ -441,67 +474,87 @@ function translate(code, context) {
 
     // Application of function value
     var f = translate(code.hd, context);
-    return `(${f})(${translatedArgs})`;
+    return `asKlFunction(${f})(${translatedArgs})`;
 }
+
+// TODO: inline template can be set on function object
+
+//
+// Init KL environment
+//
+
 kl = {
     startTime: new Date().getTime(),
     uniqueSuffix: 0,
     symbols: {},
     fns: {}
 };
-kl.symbols[nameKlToJs('*language*')] = 'JavaScript';
-kl.symbols[nameKlToJs('*implementation*')] = getImplementation();
-kl.symbols[nameKlToJs('*release*')] = getRelease();
-kl.symbols[nameKlToJs('*os*')] = getOperatingSystem();
-kl.symbols[nameKlToJs('*port*')] = '0.1';
-kl.symbols[nameKlToJs('*porters*')] = 'Robert Koeninger';
-kl.symbols[nameKlToJs('*stinput*')] = ''; // TODO: console
-kl.symbols[nameKlToJs('*stoutput*')] = ''; // TODO: console
-kl.symbols[nameKlToJs('*sterror*')] = ''; // TODO: console
-kl.symbols[nameKlToJs('*home-directory*')] = ''; // TODO: current url
-kl.fns[nameKlToJs('if')] = (c, x, y) => asJsBool(c) ? x : y;
-kl.fns[nameKlToJs('and')] = (x, y) => asKlBool(asJsBool(x) && asJsBool(y));
-kl.fns[nameKlToJs('or')] = (x, y) => asKlBool(asJsBool(x) || asJsBool(y));
-kl.fns[nameKlToJs('+')] = (x, y) => asKlNumber(x) + asKlNumber(y);
-kl.fns[nameKlToJs('-')] = (x, y) => asKlNumber(x) - asKlNumber(y);
-kl.fns[nameKlToJs('*')] = (x, y) => asKlNumber(x) * asKlNumber(y);
-kl.fns[nameKlToJs('/')] = (x, y) => asKlNumber(x) / asKlNumber(y);
-kl.fns[nameKlToJs('<')] = (x, y) => asKlBool(x < y);
-kl.fns[nameKlToJs('>')] = (x, y) => asKlBool(x > y);
-kl.fns[nameKlToJs('<=')] = (x, y) => asKlBool(x <= y);
-kl.fns[nameKlToJs('>=')] = (x, y) => asKlBool(x >= y);
-kl.fns[nameKlToJs('=')] = (x, y) => asKlBool(eq(x, y));
-kl.fns[nameKlToJs('number?')] = x => asKlBool(isNumber(x));
-kl.fns[nameKlToJs('cons')] = (x, y) => new Cons(x, y);
-kl.fns[nameKlToJs('cons?')] = x => asKlBool(isCons(x));
-kl.fns[nameKlToJs('hd')] = x => x.hd;
-kl.fns[nameKlToJs('tl')] = x => x.tl;
-kl.fns[nameKlToJs('set')] = (sym, x) => kl.symbols[nameKlToJs(sym.name)] = x;
-kl.fns[nameKlToJs('value')] = sym => kl.symbols[nameKlToJs(sym.name)];
-kl.fns[nameKlToJs('intern')] = x => new Sym(asKlString(x));
-kl.fns[nameKlToJs('string?')] = x => asKlBool(isString(x));
-kl.fns[nameKlToJs('str')] = x => toStr(x);
-kl.fns[nameKlToJs('pos')] = (s, x) => s[x];
-kl.fns[nameKlToJs('tlstr')] = s => asKlString(s).slice(1);
-kl.fns[nameKlToJs('cn')] = (x, y) => asKlString(x) + asKlString(y);
-kl.fns[nameKlToJs('string->n')] = x => x.charCodeAt(0);
-kl.fns[nameKlToJs('n->string')] = x => String.fromCharCode(x);
-kl.fns[nameKlToJs('absvector')] = n => new Array(n).fill(null);
-kl.fns[nameKlToJs('<-address')] = (a, i) => a[i];
-kl.fns[nameKlToJs('address->')] = (a, i, x) => { a[i] = x; return a; };
-kl.fns[nameKlToJs('absvector?')] = a => asKlBool(isArray(a));
-kl.fns[nameKlToJs('type')] = (x, _) => x;
-kl.fns[nameKlToJs('eval-kl')] = x => eval(translate(x));
-kl.fns[nameKlToJs('simple-error')] = x => { throw new Error(asKlString(x)); };
-kl.fns[nameKlToJs('error-to-string')] = x => asKlError(x).message;
-kl.fns[nameKlToJs('get-time')] = x => {
+kl.defun = function(name, f) {
+    f.klName = name;
+    kl.fns[nameKlToJs(name)] = f;
+    return f;
+};
+kl.isSymbolDefined = name => kl.symbols.hasOwnProperty(nameKlToJs(name));
+kl.set = (name, value) => kl.symbols[nameKlToJs(name)] = value;
+kl.value = name => kl.isSymbolDefined(name) ? kl.symbols[nameKlToJs(name)] : err('symbol not defined');
+
+//
+// Set primitive functions and values
+//
+
+kl.set('*language*', 'JavaScript');
+kl.set('*implementation*', getImplementation());
+kl.set('*release*', getRelease());
+kl.set('*os*', getOperatingSystem());
+kl.set('*port*', '0.1');
+kl.set('*porters*', 'Robert Koeninger');
+kl.set('*stinput*', ''); // TODO: console
+kl.set('*stoutput*', ''); // TODO: console
+kl.set('*sterror*', ''); // TODO: console
+kl.set('*home-directory*', ''); // TODO: current url
+kl.defun('if', (c, x, y) => asJsBool(c) ? x : y);
+kl.defun('and', (x, y) => asKlBool(asJsBool(x) && asJsBool(y)));
+kl.defun('or', (x, y) => asKlBool(asJsBool(x) || asJsBool(y)));
+kl.defun('+', (x, y) => asKlNumber(x) + asKlNumber(y));
+kl.defun('-', (x, y) => asKlNumber(x) - asKlNumber(y));
+kl.defun('*', (x, y) => asKlNumber(x) * asKlNumber(y));
+kl.defun('/', (x, y) => asKlNumber(x) / asKlNumber(y));
+kl.defun('<', (x, y) => asKlBool(x < y));
+kl.defun('>', (x, y) => asKlBool(x > y));
+kl.defun('<=', (x, y) => asKlBool(x <= y));
+kl.defun('>=', (x, y) => asKlBool(x >= y));
+kl.defun('=', (x, y) => asKlBool(eq(x, y)));
+kl.defun('number?', x => asKlBool(isNumber(x)));
+kl.defun('cons', (x, y) => new Cons(x, y));
+kl.defun('cons?', x => asKlBool(isCons(x)));
+kl.defun('hd', x => asKlCons(x).hd);
+kl.defun('tl', x => asKlCons(x).tl);
+kl.defun('set', (sym, x) => kl.set(asKlSymbol(sym).name, asKlValue(x)));
+kl.defun('value', sym => kl.value(asKlSymbol(sym).name));
+kl.defun('intern', x => new Sym(asKlString(x)));
+kl.defun('string?', x => asKlBool(isString(x)));
+kl.defun('str', x => toStr(asKlValue(x)));
+kl.defun('pos', (s, x) => asKlString(s)[asIndexOf(x, s)]);
+kl.defun('tlstr', s => asKlString(s).slice(1));
+kl.defun('cn', (x, y) => asKlString(x) + asKlString(y));
+kl.defun('string->n', x => asKlString(x).charCodeAt(0));
+kl.defun('n->string', x => String.fromCharCode(asKlString(x)));
+kl.defun('absvector', n => new Array(n).fill(null));
+kl.defun('<-address', (a, i) => asKlVector(a)[asIndexOf(i, a)]);
+kl.defun('address->', (a, i, x) => { asKlVector(a)[asIndexOf(i, a)] = asKlValue(x); return a; });
+kl.defun('absvector?', a => asKlBool(isArray(a)));
+kl.defun('type', (x, _) => x);
+kl.defun('eval-kl', x => eval(translate(asKlValue(x))));
+kl.defun('simple-error', x => { throw new Error(asKlString(x)); });
+kl.defun('error-to-string', x => asKlError(x).message);
+kl.defun('get-time', x => {
     if (x.name === 'unix') return new Date().getTime();
     if (x.name === 'run') return new Date().getTime() - kl.startTime;
-    throw new Error("get-time only accepts 'unix or 'run");
-};
-// TODO: open
-// TODO: close
-// TODO: read-byte
-// TODO: write-byte
+    err("get-time only accepts 'unix or 'run");
+});
 
-// TODO: kl name and inline template can be set as properties on function objects
+// TODO: implement these:
+kl.defun('open', (path, d) => err('not implemented'));
+kl.defun('close', s => err('not implemented'));
+kl.defun('read-byte', s => err('not implemented'));
+kl.defun('write-byte', (s, b) => err('not implemented'));

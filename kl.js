@@ -279,6 +279,13 @@ function nameJsToKl(name) {
 function ifExpr(condition, consequent, alternative) {
     return `asJsBool(${condition})?(${consequent}):(${alternative})`;
 }
+concatAll = lists => lists.reduce((x, y) => x.concat(y), []);
+function flattenDo(expr) {
+    if (isCons(expr) && isSymbol(expr.hd) && expr.hd.name === 'do') {
+        return concatAll(consToArray(expr.tl).map(flattenDo));
+    }
+    return [expr];
+}
 // Value{Num, Str, Sym, Cons} -> JsString
 function translate(code, context) {
     if (!context) context = new Context();
@@ -326,10 +333,10 @@ function translate(code, context) {
         var varName = code.tl.hd.name;
         var value = translate(code.tl.tl.hd, context);
         var body = translate(code.tl.tl.tl.hd, context.pushLocal(varName));
-        return `function () {
+        return `(function () {
                   var ${nameKlToJs(varName)} = ${value};
                   return ${body};
-                }()`;
+                })()`;
     }
     if (consLength(code) === 4 && eq(code.hd, new Sym('defun'))) {
         var defunName = code.tl.hd.name;
@@ -355,16 +362,23 @@ function translate(code, context) {
     if (consLength(code) === 3 && eq(code.hd, new Sym('trap-error'))) {
         var body = translate(code.tl.hd, context);
         var handler = translate(code.tl.tl.hd, context);
-        return `function () {
+        return `(function () {
                   try {
                     return ${body};
                   } catch ($err) {
                     return ${handler}($err);
                   }
-                }()`;
+                })()`;
     }
-
-    // TODO: flatten do expressions into semicolon separated sequence
+    if (eq(code.hd, new Sym('do'))) {
+        var statements = flattenDo(code).map(expr => translate(expr, context));
+        var butLastStatements = statements.slice(0, statements.length - 1).join(';\n');
+        var lastStatement = statements[statements.length - 1];
+        return `(function () {
+                  ${butLastStatements};
+                  return ${lastStatement};
+                })()`;
+    }
 
     var translatedArgs = consToArray(code.tl).map((expr) => translate(expr, context)).join();
 
@@ -378,10 +392,10 @@ function translate(code, context) {
             var statements = consToArray(code.tl);
             var butLastStatements = statements.slice(0, statements.length - 1).join(';');
             var lastStatement = statements[statements.length - 1];
-            return `function () {
+            return `(function () {
                       ${butLastStatements};
                       return asKlValue(${lastStatement});
-                    }()`;
+                    })()`;
         }
 
         // JS-namespace function call
@@ -446,7 +460,7 @@ kl.fns[nameKlToJs('tlstr')] = function (s) { return s.slice(1); };
 kl.fns[nameKlToJs('cn')] = function (x, y) { return "" + x + y; };
 kl.fns[nameKlToJs('string->n')] = function (x) { return x.charCodeAt(0); };
 kl.fns[nameKlToJs('n->string')] = function (x) { return String.fromCharCode(x); };
-kl.fns[nameKlToJs('absvector')] = function (n) { var a = []; a.length = n; return a; };
+kl.fns[nameKlToJs('absvector')] = function (n) { return new Array(n).fill(null); };
 kl.fns[nameKlToJs('<-address')] = function (a, i) { return a[i]; };
 kl.fns[nameKlToJs('address->')] = function (a, i, x) { a[i] = x; return a; };
 kl.fns[nameKlToJs('absvector?')] = function (a) { return asKlBool(a.constructor === Array); };

@@ -181,15 +181,21 @@ function Context() {
         return context;
     }
 }
-function Thunk(run) {
-    this.run = run;
+class Thunk {
+    constructor(run) {
+        this.run = run;
+    }
 }
-function Sym(name) {
-    this.name = name;
+class Sym {
+    constructor(name) {
+        this.name = name;
+    }
 }
-function Cons(hd, tl) {
-    this.hd = hd;
-    this.tl = tl;
+class Cons {
+    constructor(hd, tl) {
+        this.hd = hd;
+        this.tl = tl;
+    }
 }
 isSymbol   = x => x && x.constructor === Sym;
 isCons     = x => x && x.constructor === Cons;
@@ -229,10 +235,28 @@ function asJsBool(x) {
         if (x.name === 'true') return true;
         if (x.name === 'false') return false;
     }
-    throw new Error("not a boolean");
+    throw new Error('not a boolean');
 }
 function asKlBool(x) {
     return x ? new Sym('true') : new Sym('false');
+}
+function asKlNumber(x) {
+    if (isNumber(x)) {
+        return x;
+    }
+    throw new Error('not a number');
+}
+function asKlString(x) {
+    if (isString(x)) {
+        return x;
+    }
+    throw new Error('not a string');
+}
+function asKlError(x) {
+    if (isError(x)) {
+        return x;
+    }
+    throw new Error('not an error');
 }
 function asKlValue(x) {
     if (x === true) return new Sym('true');
@@ -435,42 +459,42 @@ kl.symbols[nameKlToJs('*stinput*')] = ''; // TODO: console
 kl.symbols[nameKlToJs('*stoutput*')] = ''; // TODO: console
 kl.symbols[nameKlToJs('*sterror*')] = ''; // TODO: console
 kl.symbols[nameKlToJs('*home-directory*')] = ''; // TODO: current url
-kl.fns[nameKlToJs('if')] = function (c, x, y) { return c ? x : y; };
-kl.fns[nameKlToJs('and')] = function (x, y) { return asKlBool(x && y); };
-kl.fns[nameKlToJs('or')] = function (x, y) { return asKlBool(x || y); };
-kl.fns[nameKlToJs('+')] = function (x, y) { return x + y; };
-kl.fns[nameKlToJs('-')] = function (x, y) { return x - y; };
-kl.fns[nameKlToJs('*')] = function (x, y) { return x * y; };
-kl.fns[nameKlToJs('/')] = function (x, y) { return x / y; };
-kl.fns[nameKlToJs('<')] = function (x, y) { return asKlBool(x < y); };
-kl.fns[nameKlToJs('>')] = function (x, y) { return asKlBool(x > y); };
-kl.fns[nameKlToJs('<=')] = function (x, y) { return asKlBool(x <= y); };
-kl.fns[nameKlToJs('>=')] = function (x, y) { return asKlBool(x >= y); };
-kl.fns[nameKlToJs('=')] = function (x, y) { return asKlBool(eq(x, y)); };
-kl.fns[nameKlToJs('number?')] = function (x) { return asKlBool(isNumber(x)); };
-kl.fns[nameKlToJs('cons')] = function (x, y) { return new Cons(x, y); };
-kl.fns[nameKlToJs('cons?')] = function (x) { return asKlBool(isCons(x)); };
-kl.fns[nameKlToJs('hd')] = function (x) { return x.hd; };
-kl.fns[nameKlToJs('tl')] = function (x) { return x.tl; };
-kl.fns[nameKlToJs('set')] = function (sym, x) { return kl.symbols[nameKlToJs(sym.name)] = x; };
-kl.fns[nameKlToJs('value')] = function (sym) { return kl.symbols[nameKlToJs(sym.name)]; };
-kl.fns[nameKlToJs('intern')] = function (x) { return new Sym(x); };
-kl.fns[nameKlToJs('string?')] = function (x) { return asKlBool(isString(x)); };
+kl.fns[nameKlToJs('if')] = (c, x, y) => asJsBool(c) ? x : y;
+kl.fns[nameKlToJs('and')] = (x, y) => asKlBool(asJsBool(x) && asJsBool(y));
+kl.fns[nameKlToJs('or')] = (x, y) => asKlBool(asJsBool(x) || asJsBool(y));
+kl.fns[nameKlToJs('+')] = (x, y) => asKlNumber(x) + asKlNumber(y);
+kl.fns[nameKlToJs('-')] = (x, y) => asKlNumber(x) - asKlNumber(y);
+kl.fns[nameKlToJs('*')] = (x, y) => asKlNumber(x) * asKlNumber(y);
+kl.fns[nameKlToJs('/')] = (x, y) => asKlNumber(x) / asKlNumber(y);
+kl.fns[nameKlToJs('<')] = (x, y) => asKlBool(x < y);
+kl.fns[nameKlToJs('>')] = (x, y) => asKlBool(x > y);
+kl.fns[nameKlToJs('<=')] = (x, y) => asKlBool(x <= y);
+kl.fns[nameKlToJs('>=')] = (x, y) => asKlBool(x >= y);
+kl.fns[nameKlToJs('=')] = (x, y) => asKlBool(eq(x, y));
+kl.fns[nameKlToJs('number?')] = x => asKlBool(isNumber(x));
+kl.fns[nameKlToJs('cons')] = (x, y) => new Cons(x, y);
+kl.fns[nameKlToJs('cons?')] = x => asKlBool(isCons(x));
+kl.fns[nameKlToJs('hd')] = x => x.hd;
+kl.fns[nameKlToJs('tl')] = x => x.tl;
+kl.fns[nameKlToJs('set')] = (sym, x) => kl.symbols[nameKlToJs(sym.name)] = x;
+kl.fns[nameKlToJs('value')] = sym => kl.symbols[nameKlToJs(sym.name)];
+kl.fns[nameKlToJs('intern')] = x => new Sym(asKlString(x));
+kl.fns[nameKlToJs('string?')] = x => asKlBool(isString(x));
 kl.fns[nameKlToJs('str')] = x => toStr(x);
-kl.fns[nameKlToJs('pos')] = function (s, x) { return s[x]; };
-kl.fns[nameKlToJs('tlstr')] = function (s) { return s.slice(1); };
-kl.fns[nameKlToJs('cn')] = function (x, y) { return "" + x + y; };
-kl.fns[nameKlToJs('string->n')] = function (x) { return x.charCodeAt(0); };
-kl.fns[nameKlToJs('n->string')] = function (x) { return String.fromCharCode(x); };
-kl.fns[nameKlToJs('absvector')] = function (n) { return new Array(n).fill(null); };
-kl.fns[nameKlToJs('<-address')] = function (a, i) { return a[i]; };
-kl.fns[nameKlToJs('address->')] = function (a, i, x) { a[i] = x; return a; };
-kl.fns[nameKlToJs('absvector?')] = function (a) { return asKlBool(a.constructor === Array); };
-kl.fns[nameKlToJs('type')] = function (x, t) { return x; };
-kl.fns[nameKlToJs('eval-kl')] = function (x) { return eval(translate(x)); };
-kl.fns[nameKlToJs('simple-error')] = function (x) { throw new Error(x); };
-kl.fns[nameKlToJs('error-to-string')] = function (x) { return x.message; };
-kl.fns[nameKlToJs('get-time')] = function (x) {
+kl.fns[nameKlToJs('pos')] = (s, x) => s[x];
+kl.fns[nameKlToJs('tlstr')] = s => asKlString(s).slice(1);
+kl.fns[nameKlToJs('cn')] = (x, y) => asKlString(x) + asKlString(y);
+kl.fns[nameKlToJs('string->n')] = x => x.charCodeAt(0);
+kl.fns[nameKlToJs('n->string')] = x => String.fromCharCode(x);
+kl.fns[nameKlToJs('absvector')] = n => new Array(n).fill(null);
+kl.fns[nameKlToJs('<-address')] = (a, i) => a[i];
+kl.fns[nameKlToJs('address->')] = (a, i, x) => { a[i] = x; return a; };
+kl.fns[nameKlToJs('absvector?')] = a => asKlBool(isArray(a));
+kl.fns[nameKlToJs('type')] = (x, _) => x;
+kl.fns[nameKlToJs('eval-kl')] = x => eval(translate(x));
+kl.fns[nameKlToJs('simple-error')] = x => { throw new Error(asKlString(x)); };
+kl.fns[nameKlToJs('error-to-string')] = x => asKlError(x).message;
+kl.fns[nameKlToJs('get-time')] = x => {
     if (x.name === 'unix') return new Date().getTime();
     if (x.name === 'run') return new Date().getTime() - kl.startTime;
     throw new Error("get-time only accepts 'unix or 'run");

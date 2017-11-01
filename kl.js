@@ -334,6 +334,13 @@ function flattenDo(expr) {
     }
     return [expr];
 }
+
+// TODO: convert Statements -> ExpressionContext with
+//       `function(){ ${butLastStmts.join(';')}; return ${lastStmt}; }()`
+
+// TODO: convert Expression -> StatementContext with
+//       `(${expr});`
+
 // Value{Num, Str, Sym, Cons} -> JsString
 function translate(code, context) {
     if (isArray(code) || isFunction(code) || isError(code) || isStream(code)) {
@@ -383,6 +390,40 @@ function translate(code, context) {
         //       a new function scope isn't necessary for unique variables
 
         // TODO: flatten immeditaley nested let's into a single iife
+
+        // TODO: actually, since there are no loops, uniquifying local
+        //       variable names should be enough to deal with
+        //       nested and parallel re-definitions of the same local/parameter
+
+        /*
+            (let X 1 (let X 2 (let X 3 X)))
+
+            (function () {
+                var X = 1;
+                return (function () {
+                    var X = 2;
+                    return (function () {
+                        var X = 3;
+                        return X;
+                    })();
+                })();
+            })()
+
+            (function () {
+                var X$1, X$2, X$3;
+                X$1 = 1;
+                X$2 = 2;
+                X$3 = 3;
+                return X$3;
+            })()
+
+            $do = () => arguments.last;
+
+            (function () {
+                var X$1, X$2, X$3;
+                return $do(X$1 = 1, X$2 = 2, X$3 = 3, X$3);
+            })()
+         */
         var varName = code.tl.hd.name;
         var value = translate(code.tl.tl.hd, context);
         var body = translate(code.tl.tl.tl.hd, context.pushLocal(varName));
@@ -432,9 +473,13 @@ function translate(code, context) {
                   return ${lastStatement};
                 })()`;
     }
+
+    // Inlined global symbol assign
     if (consLength(code) === 3 && eq(code.hd, new Sym('set')) && isSymbol(code.tl.hd) && !context.locals.includes(code.tl.hd.name)) {
         return `kl.symbols.${nameKlToJs(code.tl.hd.name)} = ${translate(code.tl.tl.hd, context)}`;
     }
+
+    // Inlined global symbol retrieve
     if (consLength(code) === 2 && eq(code.hd, new Sym('value')) && isSymbol(code.tl.hd) && !context.locals.includes(code.tl.hd.name) && kl.isSymbolDefined(code.tl.hd.name)) {
         return `kl.symbols.${nameKlToJs(code.tl.hd.name)}`;
     }

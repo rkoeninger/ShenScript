@@ -191,28 +191,38 @@ function Cons(hd, tl) {
     this.hd = hd;
     this.tl = tl;
 }
-function isSymbol(x) { return x instanceof Sym; }
-function isCons(x) { return x instanceof Cons; }
-function isNumber(x) { return typeof x === 'number'; }
-function isString(x) { return typeof x === 'string'; }
-function isFunction(x) { return typeof x === 'function'; }
+isSymbol   = x => x && x.constructor === Sym;
+isCons     = x => x && x.constructor === Cons;
+isArray    = x => x && x.constructor === Array;
+isError    = x => x && x.constructor === Error;
+isNumber   = x => typeof x === 'number';
+isString   = x => typeof x === 'string';
+isFunction = x => typeof x === 'function';
+// TODO: isStream = x => x && x.constructor === Stream;
+// streams have identity equality
+// toStr(x: Stream) => `<Stream ${name/path/url}>`
 function eq(x, y) {
-    if (isSymbol(x) && isSymbol(y)) {
-        return x.name === y.name;
-    }
-    if (isNumber(x) && isNumber(y)) {
-        return x === y;
-    }
-    if (isString(x) && isString(y)) {
-        return x === y;
-    }
-    if (isCons(x) && isCons(y)) {
-        return eq(x.hd, y.hd) && eq(x.tl, y.tl);
-    }
-    if (isFunction(x) && isFunction(y)) {
-        return x === y;
+    if (x === y) return true;
+    if (isSymbol(x) && isSymbol(y)) return x.name === y.name;
+    if (isCons(x) && isCons(y)) return eq(x.hd, y.hd) && eq(x.tl, y.tl);
+    if (isArray(x) && isArray(y)) {
+        if (x.length !== y.length) return false;
+        for (var i = 0; i < x.length; ++i) {
+            if (!eq(x[i], y[i])) return false;
+        }
+        return true;
     }
     return false;
+}
+function toStr(x) {
+    if (x === null) return '[]';
+    if (isSymbol(x)) return x.name;
+    if (isString(x)) return `"${x}"`;
+    if (isCons(x)) return `[${consToArray(x).map(toStr).join(' ')}]`;
+    if (isFunction(x)) return `<Function ${x.name}>`;
+    if (isArray(x)) return `<Vector ${x.length}>`;
+    if (isError(x)) return `<Error "${x.message}">`;
+    return '' + x;
 }
 function asJsBool(x) {
     if (isSymbol(x)) {
@@ -266,13 +276,9 @@ function nameJsToKl(name) {
     }
     return result;
 }
-
-// TODO: include current function name in context object
-
 function ifExpr(condition, consequent, alternative) {
     return `asJsBool(${condition})?(${consequent}):(${alternative})`;
 }
-
 // Value{Num, Str, Sym, Cons} -> JsString
 function translate(code, context) {
     if (!context) context = new Context();
@@ -434,7 +440,7 @@ kl.fns[nameKlToJs('set')] = function (sym, x) { return kl.symbols[nameKlToJs(sym
 kl.fns[nameKlToJs('value')] = function (sym) { return kl.symbols[nameKlToJs(sym.name)]; };
 kl.fns[nameKlToJs('intern')] = function (x) { return new Sym(x); };
 kl.fns[nameKlToJs('string?')] = function (x) { return asKlBool(isString(x)); };
-kl.fns[nameKlToJs('str')] = function (x) { return "" + x; };
+kl.fns[nameKlToJs('str')] = x => toStr(x);
 kl.fns[nameKlToJs('pos')] = function (s, x) { return s[x]; };
 kl.fns[nameKlToJs('tlstr')] = function (s) { return s.slice(1); };
 kl.fns[nameKlToJs('cn')] = function (x, y) { return "" + x + y; };

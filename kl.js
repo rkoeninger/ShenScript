@@ -330,6 +330,8 @@ function translate(code, context) {
     if (consLength(code) === 4 && eq(code.hd, new Sym('let'))) {
         // TODO: improve scoping on let bindings
         //       a new function scope isn't necessary for unique variables
+
+        // TODO: flatten immeditaley nested let's into a single iife
         var varName = code.tl.hd.name;
         var value = translate(code.tl.tl.hd, context);
         var body = translate(code.tl.tl.tl.hd, context.pushLocal(varName));
@@ -390,7 +392,7 @@ function translate(code, context) {
                 return 'null';
             }
             var statements = consToArray(code.tl);
-            var butLastStatements = statements.slice(0, statements.length - 1).join(';');
+            var butLastStatements = statements.slice(0, statements.length - 1).join(';\n');
             var lastStatement = statements[statements.length - 1];
             return `(function () {
                       ${butLastStatements};

@@ -1,3 +1,5 @@
+// TODO: https://github.com/lukehoban/es6features
+
 function getOperatingSystem() {
     if (navigator) {
         if (navigator.platform.toLowerCase() === 'win32') return "Windows";
@@ -293,6 +295,7 @@ function nameKlToJs(name) {
     for (var i = 0; i < name.length; ++i) {
         switch (name[i]) {
             case '$': { result += '$do'; break; }
+            case '.': { result += '$dt'; break; }
             case '+': { result += "$pl"; break; }
             case '-': { result += "$mi"; break; }
             case '*': { result += "$st"; break; }
@@ -311,6 +314,7 @@ function nameJsToKl(name) {
     for (var i = 0; i < name.length;) {
         switch (name.slice(i, i + 3)) {
             case '$do': { result += '$'; i += 3; break; }
+            case '$dt': { result += '.'; i += 3; break; }
             case '$pl': { result += '+'; i += 3; break; }
             case '$mi': { result += '-'; i += 3; break; }
             case '$st': { result += '*'; i += 3; break; }
@@ -324,22 +328,24 @@ function nameJsToKl(name) {
     }
     return result;
 }
-function ifExpr(condition, consequent, alternative) {
-    return `asJsBool(${condition})?(${consequent}):(${alternative})`;
-}
+ifExpr = (c, x, y) => `asJsBool(${c})?(${x}):(${y})`;
 concatAll = lists => lists.reduce((x, y) => x.concat(y), []);
-function flattenDo(expr) {
-    if (isCons(expr) && isSymbol(expr.hd) && expr.hd.name === 'do') {
-        return concatAll(consToArray(expr.tl).map(flattenDo));
-    }
-    return [expr];
-}
+isDoExpr = expr => isCons(expr) && isSymbol(expr.hd) && expr.hd.name === 'do';
+flattenDo = expr => isDoExpr(expr) ? concatAll(consToArray(expr.tl).map(flattenDo)) : [expr];
+
+// TODO: use fn.length to do partial application/overapplication
 
 // TODO: convert Statements -> ExpressionContext with
 //       `function(){ ${butLastStmts.join(';')}; return ${lastStmt}; }()`
 
 // TODO: convert Expression -> StatementContext with
 //       `(${expr});`
+
+// function convertType(typedExpr, targetType) {
+//     if (typedExpr.type === 'js.bool' && targetType === 'kl.bool') return {expr: `asKlBool(${typedExpr})`, type: targetType};
+//     if (typedExpr.type === 'kl.bool' && targetType === 'js.bool') return {expr: `asJsBool(${typedExpr})`, type: targetType};
+//     return expr;
+// }
 
 // Value{Num, Str, Sym, Cons} -> JsString
 function translate(code, context) {
@@ -394,6 +400,8 @@ function translate(code, context) {
         // TODO: actually, since there are no loops, uniquifying local
         //       variable names should be enough to deal with
         //       nested and parallel re-definitions of the same local/parameter
+
+        // TODO: actually, just use let/const
 
         /*
             (let X 1 (let X 2 (let X 3 X)))
@@ -475,12 +483,21 @@ function translate(code, context) {
     }
 
     // Inlined global symbol assign
-    if (consLength(code) === 3 && eq(code.hd, new Sym('set')) && isSymbol(code.tl.hd) && !context.locals.includes(code.tl.hd.name)) {
+    if (consLength(code) === 3 &&
+        eq(code.hd, new Sym('set')) &&
+        isSymbol(code.tl.hd) &&
+        !context.locals.includes(code.tl.hd.name)) {
+
         return `kl.symbols.${nameKlToJs(code.tl.hd.name)} = ${translate(code.tl.tl.hd, context)}`;
     }
 
     // Inlined global symbol retrieve
-    if (consLength(code) === 2 && eq(code.hd, new Sym('value')) && isSymbol(code.tl.hd) && !context.locals.includes(code.tl.hd.name) && kl.isSymbolDefined(code.tl.hd.name)) {
+    if (consLength(code) === 2 &&
+        eq(code.hd, new Sym('value')) &&
+        isSymbol(code.tl.hd) &&
+        !context.locals.includes(code.tl.hd.name) &&
+        kl.isSymbolDefined(code.tl.hd.name)) {
+
         return `kl.symbols.${nameKlToJs(code.tl.hd.name)}`;
     }
 
@@ -534,7 +551,7 @@ kl = {
     symbols: {},
     fns: {}
 };
-kl.defun = function(name, f) {
+kl.defun = (name, f) => {
     f.klName = name;
     kl.fns[nameKlToJs(name)] = f;
     return f;
@@ -542,6 +559,31 @@ kl.defun = function(name, f) {
 kl.isSymbolDefined = name => kl.symbols.hasOwnProperty(nameKlToJs(name));
 kl.set = (name, value) => kl.symbols[nameKlToJs(name)] = value;
 kl.value = name => kl.isSymbolDefined(name) ? kl.symbols[nameKlToJs(name)] : err('symbol not defined');
+
+// TODO: all functions need to have arity property set
+kl.app = function (f, ...args) {
+
+    // Partial application
+    if (args.length < f.arity) {
+        var pf = (...moreArgs) => app(f, args.concat(moreArgs));
+        pf.arity = f.arity - args.length;
+        return pf;
+    }
+
+    // Curried application
+    if (args.length > f.arity) return app(f.apply(args.slice(0, f.length)), args.slice(f.length));
+
+    // Normal application
+    return f.apply(args);
+};
+
+// TODO: insert applications of this into HEAD position
+//       calls in both versions of functions,
+//       and TAIL position for HEAD-version functions.
+kl.runTrampolines = x => {
+    while (isThunk(x)) x = x.run();
+    return x;
+};
 
 //
 // Set primitive functions and values
@@ -590,7 +632,7 @@ kl.defun('address->', (a, i, x) => { asKlVector(a)[asIndexOf(i, a)] = asKlValue(
 kl.defun('absvector?', a => asKlBool(isArray(a)));
 kl.defun('type', (x, _) => x);
 kl.defun('eval-kl', x => eval(translate(asKlValue(x))));
-kl.defun('simple-error', x => { throw new Error(asKlString(x)); });
+kl.defun('simple-error', x => err(asKlString(x)));
 kl.defun('error-to-string', x => asKlError(x).message);
 kl.defun('get-time', x => {
     if (x.name === 'unix') return new Date().getTime();

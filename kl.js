@@ -1,3 +1,5 @@
+'use strict';
+
 // TODO: https://github.com/lukehoban/es6features
 
 function getOperatingSystem() {
@@ -137,6 +139,7 @@ function consLength(x) {
     return length;
 }
 function parse(state) {
+    if (isString(state)) state = new State(state);
     skipWhitespace(state);
     if (isDone(state)) {
         throw new Error('unexpected end of input');
@@ -168,22 +171,53 @@ function State(text) {
 }
 function Context() {
     this.locals = [];
-    this.unique = {};
     this.scopeName = null;
-    this.pushLocal = function (name) {
-        context = new Context();
-        context.locals = this.locals.slice(0);
+    this.position = 'tail';
+
+    this.clone = function () {
+        const x = new Context();
+        x.locals = this.locals.slice(0);
+        x.scopeName = this.scopeName;
+        x.position = this.position;
+        return x;
+    };
+
+    this.let = function (name) {
+        const context = this.clone();
         context.locals.push(name);
-        context.unique = this.unique; // TODO: copy
-        context.scopeName = this.scopeName;
         return context;
     };
-    this.putLocals = function (names, scopeName) {
-        context = new Context();
-        context.locals = names.slice(0);
-        context.unique = this.unique; // TODO: copy
-        context.scopeName = scopeName || null;
+    this.lambda = function (name) {
+        const context = this.clone();
+        context.locals.push(name);
+        context.position = 'tail';
         return context;
+    };
+    this.defun = function (name, params) {
+        const context = this.clone();
+        context.locals = params.slice(0);
+        context.scopeName = name || null;
+        context.position = 'tail';
+        return context;
+    };
+    this.inHead = function () {
+        const context = this.clone();
+        context.position = 'head';
+        return context;
+    };
+    this.inTail = function () {
+        const context = this.clone();
+        context.position = 'tail';
+        return context;
+    };
+    this.isHead = function () {
+        return this.position === 'head';
+    };
+    this.isTail = function () {
+        return this.position === 'tail';
+    };
+    this.invoke = function () {
+        return this.isHead() ? 'Kl.headCall' : 'Kl.tailCall';
     }
 }
 
@@ -194,16 +228,21 @@ function Context() {
  * Empty              null
  * Number             number
  * String             string
- * Symbol             Sym
- * Cons               Cons
  * Function           function
  * AbsVector          array
+ * Symbol             Sym
+ * Cons               Cons
  * Stream             Stream
  */
 
 class Thunk {
-    constructor(run) {
-        this.run = run;
+    constructor(f, args) {
+        this.f = f;
+        this.args = args;
+    }
+
+    run() {
+        return this.f.apply(null, this.args);
     }
 }
 class Sym {
@@ -222,15 +261,16 @@ class Stream {
         this.name = name;
     }
 }
-consoleStream = new Stream('console');
-isSymbol   = x => x && x.constructor === Sym;
-isCons     = x => x && x.constructor === Cons;
-isArray    = x => x && x.constructor === Array;
-isError    = x => x && x.constructor === Error;
-isStream   = x => x && x.constructor === Stream;
-isNumber   = x => typeof x === 'number';
-isString   = x => typeof x === 'string';
-isFunction = x => typeof x === 'function';
+var consoleStream = new Stream('console');
+var isThunk    = x => x && x.constructor === Thunk;
+var isSymbol   = x => x && x.constructor === Sym;
+var isCons     = x => x && x.constructor === Cons;
+var isArray    = x => x && x.constructor === Array;
+var isError    = x => x && x.constructor === Error;
+var isStream   = x => x && x.constructor === Stream;
+var isNumber   = x => typeof x === 'number';
+var isString   = x => typeof x === 'string';
+var isFunction = x => typeof x === 'function';
 function eq(x, y) {
     if (x === y) return true;
     if (isSymbol(x) && isSymbol(y)) return x.name === y.name;
@@ -262,16 +302,16 @@ function asJsBool(x) {
     }
     throw new Error('not a boolean');
 }
-err = x => { throw new Error(x); };
-asKlBool = x => new Sym(x ? 'true' : 'false');
-asKlNumber = x => isNumber(x) ? x : err('not a number');
-asKlString = x => isString(x) ? x : err('not a string');
-asKlSymbol = x => isSymbol(x) ? x : err('not a symbol');
-asKlVector = x => isArray(x) ? x : err('not an absvector');
-asKlCons = x => isCons(x) ? x : err('not a cons');
-asKlError = x => isError(x) ? x : err('not an error');
-asKlStream = x => isStream(x) ? x : err('not a stream');
-asKlFunction = x => isFunction(x) ? x : err('not a function');
+var err = x => { throw new Error(x); };
+var asKlBool = x => new Sym(x ? 'true' : 'false');
+var asKlNumber = x => isNumber(x) ? x : err('not a number');
+var asKlString = x => isString(x) ? x : err('not a string');
+var asKlSymbol = x => isSymbol(x) ? x : err('not a symbol');
+var asKlVector = x => isArray(x) ? x : err('not an absvector');
+var asKlCons = x => isCons(x) ? x : err('not a cons');
+var asKlError = x => isError(x) ? x : err('not an error');
+var asKlStream = x => isStream(x) ? x : err('not a stream');
+var asKlFunction = x => isFunction(x) ? x : err('not a function');
 function asIndexOf(i, a) {
     if (isNumber(i)) {
         if (i % 1 === 0) {
@@ -294,44 +334,32 @@ function nameKlToJs(name) {
     var result = "";
     for (var i = 0; i < name.length; ++i) {
         switch (name[i]) {
-            case '$': { result += '$do'; break; }
-            case '.': { result += '$dt'; break; }
+            case '-': { result += "_"; break; }
+            case '_': { result += '$un'; break; }
+            case '$': { result += '$dl'; break; }
+            case '.': { result += '$do'; break; }
             case '+': { result += "$pl"; break; }
-            case '-': { result += "$mi"; break; }
             case '*': { result += "$st"; break; }
             case '/': { result += "$sl"; break; }
             case '<': { result += "$lt"; break; }
             case '>': { result += "$gt"; break; }
+            case '%': { result += "$pe"; break; }
+            case '&': { result += "$am"; break; }
+            case '^': { result += "$ca"; break; }
             case '=': { result += "$eq"; break; }
+            case '!': { result += "$ex"; break; }
             case '?': { result += "$qu"; break; }
             default:  { result += name[i]; break; }
         }
     }
     return result;
 }
-function nameJsToKl(name) {
-    var result = "";
-    for (var i = 0; i < name.length;) {
-        switch (name.slice(i, i + 3)) {
-            case '$do': { result += '$'; i += 3; break; }
-            case '$dt': { result += '.'; i += 3; break; }
-            case '$pl': { result += '+'; i += 3; break; }
-            case '$mi': { result += '-'; i += 3; break; }
-            case '$st': { result += '*'; i += 3; break; }
-            case '$sl': { result += '/'; i += 3; break; }
-            case '$lt': { result += '<'; i += 3; break; }
-            case '$gt': { result += '>'; i += 3; break; }
-            case '$eq': { result += '='; i += 3; break; }
-            case '$qu': { result += '?'; i += 3; break; }
-            default:  { result += name[i]; i++; break; }
-        }
-    }
-    return result;
-}
-ifExpr = (c, x, y) => `asJsBool(${c})?(${x}):(${y})`;
-concatAll = lists => lists.reduce((x, y) => x.concat(y), []);
-isDoExpr = expr => isCons(expr) && isSymbol(expr.hd) && expr.hd.name === 'do';
-flattenDo = expr => isDoExpr(expr) ? concatAll(consToArray(expr.tl).map(flattenDo)) : [expr];
+var ifExpr = (c, x, y) => `asJsBool(${c})?(${x}):(${y})`;
+var concatAll = lists => lists.reduce((x, y) => x.concat(y), []);
+var isDoExpr = expr => isCons(expr) && isSymbol(expr.hd) && expr.hd.name === 'do';
+var flattenDo = expr => isDoExpr(expr) ? concatAll(consToArray(expr.tl).map(flattenDo)) : [expr];
+
+// TODO: track expression types to simplify code
 
 // TODO: use fn.length to do partial application/overapplication
 
@@ -363,14 +391,22 @@ function translate(code, context) {
         return `new Sym("${code.name}")`;
     }
     if (consLength(code) === 3 && eq(code.hd, new Sym('and'))) {
-        var left = translate(code.tl.hd, context);
-        var right = translate(code.tl.tl.hd, context);
+        var left = translate(code.tl.hd, context.inHead());
+        var right = translate(code.tl.tl.hd, context.inHead());
         return `asKlBool(asJsBool(${left}) && asJsBool(${right}))`;
     }
     if (consLength(code) === 3 && eq(code.hd, new Sym('or'))) {
-        var left = translate(code.tl.hd, context);
-        var right = translate(code.tl.tl.hd, context);
+        var left = translate(code.tl.hd, context.inHead());
+        var right = translate(code.tl.tl.hd, context.inHead());
         return `asKlBool(asJsBool(${left}) || asJsBool(${right}))`;
+    }
+
+    // Conditional evaluation
+    if (consLength(code) === 4 && eq(code.hd, new Sym('if'))) {
+        return ifExpr(
+            translate(code.tl.hd, context.inHead()),
+            translate(code.tl.tl.hd, context),
+            translate(code.tl.tl.tl.hd, context));
     }
     if (eq(code.hd, new Sym('cond'))) {
         function condRecur(code) {
@@ -378,19 +414,15 @@ function translate(code, context) {
                 return `kl.fns.${nameKlToJs('simple-error')}("No clause was true")`;
             } else {
                 return ifExpr(
-                    translate(code.hd.hd, context),
+                    translate(code.hd.hd, context.inHead()),
                     translate(code.hd.tl.hd, context),
                     condRecur(code.tl));
             }
         }
         return condRecur(code.tl);
     }
-    if (consLength(code) === 4 && eq(code.hd, new Sym('if'))) {
-        return ifExpr(
-            translate(code.tl.hd, context),
-            translate(code.tl.tl.hd, context),
-            translate(code.tl.tl.tl.hd, context));
-    }
+
+    // Local variable binding
     if (consLength(code) === 4 && eq(code.hd, new Sym('let'))) {
         // TODO: improve scoping on let bindings
         //       a new function scope isn't necessary for unique variables
@@ -433,34 +465,44 @@ function translate(code, context) {
             })()
          */
         var varName = code.tl.hd.name;
-        var value = translate(code.tl.tl.hd, context);
-        var body = translate(code.tl.tl.tl.hd, context.pushLocal(varName));
+        var value = translate(code.tl.tl.hd, context.inHead());
+        var body = translate(code.tl.tl.tl.hd, context.let(varName));
         return `(function () {
-                  var ${nameKlToJs(varName)} = ${value};
+                  const ${nameKlToJs(varName)} = ${value};
                   return ${body};
                 })()`;
     }
+
+    // Global function definition
     if (consLength(code) === 4 && eq(code.hd, new Sym('defun'))) {
         var defunName = code.tl.hd.name;
         var paramNames = consToArray(code.tl.tl.hd).map((expr) => expr.name);
-        var body = translate(code.tl.tl.tl.hd, context.putLocals(paramNames, defunName));
-        return `kl.defun('${defunName}', function (${paramNames.map(nameKlToJs).join()}) {
+        var arity = paramNames.length;
+        var translatedParams = paramNames.map(nameKlToJs).join();
+        var body = translate(code.tl.tl.tl.hd, context.defun(defunName, paramNames));
+        return `kl.defun('${nameKlToJs(defunName)}', ${arity}, function (${translatedParams}) {
                   return ${body};
                 })`;
     }
+
+    // 1-arg anonymous function
     if (consLength(code) === 3 && eq(code.hd, new Sym('lambda'))) {
         var param = nameKlToJs(code.tl.hd.name);
-        var body = translate(code.tl.tl.hd, context.putLocals([code.tl.hd.name]));
+        var body = translate(code.tl.tl.hd, context.lambda(code.tl.hd.name));
         return `function (${param}) {
                   return ${body};
                 }`;
     }
+
+    // 0-arg anonymous function
     if (consLength(code) === 2 && eq(code.hd, new Sym('freeze'))) {
-        var body = translate(code.tl.hd);
+        var body = translate(code.tl.hd, context.inTail());
         return `function () {
                   return ${body};
                 }`;
     }
+
+    // Error handling
     if (consLength(code) === 3 && eq(code.hd, new Sym('trap-error'))) {
         var body = translate(code.tl.hd, context);
         var handler = translate(code.tl.tl.hd, context);
@@ -472,6 +514,8 @@ function translate(code, context) {
                   }
                 })()`;
     }
+
+    // Flattened, sequential, side-effecting expressions
     if (eq(code.hd, new Sym('do'))) {
         var statements = flattenDo(code).map(expr => translate(expr, context));
         var butLastStatements = statements.slice(0, statements.length - 1).join(';\n');
@@ -488,7 +532,7 @@ function translate(code, context) {
         isSymbol(code.tl.hd) &&
         !context.locals.includes(code.tl.hd.name)) {
 
-        return `kl.symbols.${nameKlToJs(code.tl.hd.name)} = ${translate(code.tl.tl.hd, context)}`;
+        return `kl.symbols.${nameKlToJs(code.tl.hd.name)} = ${translate(code.tl.tl.hd, context.inHead())}`;
     }
 
     // Inlined global symbol retrieve
@@ -501,7 +545,7 @@ function translate(code, context) {
         return `kl.symbols.${nameKlToJs(code.tl.hd.name)}`;
     }
 
-    var translatedArgs = consToArray(code.tl).map((expr) => translate(expr, context)).join();
+    var translatedArgs = consToArray(code.tl).map((expr) => translate(expr, context.inHead())).join();
 
     if (isSymbol(code.hd)) {
 
@@ -528,62 +572,88 @@ function translate(code, context) {
         // KL function call
         var name = nameKlToJs(code.hd.name);
         if (context.locals.includes(code.hd.name)) {
-            return `${name}(${translatedArgs})`;
+            return `${context.invoke()}(${name}, [${translatedArgs}])`;
         } else {
-            return `kl.fns.${name}(${translatedArgs})`;
+            return `${context.invoke()}(kl.fns.${name}, [${translatedArgs}])`;
         }
     }
 
     // Application of function value
     var f = translate(code.hd, context);
-    return `asKlFunction(${f})(${translatedArgs})`;
+    return `${context.invoke()}(asKlFunction(${f}), [${translatedArgs}])`;
 }
-
-// TODO: inline template can be set on function object
 
 //
 // Init KL environment
 //
 
-kl = {
-    startTime: new Date().getTime(),
-    uniqueSuffix: 0,
-    symbols: {},
-    fns: {}
-};
-kl.defun = (name, f) => {
-    f.klName = name;
-    kl.fns[nameKlToJs(name)] = f;
-    return f;
-};
-kl.isSymbolDefined = name => kl.symbols.hasOwnProperty(nameKlToJs(name));
-kl.set = (name, value) => kl.symbols[nameKlToJs(name)] = value;
-kl.value = name => kl.isSymbolDefined(name) ? kl.symbols[nameKlToJs(name)] : err('symbol not defined');
-
-// TODO: all functions need to have arity property set
-kl.app = function (f, ...args) {
-
-    // Partial application
-    if (args.length < f.arity) {
-        var pf = (...moreArgs) => app(f, args.concat(moreArgs));
-        pf.arity = f.arity - args.length;
-        return pf;
-    }
-
-    // Curried application
-    if (args.length > f.arity) return app(f.apply(args.slice(0, f.length)), args.slice(f.length));
-
-    // Normal application
-    return f.apply(args);
-};
+// TODO: inline template can be set on function object
 
 // TODO: insert applications of this into HEAD position
 //       calls in both versions of functions,
 //       and TAIL position for HEAD-version functions.
-kl.runTrampolines = x => {
-    while (isThunk(x)) x = x.run();
-    return x;
-};
+
+// TODO: all functions need to have arity property set
+
+class Kl {
+    constructor() {
+        this.startTime = new Date().getTime();
+        this.uniqueSuffix = 0;
+        this.symbols = {};
+        this.fns = {};
+    }
+
+    defun(name, arity, f) {
+        f.klName = name;
+        f.arity = arity;
+        this.fns[nameKlToJs(name)] = f;
+        return f;
+    }
+
+    isSymbolDefined(name) {
+        return this.symbols.hasOwnProperty(nameKlToJs(name));
+    }
+
+    set(name, value) {
+        return this.symbols[nameKlToJs(name)] = value;
+    }
+
+    value(name) {
+        return this.isSymbolDefined(name) ? this.symbols[nameKlToJs(name)] : err('symbol not defined');
+    }
+
+    // static app(f, ...args) {
+    //     // Partial application
+    //     if (args.length < f.arity) {
+    //         const pf = (...moreArgs) => Kl.app(f, args.concat(moreArgs));
+    //         pf.arity = f.arity - args.length;
+    //         return pf;
+    //     }
+
+    //     // Curried application
+    //     if (args.length > f.arity) {
+    //         return Kl.app(f.apply(args.slice(0, f.length)), args.slice(f.length));
+    //     }
+
+    //     // Normal application
+    //     return f.apply(null, args);
+    // }
+
+    static run(x) {
+        while (isThunk(x)) x = x.run();
+        return x;
+    }
+
+    static headCall(f, args) {
+        return Kl.run(f.apply(null, args));
+    }
+
+    static tailCall(f, args) {
+        return new Thunk(f, args);
+    }
+}
+
+var kl = new Kl();
 
 //
 // Set primitive functions and values
@@ -599,49 +669,94 @@ kl.set('*stinput*', ''); // TODO: console
 kl.set('*stoutput*', ''); // TODO: console
 kl.set('*sterror*', ''); // TODO: console
 kl.set('*home-directory*', ''); // TODO: current url
-kl.defun('if', (c, x, y) => asJsBool(c) ? x : y);
-kl.defun('and', (x, y) => asKlBool(asJsBool(x) && asJsBool(y)));
-kl.defun('or', (x, y) => asKlBool(asJsBool(x) || asJsBool(y)));
-kl.defun('+', (x, y) => asKlNumber(x) + asKlNumber(y));
-kl.defun('-', (x, y) => asKlNumber(x) - asKlNumber(y));
-kl.defun('*', (x, y) => asKlNumber(x) * asKlNumber(y));
-kl.defun('/', (x, y) => asKlNumber(x) / asKlNumber(y));
-kl.defun('<', (x, y) => asKlBool(x < y));
-kl.defun('>', (x, y) => asKlBool(x > y));
-kl.defun('<=', (x, y) => asKlBool(x <= y));
-kl.defun('>=', (x, y) => asKlBool(x >= y));
-kl.defun('=', (x, y) => asKlBool(eq(x, y)));
-kl.defun('number?', x => asKlBool(isNumber(x)));
-kl.defun('cons', (x, y) => new Cons(x, y));
-kl.defun('cons?', x => asKlBool(isCons(x)));
-kl.defun('hd', x => asKlCons(x).hd);
-kl.defun('tl', x => asKlCons(x).tl);
-kl.defun('set', (sym, x) => kl.set(asKlSymbol(sym).name, asKlValue(x)));
-kl.defun('value', sym => kl.value(asKlSymbol(sym).name));
-kl.defun('intern', x => new Sym(asKlString(x)));
-kl.defun('string?', x => asKlBool(isString(x)));
-kl.defun('str', x => toStr(asKlValue(x)));
-kl.defun('pos', (s, x) => asKlString(s)[asIndexOf(x, s)]);
-kl.defun('tlstr', s => asKlString(s).slice(1));
-kl.defun('cn', (x, y) => asKlString(x) + asKlString(y));
-kl.defun('string->n', x => asKlString(x).charCodeAt(0));
-kl.defun('n->string', x => String.fromCharCode(asKlString(x)));
-kl.defun('absvector', n => new Array(n).fill(null));
-kl.defun('<-address', (a, i) => asKlVector(a)[asIndexOf(i, a)]);
-kl.defun('address->', (a, i, x) => { asKlVector(a)[asIndexOf(i, a)] = asKlValue(x); return a; });
-kl.defun('absvector?', a => asKlBool(isArray(a)));
-kl.defun('type', (x, _) => x);
-kl.defun('eval-kl', x => eval(translate(asKlValue(x))));
-kl.defun('simple-error', x => err(asKlString(x)));
-kl.defun('error-to-string', x => asKlError(x).message);
-kl.defun('get-time', x => {
+kl.defun('if', 3, (c, x, y) => asJsBool(c) ? x : y);
+kl.defun('and', 2, (x, y) => asKlBool(asJsBool(x) && asJsBool(y)));
+kl.defun('or', 2, (x, y) => asKlBool(asJsBool(x) || asJsBool(y)));
+kl.defun('+', 2, (x, y) => asKlNumber(x) + asKlNumber(y));
+kl.defun('-', 2, (x, y) => asKlNumber(x) - asKlNumber(y));
+kl.defun('*', 2, (x, y) => asKlNumber(x) * asKlNumber(y));
+kl.defun('/', 2, (x, y) => asKlNumber(x) / asKlNumber(y));
+kl.defun('<', 2, (x, y) => asKlBool(x < y));
+kl.defun('>', 2, (x, y) => asKlBool(x > y));
+kl.defun('<=', 2, (x, y) => asKlBool(x <= y));
+kl.defun('>=', 2, (x, y) => asKlBool(x >= y));
+kl.defun('=', 2, (x, y) => asKlBool(eq(x, y)));
+kl.defun('number?', 1, x => asKlBool(isNumber(x)));
+kl.defun('cons', 2, (x, y) => new Cons(x, y));
+kl.defun('cons?', 1, x => asKlBool(isCons(x)));
+kl.defun('hd', 1, x => asKlCons(x).hd);
+kl.defun('tl', 1, x => asKlCons(x).tl);
+kl.defun('set', 2, (sym, x) => kl.set(asKlSymbol(sym).name, asKlValue(x)));
+kl.defun('value', 1, sym => kl.value(asKlSymbol(sym).name));
+kl.defun('intern', 1, x => new Sym(asKlString(x)));
+kl.defun('string?', 1, x => asKlBool(isString(x)));
+kl.defun('str', 1, x => toStr(asKlValue(x)));
+kl.defun('pos', 2, (s, x) => asKlString(s)[asIndexOf(x, s)]);
+kl.defun('tlstr', 1, s => asKlString(s).slice(1));
+kl.defun('cn', 2, (x, y) => asKlString(x) + asKlString(y));
+kl.defun('string->n', 1, x => asKlString(x).charCodeAt(0));
+kl.defun('n->string', 1, x => String.fromCharCode(asKlString(x)));
+kl.defun('absvector', 1, n => new Array(n).fill(null));
+kl.defun('<-address', 2, (a, i) => asKlVector(a)[asIndexOf(i, a)]);
+kl.defun('address->', 3, (a, i, x) => { asKlVector(a)[asIndexOf(i, a)] = asKlValue(x); return a; });
+kl.defun('absvector?', 1, a => asKlBool(isArray(a)));
+kl.defun('type', 2, (x, _) => x);
+kl.defun('eval-kl', 1, x => eval(translate(asKlValue(x))));
+kl.defun('simple-error', 1, x => err(asKlString(x)));
+kl.defun('error-to-string', 1, x => asKlError(x).message);
+kl.defun('get-time', 1, x => {
     if (x.name === 'unix') return new Date().getTime();
     if (x.name === 'run') return new Date().getTime() - kl.startTime;
     err("get-time only accepts 'unix or 'run");
 });
 
 // TODO: implement these:
-kl.defun('open', (path, d) => err('not implemented'));
-kl.defun('close', s => err('not implemented'));
-kl.defun('read-byte', s => err('not implemented'));
-kl.defun('write-byte', (s, b) => err('not implemented'));
+kl.defun('open', 2, (path, d) => err('not implemented'));
+kl.defun('close', 1, s => err('not implemented'));
+kl.defun('read-byte', 1, s => err('not implemented'));
+kl.defun('write-byte', 2, (s, b) => err('not implemented'));
+
+
+
+
+function check(f) {
+    if (!f()) console.error('fail');
+}
+
+function exec(x) {
+    return Kl.run(eval(translate(parse(x))));
+}
+
+function tests() {
+    check(() => eq(parse('"abc"'), 'abc'));
+    check(() => eq(parse('(abc)').hd, new Sym('abc')));
+    check(() => parse('5') === 5);
+    check(() => exec('(+ 1 2)') === 3);
+    check(() => exec('(value *language*)') === 'JavaScript');
+    check(() => exec('(let X 123 X)') === 123);
+    check(() => exec('(let X 1 (let X 2 (let X 3 X)))') === 3);
+    check(() => {
+        exec('(defun fac (N) (if (= 0 N) 1 (* N (fac (- N 1)))))');
+        return (exec('(fac 5)') === 120) && (exec('(fac 7)') === 5040);
+    });
+    check(() => {
+        exec('(defun do (_ X) X)');
+        return exec('(do (let X 1 X) (let X 2 X))') === 2;
+    });
+    check(() => {
+        exec('(defun count-down (X) (if (= 0 X) "done" (count-down (- X 1))))');
+        return exec('(count-down 20000)') === 'done';
+    });
+    check(() => {
+        return true;
+    });
+    check(() => {
+        return true;
+    });
+    check(() => {
+        return true;
+    });
+    console.log('done');
+}
+
+tests();

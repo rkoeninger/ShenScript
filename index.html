@@ -1,6 +1,11 @@
 <html>
     <head>
+        <script src="env.js"></script>
+        <script src="types.js"></script>
+        <script src="parser.js"></script>
+        <script src="translation.js"></script>
         <script src="kl.js"></script>
+        <script src="tests.js"></script>
         <script>
             function doParse() {
                 var textarea = document.getElementById('code');
@@ -12,7 +17,7 @@
             }
             function doRunTail() {
                 var textarea = document.getElementById('code');
-                console.log(eval(translate(parse(new State(textarea.value)))));
+                console.log(eval(translate(parse(new State(textarea.value)), new Context().inTail())));
             }
             function doRunHead() {
                 var textarea = document.getElementById('code');

@@ -42,15 +42,15 @@ function Context() {
     };
     this.isHead = () => this.position === 'head';
     this.isTail = () => this.position === 'tail';
-    this.invoke = () => this.isHead() ? 'Kl.headCall' : 'Kl.tailCall';
+    this.invoke = (f, args) => `${this.isHead() ? 'Kl.headCall' : 'Kl.tailCall'}(${f}, [${args}])`;
 }
 
 function nameKlToJs(name) {
-    var result = "";
-    for (var i = 0; i < name.length; ++i) {
+    let result = "";
+    for (let i = 0; i < name.length; ++i) {
         switch (name[i]) {
-            case '-': { result += "_"; break; }
-            case '_': { result += '$un'; break; }
+            case '-': { result += '_'; break; }
+            case '_': { result += '__'; break; }
             case '$': { result += '$dl'; break; }
             case '.': { result += '$do'; break; }
             case '+': { result += "$pl"; break; }
@@ -69,10 +69,10 @@ function nameKlToJs(name) {
     }
     return result;
 }
-var ifExpr = (c, x, y) => `asJsBool(${c})?(${x}):(${y})`;
-var concatAll = lists => lists.reduce((x, y) => x.concat(y), []);
-var isDoExpr = expr => isCons(expr) && isSymbol(expr.hd) && expr.hd.name === 'do';
-var flattenDo = expr => isDoExpr(expr) ? concatAll(consToArray(expr.tl).map(flattenDo)) : [expr];
+let ifExpr = (c, x, y) => `asJsBool(${c})?(${x}):(${y})`;
+let concatAll = lists => lists.reduce((x, y) => x.concat(y), []);
+let isDoExpr = expr => isCons(expr) && isSymbol(expr.hd) && expr.hd.name === 'do';
+let flattenDo = expr => isDoExpr(expr) ? concatAll(consToArray(expr.tl).map(flattenDo)) : [expr];
 
 // TODO: track expression types to simplify code
 
@@ -106,13 +106,13 @@ function translate(code, context) {
         return `new Sym("${code.name}")`;
     }
     if (consLength(code) === 3 && eq(code.hd, new Sym('and'))) {
-        var left = translate(code.tl.hd, context.inHead());
-        var right = translate(code.tl.tl.hd, context.inHead());
+        const left = translate(code.tl.hd, context.inHead());
+        const right = translate(code.tl.tl.hd, context.inHead());
         return `asKlBool(asJsBool(${left}) && asJsBool(${right}))`;
     }
     if (consLength(code) === 3 && eq(code.hd, new Sym('or'))) {
-        var left = translate(code.tl.hd, context.inHead());
-        var right = translate(code.tl.tl.hd, context.inHead());
+        const left = translate(code.tl.hd, context.inHead());
+        const right = translate(code.tl.tl.hd, context.inHead());
         return `asKlBool(asJsBool(${left}) || asJsBool(${right}))`;
     }
 
@@ -176,9 +176,9 @@ function translate(code, context) {
                 return $do(X$1 = 1, X$2 = 2, X$3 = 3, X$3);
             })()
          */
-        var varName = code.tl.hd.name;
-        var value = translate(code.tl.tl.hd, context.inHead());
-        var body = translate(code.tl.tl.tl.hd, context.let(varName));
+        const varName = code.tl.hd.name;
+        const value = translate(code.tl.tl.hd, context.inHead());
+        const body = translate(code.tl.tl.tl.hd, context.let(varName));
         return `(function () {
                   const ${nameKlToJs(varName)} = ${value};
                   return ${body};
@@ -187,11 +187,11 @@ function translate(code, context) {
 
     // Global function definition
     if (consLength(code) === 4 && eq(code.hd, new Sym('defun'))) {
-        var defunName = code.tl.hd.name;
-        var paramNames = consToArray(code.tl.tl.hd).map((expr) => expr.name);
-        var arity = paramNames.length;
-        var translatedParams = paramNames.map(nameKlToJs).join();
-        var body = translate(code.tl.tl.tl.hd, context.defun(defunName, paramNames));
+        const defunName = code.tl.hd.name;
+        const paramNames = consToArray(code.tl.tl.hd).map((expr) => expr.name);
+        const arity = paramNames.length;
+        const translatedParams = paramNames.map(nameKlToJs).join();
+        const body = translate(code.tl.tl.tl.hd, context.defun(defunName, paramNames));
         return `kl.defun('${defunName}', ${arity}, function (${translatedParams}) {
                   return ${body};
                 })`;
@@ -199,8 +199,8 @@ function translate(code, context) {
 
     // 1-arg anonymous function
     if (consLength(code) === 3 && eq(code.hd, new Sym('lambda'))) {
-        var param = nameKlToJs(code.tl.hd.name);
-        var body = translate(code.tl.tl.hd, context.lambda(code.tl.hd.name));
+        const param = nameKlToJs(code.tl.hd.name);
+        const body = translate(code.tl.tl.hd, context.lambda(code.tl.hd.name));
         return `function (${param}) {
                   return ${body};
                 }`;
@@ -208,7 +208,7 @@ function translate(code, context) {
 
     // 0-arg anonymous function
     if (consLength(code) === 2 && eq(code.hd, new Sym('freeze'))) {
-        var body = translate(code.tl.hd, context.inTail());
+        const body = translate(code.tl.hd, context.inTail());
         return `function () {
                   return ${body};
                 }`;
@@ -216,8 +216,8 @@ function translate(code, context) {
 
     // Error handling
     if (consLength(code) === 3 && eq(code.hd, new Sym('trap-error'))) {
-        var body = translate(code.tl.hd, context);
-        var handler = translate(code.tl.tl.hd, context);
+        const body = translate(code.tl.hd, context);
+        const handler = translate(code.tl.tl.hd, context);
         return `(function () {
                   try {
                     return ${body};
@@ -229,9 +229,9 @@ function translate(code, context) {
 
     // Flattened, sequential, side-effecting expressions
     if (eq(code.hd, new Sym('do'))) {
-        var statements = flattenDo(code).map(expr => translate(expr, context));
-        var butLastStatements = statements.slice(0, statements.length - 1).join(';\n');
-        var lastStatement = statements[statements.length - 1];
+        const statements = flattenDo(code).map(expr => translate(expr, context));
+        const butLastStatements = statements.slice(0, statements.length - 1).join(';\n');
+        const lastStatement = statements[statements.length - 1];
         return `(function () {
                   ${butLastStatements};
                   return ${lastStatement};
@@ -257,7 +257,7 @@ function translate(code, context) {
         return `kl.symbols.${nameKlToJs(code.tl.hd.name)}`;
     }
 
-    var translatedArgs = consToArray(code.tl).map((expr) => translate(expr, context.inHead())).join();
+    const translatedArgs = consToArray(code.tl).map((expr) => translate(expr, context.inHead())).join();
 
     if (isSymbol(code.hd)) {
 
@@ -266,9 +266,9 @@ function translate(code, context) {
             if (consLength(code.length) === 1) {
                 return 'null';
             }
-            var statements = consToArray(code.tl);
-            var butLastStatements = statements.slice(0, statements.length - 1).join(';\n');
-            var lastStatement = statements[statements.length - 1];
+            const statements = consToArray(code.tl);
+            const butLastStatements = statements.slice(0, statements.length - 1).join(';\n');
+            const lastStatement = statements[statements.length - 1];
             return `(function () {
                       ${butLastStatements};
                       return asKlValue(${lastStatement});
@@ -277,20 +277,20 @@ function translate(code, context) {
 
         // JS-namespace function call
         if (code.hd.name.indexOf('js.') === 0) {
-            var name = code.hd.name.slice(3);
+            const name = code.hd.name.slice(3);
             return `${name}(${translatedArgs})`;
         }
 
         // KL function call
-        var name = nameKlToJs(code.hd.name);
+        const name = nameKlToJs(code.hd.name);
         if (context.locals.includes(code.hd.name)) {
-            return `${context.invoke()}(${name}, [${translatedArgs}])`;
+            return context.invoke(name, translatedArgs);
         } else {
-            return `${context.invoke()}(kl.fns.${name}, [${translatedArgs}])`;
+            return context.invoke(`kl.fns.${name}`, translatedArgs);
         }
     }
 
     // Application of function value
-    var f = translate(code.hd, context);
-    return `${context.invoke()}(asKlFunction(${f}), [${translatedArgs}])`;
+    const f = translate(code.hd, context.inHead());
+    return context.invoke(`asKlFunction(${f})`, translatedArgs);
 }

@@ -68,11 +68,14 @@ class Kl {
     }
 }
 
-var kl = new Kl();
+let kl = new Kl();
 
 //
 // Set primitive functions and values
 //
+
+// TODO: as* calls should be injected selectively at
+//       transpile-time using type analysis
 
 kl.set('*language*', 'JavaScript');
 kl.set('*implementation*', env.name());
@@ -113,7 +116,10 @@ kl.defun('string->n', 1, x => asKlString(x).charCodeAt(0));
 kl.defun('n->string', 1, x => String.fromCharCode(asKlString(x)));
 kl.defun('absvector', 1, n => new Array(n).fill(null));
 kl.defun('<-address', 2, (a, i) => asKlVector(a)[asIndexOf(i, a)]);
-kl.defun('address->', 3, (a, i, x) => { asKlVector(a)[asIndexOf(i, a)] = asKlValue(x); return a; });
+kl.defun('address->', 3, (a, i, x) => {
+    asKlVector(a)[asIndexOf(i, a)] = asKlValue(x);
+    return a;
+});
 kl.defun('absvector?', 1, a => asKlBool(isArray(a)));
 kl.defun('type', 2, (x, _) => x);
 kl.defun('eval-kl', 1, x => eval(translate(asKlValue(x))));

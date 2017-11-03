@@ -39,16 +39,16 @@ class Stream {
         this.name = name;
     }
 }
-var consoleStream = new Stream('console');
-var isThunk    = x => x && x.constructor === Thunk;
-var isSymbol   = x => x && x.constructor === Sym;
-var isCons     = x => x && x.constructor === Cons;
-var isArray    = x => x && x.constructor === Array;
-var isError    = x => x && x.constructor === Error;
-var isStream   = x => x && x.constructor === Stream;
-var isNumber   = x => typeof x === 'number';
-var isString   = x => typeof x === 'string';
-var isFunction = x => typeof x === 'function';
+let consoleStream = new Stream('console');
+let isThunk    = x => x && x.constructor === Thunk;
+let isSymbol   = x => x && x.constructor === Sym;
+let isCons     = x => x && x.constructor === Cons;
+let isArray    = x => x && x.constructor === Array;
+let isError    = x => x && x.constructor === Error;
+let isStream   = x => x && x.constructor === Stream;
+let isNumber   = x => typeof x === 'number';
+let isString   = x => typeof x === 'string';
+let isFunction = x => typeof x === 'function';
 function eq(x, y) {
     if (x === y) return true;
     if (isSymbol(x) && isSymbol(y)) return x.name === y.name;
@@ -80,16 +80,16 @@ function asJsBool(x) {
     }
     throw new Error('not a boolean');
 }
-var err = x => { throw new Error(x); };
-var asKlBool = x => new Sym(x ? 'true' : 'false');
-var asKlNumber = x => isNumber(x) ? x : err('not a number');
-var asKlString = x => isString(x) ? x : err('not a string');
-var asKlSymbol = x => isSymbol(x) ? x : err('not a symbol');
-var asKlVector = x => isArray(x) ? x : err('not an absvector');
-var asKlCons = x => isCons(x) ? x : err('not a cons');
-var asKlError = x => isError(x) ? x : err('not an error');
-var asKlStream = x => isStream(x) ? x : err('not a stream');
-var asKlFunction = x => isFunction(x) ? x : err('not a function');
+let err = x => { throw new Error(x); };
+let asKlBool = x => new Sym(x ? 'true' : 'false');
+let asKlNumber = x => isNumber(x) ? x : err('not a number');
+let asKlString = x => isString(x) ? x : err('not a string');
+let asKlSymbol = x => isSymbol(x) ? x : err('not a symbol');
+let asKlVector = x => isArray(x) ? x : err('not an absvector');
+let asKlCons = x => isCons(x) ? x : err('not a cons');
+let asKlError = x => isError(x) ? x : err('not an error');
+let asKlStream = x => isStream(x) ? x : err('not a stream');
+let asKlFunction = x => isFunction(x) ? x : err('not a function');
 function asIndexOf(i, a) {
     if (isNumber(i)) {
         if (i % 1 === 0) {

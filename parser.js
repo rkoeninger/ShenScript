@@ -15,14 +15,14 @@ function isSymbolChar(ch) {
 }
 function readString(state) {
     skip(state);
-    var start = state.pos;
+    const start = state.pos;
     while (current(state) !== '"') {
         if (isDone(state)) {
             throw new Error('unexpected end of input');
         }
         skip(state);
     }
-    var end = state.pos;
+    const end = state.pos;
     skip(state);
     return state.text.substring(start, end);
 }
@@ -30,30 +30,30 @@ function readString(state) {
 // TODO: read fractional and negative numbers
 
 function readNumber(state) {
-    var start = state.pos;
+    const start = state.pos;
     while (isDigitOrSign(current(state))) {
         if (isDone(state)) {
             throw new Error('unexpected end of input');
         }
         skip(state);
     }
-    var end = state.pos;
+    const end = state.pos;
     return parseFloat(state.text.substring(start, end));
 }
 function readSymbol(state) {
-    var start = state.pos;
+    const start = state.pos;
     while (isSymbolChar(current(state))) {
         if (isDone(state)) {
             throw new Error('unexpected end of input');
         }
         skip(state);
     }
-    var end = state.pos;
+    const end = state.pos;
     return new Sym(state.text.substring(start, end));
 }
 function arrayToCons(x) {
-    var result = null;
-    for (var i = x.length - 1; i >= 0; i--) result = new Cons(x[i], result);
+    let result = null;
+    for (let i = x.length - 1; i >= 0; i--) result = new Cons(x[i], result);
     return result;
 }
 function consToArray(x, array) {
@@ -68,7 +68,7 @@ function consToArray(x, array) {
     return array;
 }
 function consLength(x) {
-    var length = 0;
+    let length = 0;
     while (isCons(x)) {
         x = x.tl;
         length++;
@@ -86,7 +86,7 @@ function parse(state) {
     }
     if (current(state) === '(') {
         skip(state);
-        var child = parse(state), children = [];
+        let child = parse(state), children = [];
         while (child !== undefined) {
             children.push(child);
             child = parse(state);

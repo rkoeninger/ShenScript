@@ -29,7 +29,9 @@ function tests() {
         return exec('(count-down 20000)') === 'done';
     });
     check(() => {
-        return true;
+        exec('(defun even? (X) (if (= 0 X) true  (odd?  (- X 1))))');
+        exec('(defun odd?  (X) (if (= 0 X) false (even? (- X 1))))');
+        return asJsBool(exec('(even? 20000)'));
     });
     check(() => {
         return true;

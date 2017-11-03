@@ -10,22 +10,28 @@
                 var textarea = document.getElementById('code');
                 console.log(translate(parse(new State(textarea.value))));
             }
-            function doRun() {
+            function doRunTail() {
                 var textarea = document.getElementById('code');
                 console.log(eval(translate(parse(new State(textarea.value)))));
+            }
+            function doRunHead() {
+                var textarea = document.getElementById('code');
+                console.log(Kl.run(eval(translate(parse(new State(textarea.value))))));
             }
         </script>
         <style>
             #code {
-                height: 300px;
-                width: 500px;
+                height: 100px;
+                width: 700px;
             }
         </style>
     </head>
     <body>
         <textarea id="code"></textarea>
+        <br>
         <button onclick="doParse();">Parse</button>
         <button onclick="doTranslate();">Translate</button>
-        <button onclick="doRun();">Run</button>
+        <button onclick="doRunTail();">Run Tail</button>
+        <button onclick="doRunHead();">Run Head</button>
     </body>
 </html>

@@ -4,20 +4,28 @@
 
 function getOperatingSystem() {
     if (navigator) {
-        if (navigator.platform.toLowerCase() === 'win32') return "Windows";
-        if (navigator.appVersion.indexOf("Win") != -1) return "Windows";
-        if (navigator.appVersion.indexOf("Mac") != -1) return "macOS";
-        if (navigator.appVersion.indexOf("iPhone") != -1) return "iOS";
-        if (navigator.appVersion.indexOf("iPad") != -1) return "iOS";
-        if (navigator.appVersion.indexOf("iOS") != -1) return "iOS";
-        if (navigator.appVersion.indexOf("Linux") != -1) return "Linux";
-        if (navigator.appVersion.indexOf("Android") != -1) return "Android";
-        if (navigator.appVersion.indexOf("X11") != -1) return "Unix";
+        if (navigator.platform) {
+            if (navigator.platform.toLowerCase() === 'win32') return "Windows";
+            if (navigator.platform.toLowerCase() === 'win64') return "Windows";
+        }
+        if (navigator.appVersion) {
+            if (navigator.appVersion.indexOf("Win") != -1) return "Windows";
+            if (navigator.appVersion.indexOf("Mac") != -1) return "macOS";
+            if (navigator.appVersion.indexOf("iPhone") != -1) return "iOS";
+            if (navigator.appVersion.indexOf("iPad") != -1) return "iOS";
+            if (navigator.appVersion.indexOf("iOS") != -1) return "iOS";
+            if (navigator.appVersion.indexOf("Linux") != -1) return "Linux";
+            if (navigator.appVersion.indexOf("Android") != -1) return "Android";
+            if (navigator.appVersion.indexOf("X11") != -1) return "Unix";
+        }
     }
     if (process) {
-        if (process.platform === 'win32') return 'Windows';
-        if (process.platform === 'darwin') return 'macOS';
-        if (process.platform === 'linux') return 'Linux';
+        if (process.platform) {
+            if (process.platform.toLowerCase() === 'win32') return 'Windows';
+            if (process.platform.toLowerCase() === 'win64') return 'Windows';
+            if (process.platform.toLowerCase() === 'darwin') return 'macOS';
+            if (process.platform.toLowerCase() === 'linux') return 'Linux';
+        }
     }
     return "Unknown";
 }
@@ -172,7 +180,7 @@ function State(text) {
 function Context() {
     this.locals = [];
     this.scopeName = null;
-    this.position = 'tail';
+    this.position = 'head';
 
     this.clone = function () {
         const x = new Context();
@@ -210,15 +218,9 @@ function Context() {
         context.position = 'tail';
         return context;
     };
-    this.isHead = function () {
-        return this.position === 'head';
-    };
-    this.isTail = function () {
-        return this.position === 'tail';
-    };
-    this.invoke = function () {
-        return this.isHead() ? 'Kl.headCall' : 'Kl.tailCall';
-    }
+    this.isHead = () => this.position === 'head';
+    this.isTail = () => this.position === 'tail';
+    this.invoke = () => this.isHead() ? 'Kl.headCall' : 'Kl.tailCall';
 }
 
 /* Type mapping:
@@ -424,9 +426,6 @@ function translate(code, context) {
 
     // Local variable binding
     if (consLength(code) === 4 && eq(code.hd, new Sym('let'))) {
-        // TODO: improve scoping on let bindings
-        //       a new function scope isn't necessary for unique variables
-
         // TODO: flatten immeditaley nested let's into a single iife
 
         // TODO: actually, since there are no loops, uniquifying local
@@ -589,10 +588,6 @@ function translate(code, context) {
 
 // TODO: inline template can be set on function object
 
-// TODO: insert applications of this into HEAD position
-//       calls in both versions of functions,
-//       and TAIL position for HEAD-version functions.
-
 // TODO: all functions need to have arity property set
 
 class Kl {
@@ -724,7 +719,7 @@ function check(f) {
 }
 
 function exec(x) {
-    return Kl.run(eval(translate(parse(x))));
+    return eval(translate(parse(x)));
 }
 
 function tests() {

@@ -480,7 +480,7 @@ function translate(code, context) {
         var arity = paramNames.length;
         var translatedParams = paramNames.map(nameKlToJs).join();
         var body = translate(code.tl.tl.tl.hd, context.defun(defunName, paramNames));
-        return `kl.defun('${nameKlToJs(defunName)}', ${arity}, function (${translatedParams}) {
+        return `kl.defun('${defunName}', ${arity}, function (${translatedParams}) {
                   return ${body};
                 })`;
     }

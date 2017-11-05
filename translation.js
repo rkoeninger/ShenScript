@@ -71,8 +71,9 @@ function nameKlToJs(name) {
 }
 let ifExpr = (c, x, y) => `asJsBool(${c})?(${x}):(${y})`;
 let concatAll = lists => lists.reduce((x, y) => x.concat(y), []);
-let isDoExpr = expr => isCons(expr) && isSymbol(expr.hd) && expr.hd.name === 'do';
+let isDoExpr = expr => isCons(expr) && eq(expr.hd, new Sym('do'));
 let flattenDo = expr => isDoExpr(expr) ? concatAll(consToArray(expr.tl).map(flattenDo)) : [expr];
+let isLetExpr = expr => isCons(expr) && eq(expr.hd, new Sym('let'));
 
 // TODO: track expression types to simplify code
 
@@ -96,15 +97,21 @@ function translate(code, context) {
         err('vectors, functions, errors and streams are not valid syntax');
     }
     if (!context) context = new Context();
+
+    // Literals
     if (code === null) return 'null';
     if (isNumber(code)) return '' + code;
     if (isString(code)) return `"${code}"`;
+
+    // Local variables and idle symbols
     if (isSymbol(code)) {
         if (context.locals.includes(code.name)) {
             return nameKlToJs(code.name);
         }
         return `new Sym("${code.name}")`;
     }
+
+    // Conjunction and disjunction
     if (consLength(code) === 3 && eq(code.hd, new Sym('and'))) {
         const left = translate(code.tl.hd, context.inHead());
         const right = translate(code.tl.tl.hd, context.inHead());
@@ -139,49 +146,33 @@ function translate(code, context) {
 
     // Local variable binding
     if (consLength(code) === 4 && eq(code.hd, new Sym('let'))) {
-        // TODO: flatten immeditaley nested let's into a single iife
+        const bindings = [];
 
-        // TODO: actually, since there are no loops, uniquifying local
-        //       variable names should be enough to deal with
-        //       nested and parallel re-definitions of the same local/parameter
+        while (isLetExpr(code)) {
+            const name = code.tl.hd.name;
+            bindings.push({
+                name,
+                value: translate(code.tl.tl.hd, context),
+                redefinition: bindings.some(x => x.name === name)
+            });
+            context = context.let(name);
+            code = code.tl.tl.tl.hd;
+        }
 
-        // TODO: actually, just use let/const
+        let body = `return ${translate(code, context)};`;
 
-        /*
-            (let X 1 (let X 2 (let X 3 X)))
+        for (let i = bindings.length - 1; i >= 0; --i) {
+            body = `const ${nameKlToJs(bindings[i].name)} = ${bindings[i].value};
+                    ${body}`;
+            if (bindings[i].redefinition) {
+                body = `{
+                    ${body}
+                }`;
+            }
+        }
 
-            (function () {
-                var X = 1;
-                return (function () {
-                    var X = 2;
-                    return (function () {
-                        var X = 3;
-                        return X;
-                    })();
-                })();
-            })()
-
-            (function () {
-                var X$1, X$2, X$3;
-                X$1 = 1;
-                X$2 = 2;
-                X$3 = 3;
-                return X$3;
-            })()
-
-            $do = () => arguments.last;
-
-            (function () {
-                var X$1, X$2, X$3;
-                return $do(X$1 = 1, X$2 = 2, X$3 = 3, X$3);
-            })()
-         */
-        const varName = code.tl.hd.name;
-        const value = translate(code.tl.tl.hd, context.inHead());
-        const body = translate(code.tl.tl.tl.hd, context.let(varName));
         return `(function () {
-                  const ${nameKlToJs(varName)} = ${value};
-                  return ${body};
+                  ${body}
                 })()`;
     }
 

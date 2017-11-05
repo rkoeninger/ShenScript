@@ -3,16 +3,16 @@ class Parser {
         this.text = text;
         this.pos = 0;
     }
-    skipWhitespace() {
-        while (!this.isDone && /\s/.test(this.current)) this.skip();
-    }
     get current() {
         return this.text[this.pos];
     }
     get isDone() {
         return this.pos >= this.text.length;
     }
-    skip() {
+    skipWhitespace() {
+        while (!this.isDone && /\s/.test(this.current)) this.skipOne();
+    }
+    skipOne() {
         this.pos++;
     }
     isDigitOrSign(ch) {
@@ -22,14 +22,14 @@ class Parser {
         return /\S/.test(ch) && ch !== '(' && ch !== ')';
     }
     readString() {
-        this.skip();
+        this.skipOne();
         const start = this.pos;
         while (this.current !== '"') {
             if (this.isDone) throw new Error('unexpected end of input');
-            this.skip();
+            this.skipOne();
         }
         const end = this.pos;
-        this.skip();
+        this.skipOne();
         return this.text.substring(start, end);
     }
 
@@ -37,13 +37,13 @@ class Parser {
 
     readNumber() {
         const start = this.pos;
-        while (this.isDigitOrSign(this.current) && !this.isDone) this.skip();
+        while (this.isDigitOrSign(this.current) && !this.isDone) this.skipOne();
         const end = this.pos;
         return parseFloat(this.text.substring(start, end));
     }
     readSymbol() {
         const start = this.pos;
-        while (this.isSymbolChar(this.current) && !this.isDone) this.skip();
+        while (this.isSymbolChar(this.current) && !this.isDone) this.skipOne();
         const end = this.pos;
         return new Sym(this.text.substring(start, end));
     }
@@ -51,7 +51,7 @@ class Parser {
         this.skipWhitespace();
         if (this.isDone) throw new Error('unexpected end of input');
         if (this.current === '(') {
-            this.skip();
+            this.skipOne();
             const children = [];
             let child = this.parse();
             while (child !== undefined) {
@@ -61,7 +61,7 @@ class Parser {
             return arrayToCons(children);
         }
         if (this.current === ')') {
-            this.skip();
+            this.skipOne();
             return undefined;
         }
         if (this.current === '"') return this.readString();

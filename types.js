@@ -108,3 +108,30 @@ function asKlValue(x) {
     if (isString(x) || isNumber(x) || isSymbol(x) || isCons(x)) return x;
     return x || null;
 }
+function arrayToCons(x) {
+    let result = null;
+    for (let i = x.length - 1; i >= 0; i--) result = new Cons(x[i], result);
+    return result;
+}
+function consToArray(x, array) {
+    if (!array) array = [];
+    if (isCons(x)) {
+        array.push(x.hd);
+        return consToArray(x.tl, array);
+    }
+    if (x !== null) {
+        throw new Error('not a valid list');
+    }
+    return array;
+}
+function consLength(x) {
+    let length = 0;
+    while (isCons(x)) {
+        x = x.tl;
+        length++;
+    }
+    if (x !== null) {
+        throw new Error('not a valid list');
+    }
+    return length;
+}

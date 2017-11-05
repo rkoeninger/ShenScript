@@ -5,13 +5,13 @@ function check(f) {
 }
 
 function exec(x) {
-    return eval(translate(parse(x)));
+    return eval(translate(Parser.parseString(x)));
 }
 
 function tests() {
-    check(() => eq(parse('"abc"'), 'abc'));
-    check(() => eq(parse('(abc)').hd, new Sym('abc')));
-    check(() => parse('5') === 5);
+    check(() => eq(Parser.parseString('"abc"'), 'abc'));
+    check(() => eq(Parser.parseString('(abc)').hd, new Sym('abc')));
+    check(() => Parser.parseString('5') === 5);
     check(() => exec('(+ 1 2)') === 3);
     check(() => exec('(value *language*)') === 'JavaScript');
     check(() => exec('(let X 123 X)') === 123);

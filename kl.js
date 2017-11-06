@@ -54,6 +54,20 @@ class Kl {
     //     return f.apply(null, args);
     // }
 
+    static wrapf(f) {
+        const g = function (...args) {
+            if (args.length === f.arity) return f.apply(null, args);
+            if (args.length < f.arity) {
+                const h = Kl.wrapf(function (...args2) { return f.apply(args.concat(args2)); });
+                h.arity = f.arity - args.length;
+                return h;
+            }
+            return f.apply(null, args.slice(0, f.arity)).apply(null, args.slice(f.arity));
+        };
+        g.arity = f.arity;
+        return g;
+    }
+
     static run(x) {
         while (isThunk(x)) x = x.run();
         return x;

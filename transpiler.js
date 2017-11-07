@@ -220,17 +220,17 @@ class Transpiler {
         if (consLength(code) === 3 && eq(code.hd, new Sym('lambda'))) {
             const param = Transpiler.rename(code.tl.hd.name);
             const body = this.translate(code.tl.tl.hd, context.lambda(code.tl.hd.name));
-            return `function (${param}) {
+            return `Kl.setArity(1, function (${param}) {
                       return ${body};
-                    }`;
+                    })`;
         }
 
         // 0-arg anonymous function
         if (consLength(code) === 2 && eq(code.hd, new Sym('freeze'))) {
             const body = this.translate(code.tl.hd, context.freeze());
-            return `function () {
+            return `Kl.setArity(0, function () {
                       return ${body};
-                    }`;
+                    })`;
         }
 
         // Error handling

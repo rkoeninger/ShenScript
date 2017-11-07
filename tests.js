@@ -33,12 +33,8 @@ function tests() {
         exec('(defun odd?  (X) (if (= 0 X) false (even? (- X 1))))');
         return asJsBool(exec('(even? 20000)'));
     });
-    check(() => {
-        return true;
-    });
-    check(() => {
-        return true;
-    });
+    check(() => exec('((+ 6) 7)') === 13);
+    check(() => exec('((lambda X (lambda Y (+ X Y))) 6 7)') === 13);
     console.log('done');
 }
 

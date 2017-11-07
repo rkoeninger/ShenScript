@@ -22,7 +22,7 @@ class Trampoline {
         this.args = args;
     }
     run() {
-        return this.f.apply(null, this.args);
+        return Kl.app(this.f, this.args);
     }
 }
 class Sym {

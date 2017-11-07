@@ -17,61 +17,40 @@ class Kl {
         this.symbols = {};
         this.fns = {};
     }
-
     defun(name, arity, f) {
         f.klName = name;
         f.arity = arity;
         this.fns[Transpiler.rename(name)] = f;
         return f;
     }
-
     isSymbolDefined(name) {
         return this.symbols.hasOwnProperty(Transpiler.rename(name));
     }
-
     set(name, value) {
         return this.symbols[Transpiler.rename(name)] = value;
     }
-
     value(name) {
         return this.isSymbolDefined(name) ? this.symbols[Transpiler.rename(name)] : err('symbol not defined');
     }
-
-    // static app(f, ...args) {
-    //     // Partial application
-    //     if (args.length < f.arity) {
-    //         const pf = (...moreArgs) => Kl.app(f, args.concat(moreArgs));
-    //         pf.arity = f.arity - args.length;
-    //         return pf;
-    //     }
-
-    //     // Curried application
-    //     if (args.length > f.arity) {
-    //         return Kl.app(f.apply(args.slice(0, f.length)), args.slice(f.length));
-    //     }
-
-    //     // Normal application
-    //     return f.apply(null, args);
-    // }
-
-    static wrapf(f) {
-        const g = function (...args) {
-            if (args.length === f.arity) return f.apply(null, args);
-            if (args.length < f.arity) {
-                const h = Kl.wrapf(function (...args2) { return f.apply(args.concat(args2)); });
-                h.arity = f.arity - args.length;
-                return h;
-            }
-            return f.apply(null, args.slice(0, f.arity)).apply(null, args.slice(f.arity));
-        };
-        g.arity = f.arity;
-        return g;
+    static app(f, args) {
+        if (args.length === f.arity) {
+            return f.apply(null, args);
+        } else if (args.length > f.arity) {
+            return Kl.app(f.apply(null, args.slice(0, f.arity)), args.slice(f.arity));
+        }
+        return Kl.setArity(f.arity - args.length, function (...args2) {
+            return Kl.app(f, args.concat(args2));
+        });
     }
     static headCall(f, args) {
-        return Trampoline.runAll(f.apply(null, args));
+        return Trampoline.runAll(Kl.app(f, args));
     }
     static tailCall(f, args) {
         return new Trampoline(f, args);
+    }
+    static setArity(arity, f) {
+        f.arity = arity;
+        return f;
     }
 }
 

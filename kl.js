@@ -68,10 +68,10 @@ class Kl {
         return g;
     }
     static headCall(f, args) {
-        return Thunk.runAll(f.apply(null, args));
+        return Trampoline.runAll(f.apply(null, args));
     }
     static tailCall(f, args) {
-        return new Thunk(f, args);
+        return new Trampoline(f, args);
     }
 }
 

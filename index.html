@@ -21,7 +21,7 @@
                 console.log(eval(Transpiler.translateTail(Parser.parseString(getSource()))));
             }
             function doRunHead() {
-                console.log(Thunk.runAll(eval(Transpiler.translateHead(Parser.parseString(getSource())))));
+                console.log(Trampoline.runAll(eval(Transpiler.translateHead(Parser.parseString(getSource())))));
             }
         </script>
         <style>

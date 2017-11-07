@@ -12,9 +12,9 @@
  * Stream             Stream
  */
 
-class Thunk {
+class Trampoline {
     static runAll(x) {
-        while (isThunk(x)) x = x.run();
+        while (isTrampoline(x)) x = x.run();
         return x;
     }
     constructor(f, args) {
@@ -42,15 +42,15 @@ class Stream {
     }
 }
 let consoleStream = new Stream('console');
-let isThunk    = x => x && x.constructor === Thunk;
-let isSymbol   = x => x && x.constructor === Sym;
-let isCons     = x => x && x.constructor === Cons;
-let isArray    = x => x && x.constructor === Array;
-let isError    = x => x && x.constructor === Error;
-let isStream   = x => x && x.constructor === Stream;
-let isNumber   = x => typeof x === 'number';
-let isString   = x => typeof x === 'string';
-let isFunction = x => typeof x === 'function';
+let isTrampoline = x => x && x.constructor === Trampoline;
+let isSymbol     = x => x && x.constructor === Sym;
+let isCons       = x => x && x.constructor === Cons;
+let isArray      = x => x && x.constructor === Array;
+let isError      = x => x && x.constructor === Error;
+let isStream     = x => x && x.constructor === Stream;
+let isNumber     = x => typeof x === 'number';
+let isString     = x => typeof x === 'string';
+let isFunction   = x => typeof x === 'function';
 function eq(x, y) {
     if (x === y) return true;
     if (isSymbol(x) && isSymbol(y)) return x.name === y.name;

@@ -90,10 +90,6 @@ kl.set('*release*', env.version());
 kl.set('*os*', env.os());
 kl.set('*port*', '0.1');
 kl.set('*porters*', 'Robert Koeninger');
-kl.set('*stinput*', ''); // TODO: console
-kl.set('*stoutput*', ''); // TODO: console
-kl.set('*sterror*', ''); // TODO: console
-kl.set('*home-directory*', ''); // TODO: current url
 kl.defun('if', 3, (c, x, y) => asJsBool(c) ? x : y);
 kl.defun('and', 2, (x, y) => asKlBool(asJsBool(x) && asJsBool(y)));
 kl.defun('or', 2, (x, y) => asKlBool(asJsBool(x) || asJsBool(y)));
@@ -117,7 +113,10 @@ kl.defun('intern', 1, x => new Sym(asKlString(x)));
 kl.defun('string?', 1, x => asKlBool(isString(x)));
 kl.defun('str', 1, x => toStr(asKlValue(x)));
 kl.defun('pos', 2, (s, x) => asKlString(s)[asIndexOf(x, s)]);
-kl.defun('tlstr', 1, s => asKlString(s).slice(1));
+kl.defun('tlstr', 1, s => {
+    const ss = asKlString(s);
+    return ss.length === 0 ? new Sym('shen.eos') : ss.slice(1);
+});
 kl.defun('cn', 2, (x, y) => asKlString(x) + asKlString(y));
 kl.defun('string->n', 1, x => asKlString(x).charCodeAt(0));
 kl.defun('n->string', 1, x => String.fromCharCode(asKlString(x)));
@@ -139,9 +138,11 @@ kl.defun('get-time', 1, x => {
 });
 
 // TODO: implement these:
+kl.set('*stinput*', ''); // TODO: console
+kl.set('*stoutput*', ''); // TODO: console
+kl.set('*sterror*', ''); // TODO: console
+kl.set('*home-directory*', ''); // TODO: current url
 kl.defun('open', 2, (path, d) => err('not implemented'));
 kl.defun('close', 1, s => err('not implemented'));
 kl.defun('read-byte', 1, s => err('not implemented'));
 kl.defun('write-byte', 2, (s, b) => err('not implemented'));
-
-

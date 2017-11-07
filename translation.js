@@ -1,48 +1,53 @@
-
-function Context() {
-    this.locals = [];
-    this.scopeName = null;
-    this.position = 'head';
-
-    this.clone = function () {
+class Context {
+    static fromHead() {
+        return new Context().inHead();
+    }
+    static fromTail() {
+        return new Context().inTail();
+    }
+    constructor() {
+        this.locals = [];
+        this.scopeName = null;
+        this.position = 'head';
+    }
+    clone() {
         const x = new Context();
         x.locals = this.locals.slice(0);
         x.scopeName = this.scopeName;
         x.position = this.position;
         return x;
-    };
-
-    this.let = function (name) {
+    }
+    let(name) {
         const context = this.clone();
         context.locals.push(name);
         return context;
-    };
-    this.lambda = function (name) {
+    }
+    lambda(name) {
         const context = this.clone();
         context.locals.push(name);
         context.position = 'tail';
         return context;
-    };
-    this.defun = function (name, params) {
+    }
+    freeze() {
+        const context = this.clone();
+        context.position = 'tail';
+        return context;
+    }
+    defun(name, params) {
         const context = this.clone();
         context.locals = params.slice(0);
         context.scopeName = name || null;
         context.position = 'tail';
         return context;
-    };
-    this.inHead = function () {
+    }
+    inHead() {
         const context = this.clone();
         context.position = 'head';
         return context;
-    };
-    this.inTail = function () {
-        const context = this.clone();
-        context.position = 'tail';
-        return context;
-    };
-    this.isHead = () => this.position === 'head';
-    this.isTail = () => this.position === 'tail';
-    this.invoke = (f, args) => `${this.isHead() ? 'Kl.headCall' : 'Kl.tailCall'}(${f}, [${args}])`;
+    }
+    invoke(f, args) {
+        return `${this.position === 'head' ? 'Kl.headCall' : 'Kl.tailCall'}(${f}, [${args}])`;
+    }
 }
 
 function nameKlToJs(name) {
@@ -50,7 +55,7 @@ function nameKlToJs(name) {
     for (let i = 0; i < name.length; ++i) {
         switch (name[i]) {
             case '-': { result += '_'; break; }
-            case '_': { result += '__'; break; }
+            case '_': { result += '$un'; break; }
             case '$': { result += '$dl'; break; }
             case '.': { result += '$do'; break; }
             case '+': { result += "$pl"; break; }
@@ -199,7 +204,7 @@ function translate(code, context) {
 
     // 0-arg anonymous function
     if (consLength(code) === 2 && eq(code.hd, new Sym('freeze'))) {
-        const body = translate(code.tl.hd, context.inTail());
+        const body = translate(code.tl.hd, context.freeze());
         return `function () {
                   return ${body};
                 }`;

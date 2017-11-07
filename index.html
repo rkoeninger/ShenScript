@@ -15,7 +15,7 @@
                 console.log(translate(Parser.parseString(getSource())));
             }
             function doRunTail() {
-                console.log(eval(translate(Parser.parseString(getSource()), new Context().inTail())));
+                console.log(eval(translate(Parser.parseString(getSource()), Context.fromTail())));
             }
             function doRunHead() {
                 console.log(Thunk.runAll(eval(translate(Parser.parseString(getSource())))));

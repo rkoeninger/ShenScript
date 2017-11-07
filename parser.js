@@ -1,4 +1,10 @@
 class Parser {
+    static parseString(text) {
+        return new Parser(text).parse();
+    }
+    static parseAllString(text) {
+        return new Parser(text).parseAll();
+    }
     constructor(text) {
         this.text = text;
         this.pos = 0;
@@ -76,11 +82,5 @@ class Parser {
             this.skipWhitespace();
         }
         return results;
-    }
-    static parseString(text) {
-        return new Parser(text).parse();
-    }
-    static parseAllString(text) {
-        return new Parser(text).parseAll();
     }
 }

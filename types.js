@@ -13,16 +13,16 @@
  */
 
 class Thunk {
+    static runAll(x) {
+        while (isThunk(x)) x = x.run();
+        return x;
+    }
     constructor(f, args) {
         this.f = f;
         this.args = args;
     }
     run() {
         return this.f.apply(null, this.args);
-    }
-    static runAll(x) {
-        while (isThunk(x)) x = x.run();
-        return x;
     }
 }
 class Sym {

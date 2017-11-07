@@ -3,7 +3,9 @@ class Context {
         return new Context().inHead();
     }
     static fromTail() {
-        return new Context().inTail();
+        const context = new Context();
+        context.position = 'tail';
+        return context;
     }
     constructor() {
         this.locals = [];
@@ -11,10 +13,10 @@ class Context {
         this.position = 'head';
     }
     clone() {
-        const x = new Context();
-        x.locals = this.locals.slice(0);
-        x.scopeName = this.scopeName;
-        x.position = this.position;
+        const context = new Context();
+        context.locals = this.locals.slice(0);
+        context.scopeName = this.scopeName;
+        context.position = this.position;
         return x;
     }
     isLocal(name) {

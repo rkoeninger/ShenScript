@@ -89,14 +89,8 @@ class Transpiler {
         }
         return result;
     }
-    static isDoExpr(expr) {
-        return isCons(expr) && eq(expr.hd, new Sym('do'));
-    }
-    static flattenDo(expr) {
-        return Transpiler.isDoExpr(expr) ? concatAll(consToArray(expr.tl).map(Transpiler.flattenDo)) : [expr];
-    }
-    static isLetExpr(expr) {
-        return isCons(expr) && eq(expr.hd, new Sym('let'));
+    static isForm(expr, keyword, length) {
+        return isCons(expr) && (!length || consLength(expr) === length) && isSymbol(expr.hd) && expr.hd.name === keyword;
     }
     static ifExpr(c, x, y) {
         return `asJsBool(${c})?(${x}):(${y})`;
@@ -140,25 +134,25 @@ class Transpiler {
         }
 
         // Conjunction and disjunction
-        if (consLength(code) === 3 && eq(code.hd, new Sym('and'))) {
+        if (Transpiler.isForm(code, 'and', 3)) {
             const left = this.translate(code.tl.hd, context.inHead());
             const right = this.translate(code.tl.tl.hd, context.inHead());
             return `asKlBool(asJsBool(${left}) && asJsBool(${right}))`;
         }
-        if (consLength(code) === 3 && eq(code.hd, new Sym('or'))) {
+        if (Transpiler.isForm(code, 'or', 3)) {
             const left = this.translate(code.tl.hd, context.inHead());
             const right = this.translate(code.tl.tl.hd, context.inHead());
             return `asKlBool(asJsBool(${left}) || asJsBool(${right}))`;
         }
 
         // Conditional evaluation
-        if (consLength(code) === 4 && eq(code.hd, new Sym('if'))) {
+        if (Transpiler.isForm(code, 'if', 4)) {
             return Transpiler.ifExpr(
                 this.translate(code.tl.hd, context.inHead()),
                 this.translate(code.tl.tl.hd, context),
                 this.translate(code.tl.tl.tl.hd, context));
         }
-        if (eq(code.hd, new Sym('cond'))) {
+        if (Transpiler.isForm(code, 'cond')) {
             function condRecur(code) {
                 if (code === null) {
                     return `kl.fns.${Transpiler.rename('simple-error')}("No clause was true")`;
@@ -173,10 +167,10 @@ class Transpiler {
         }
 
         // Local variable binding
-        if (consLength(code) === 4 && eq(code.hd, new Sym('let'))) {
+        if (Transpiler.isForm(code, 'let', 4)) {
             const bindings = [];
 
-            while (Transpiler.isLetExpr(code)) {
+            while (Transpiler.isForm(code, 'let', 4)) {
                 const name = code.tl.hd.name;
                 bindings.push({
                     name,
@@ -205,7 +199,7 @@ class Transpiler {
         }
 
         // Global function definition
-        if (consLength(code) === 4 && eq(code.hd, new Sym('defun'))) {
+        if (Transpiler.isForm(code, 'defun', 4)) {
             const defunName = code.tl.hd.name;
             const paramNames = consToArray(code.tl.tl.hd).map(expr => expr.name);
             const arity = paramNames.length;
@@ -217,7 +211,7 @@ class Transpiler {
         }
 
         // 1-arg anonymous function
-        if (consLength(code) === 3 && eq(code.hd, new Sym('lambda'))) {
+        if (Transpiler.isForm(code, 'lambda', 3)) {
             const param = Transpiler.rename(code.tl.hd.name);
             const body = this.translate(code.tl.tl.hd, context.lambda(code.tl.hd.name));
             return `Kl.setArity(1, function (${param}) {
@@ -226,7 +220,7 @@ class Transpiler {
         }
 
         // 0-arg anonymous function
-        if (consLength(code) === 2 && eq(code.hd, new Sym('freeze'))) {
+        if (Transpiler.isForm(code, 'freeze', 2)) {
             const body = this.translate(code.tl.hd, context.freeze());
             return `Kl.setArity(0, function () {
                       return ${body};
@@ -234,7 +228,7 @@ class Transpiler {
         }
 
         // Error handling
-        if (consLength(code) === 3 && eq(code.hd, new Sym('trap-error'))) {
+        if (Transpiler.isForm(code, 'trap-error', 3)) {
             const body = this.translate(code.tl.hd, context);
             const handler = this.translate(code.tl.tl.hd, context);
             return `(function () {
@@ -247,8 +241,12 @@ class Transpiler {
         }
 
         // Flattened, sequential, side-effecting expressions
-        if (eq(code.hd, new Sym('do'))) {
-            const statements = Transpiler.flattenDo(code).map(expr => this.translate(expr, context));
+        if (Transpiler.isForm(code, 'do')) {
+            function flattenDo(expr) {
+                return Transpiler.isForm(expr, 'do') ? concatAll(consToArray(expr.tl).map(flattenDo)) : [expr];
+            }
+
+            const statements = flattenDo(code).map(expr => this.translate(expr, context));
             const butLastStatements = statements.slice(0, statements.length - 1).join(';\n');
             const lastStatement = statements[statements.length - 1];
             return `(function () {
@@ -258,22 +256,15 @@ class Transpiler {
         }
 
         // Inlined global symbol assign
-        if (consLength(code) === 3 &&
-            eq(code.hd, new Sym('set')) &&
-            isSymbol(code.tl.hd) &&
-            !context.isLocal(code.tl.hd.name)) {
-
-            return `kl.symbols.${Transpiler.rename(code.tl.hd.name)} = ${this.translate(code.tl.tl.hd, context.inHead())}`;
+        if (Transpiler.isForm(code, 'set', 3) && !context.isLocal(code.tl.hd.name)) {
+            const [, sym, value] = consToArray(code);
+            return `kl.symbols.${Transpiler.rename(sym.name)} = ${this.translate(value, context.inHead())}`;
         }
 
         // Inlined global symbol retrieve
-        if (consLength(code) === 2 &&
-            eq(code.hd, new Sym('value')) &&
-            isSymbol(code.tl.hd) &&
-            !context.isLocal(code.tl.hd.name) &&
-            kl.isSymbolDefined(code.tl.hd.name)) {
-
-            return `kl.symbols.${Transpiler.rename(code.tl.hd.name)}`;
+        if (Transpiler.isForm(code, 'value', 2) && !context.isLocal(code.tl.hd.name) && kl.isSymbolDefined(code.tl.hd.name)) {
+            const [, sym] = consToArray(code);
+            return `kl.symbols.${Transpiler.rename(sym.name)}`;
         }
 
         const fexpr = code.hd;

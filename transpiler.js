@@ -17,7 +17,7 @@ class Context {
         context.locals = this.locals.slice(0);
         context.scopeName = this.scopeName;
         context.position = this.position;
-        return x;
+        return context;
     }
     isLocal(name) {
         return this.locals.includes(name);

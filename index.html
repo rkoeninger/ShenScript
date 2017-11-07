@@ -18,7 +18,7 @@
                 console.log(eval(translate(Parser.parseString(getSource()), new Context().inTail())));
             }
             function doRunHead() {
-                console.log(Kl.run(eval(translate(Parser.parseString(getSource())))));
+                console.log(Thunk.runAll(eval(translate(Parser.parseString(getSource())))));
             }
         </script>
         <style>

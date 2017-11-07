@@ -67,16 +67,9 @@ class Kl {
         g.arity = f.arity;
         return g;
     }
-
-    static run(x) {
-        while (isThunk(x)) x = x.run();
-        return x;
-    }
-
     static headCall(f, args) {
-        return Kl.run(f.apply(null, args));
+        return Thunk.runAll(f.apply(null, args));
     }
-
     static tailCall(f, args) {
         return new Thunk(f, args);
     }

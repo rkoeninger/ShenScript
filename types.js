@@ -1,4 +1,3 @@
-
 /* Type mapping:
  *
  * KL Type            JS Type
@@ -18,9 +17,12 @@ class Thunk {
         this.f = f;
         this.args = args;
     }
-
     run() {
         return this.f.apply(null, this.args);
+    }
+    static runAll(x) {
+        while (isThunk(x)) x = x.run();
+        return x;
     }
 }
 class Sym {

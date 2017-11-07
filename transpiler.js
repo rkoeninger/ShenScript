@@ -63,7 +63,7 @@ class Transpiler {
     contructor(context) {
         this.context = context;
     }
-    static nameKlToJs(name) {
+    static rename(name) {
         let result = "";
         for (let i = 0; i < name.length; ++i) {
             switch (name[i]) {
@@ -132,7 +132,7 @@ class Transpiler {
         // Local variables and idle symbols
         if (isSymbol(code)) {
             if (context.isLocal(code.name)) {
-                return Transpiler.nameKlToJs(code.name);
+                return Transpiler.rename(code.name);
             }
             return `new Sym("${code.name}")`;
         }
@@ -159,7 +159,7 @@ class Transpiler {
         if (eq(code.hd, new Sym('cond'))) {
             function condRecur(code) {
                 if (code === null) {
-                    return `kl.fns.${Transpiler.nameKlToJs('simple-error')}("No clause was true")`;
+                    return `kl.fns.${Transpiler.rename('simple-error')}("No clause was true")`;
                 } else {
                     return Transpiler.ifExpr(
                         this.translate(code.hd.hd, context.inHead()),
@@ -188,7 +188,7 @@ class Transpiler {
             let body = `return ${this.translate(code, context)};`;
 
             for (let i = bindings.length - 1; i >= 0; --i) {
-                body = `const ${Transpiler.nameKlToJs(bindings[i].name)} = ${bindings[i].value};
+                body = `const ${Transpiler.rename(bindings[i].name)} = ${bindings[i].value};
                         ${body}`;
                 if (bindings[i].redefinition) {
                     body = `{
@@ -207,7 +207,7 @@ class Transpiler {
             const defunName = code.tl.hd.name;
             const paramNames = consToArray(code.tl.tl.hd).map(expr => expr.name);
             const arity = paramNames.length;
-            const translatedParams = paramNames.map(Transpiler.nameKlToJs).join();
+            const translatedParams = paramNames.map(Transpiler.rename).join();
             const body = this.translate(code.tl.tl.tl.hd, context.defun(defunName, paramNames));
             return `kl.defun('${defunName}', ${arity}, function (${translatedParams}) {
                       return ${body};
@@ -216,7 +216,7 @@ class Transpiler {
 
         // 1-arg anonymous function
         if (consLength(code) === 3 && eq(code.hd, new Sym('lambda'))) {
-            const param = Transpiler.nameKlToJs(code.tl.hd.name);
+            const param = Transpiler.rename(code.tl.hd.name);
             const body = this.translate(code.tl.tl.hd, context.lambda(code.tl.hd.name));
             return `function (${param}) {
                       return ${body};
@@ -261,7 +261,7 @@ class Transpiler {
             isSymbol(code.tl.hd) &&
             !context.isLocal(code.tl.hd.name)) {
 
-            return `kl.symbols.${Transpiler.nameKlToJs(code.tl.hd.name)} = ${this.translate(code.tl.tl.hd, context.inHead())}`;
+            return `kl.symbols.${Transpiler.rename(code.tl.hd.name)} = ${this.translate(code.tl.tl.hd, context.inHead())}`;
         }
 
         // Inlined global symbol retrieve
@@ -271,7 +271,7 @@ class Transpiler {
             !context.isLocal(code.tl.hd.name) &&
             kl.isSymbolDefined(code.tl.hd.name)) {
 
-            return `kl.symbols.${Transpiler.nameKlToJs(code.tl.hd.name)}`;
+            return `kl.symbols.${Transpiler.rename(code.tl.hd.name)}`;
         }
 
         const fexpr = code.hd;
@@ -300,7 +300,7 @@ class Transpiler {
             }
 
             // KL function call
-            const name = Transpiler.nameKlToJs(fexpr.name);
+            const name = Transpiler.rename(fexpr.name);
             if (context.isLocal(fexpr.name)) {
                 return context.invoke(name, translatedArgs);
             } else {

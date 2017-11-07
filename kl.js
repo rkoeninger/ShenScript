@@ -21,20 +21,20 @@ class Kl {
     defun(name, arity, f) {
         f.klName = name;
         f.arity = arity;
-        this.fns[Transpiler.nameKlToJs(name)] = f;
+        this.fns[Transpiler.rename(name)] = f;
         return f;
     }
 
     isSymbolDefined(name) {
-        return this.symbols.hasOwnProperty(Transpiler.nameKlToJs(name));
+        return this.symbols.hasOwnProperty(Transpiler.rename(name));
     }
 
     set(name, value) {
-        return this.symbols[Transpiler.nameKlToJs(name)] = value;
+        return this.symbols[Transpiler.rename(name)] = value;
     }
 
     value(name) {
-        return this.isSymbolDefined(name) ? this.symbols[Transpiler.nameKlToJs(name)] : err('symbol not defined');
+        return this.isSymbolDefined(name) ? this.symbols[Transpiler.rename(name)] : err('symbol not defined');
     }
 
     // static app(f, ...args) {

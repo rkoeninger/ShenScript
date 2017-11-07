@@ -5,7 +5,7 @@ function check(f) {
 }
 
 function exec(x) {
-    return eval(translate(Parser.parseString(x)));
+    return eval(Transpiler.translateHead(Parser.parseString(x)));
 }
 
 function tests() {

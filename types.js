@@ -137,3 +137,6 @@ function consLength(x) {
     }
     return length;
 }
+function concatAll(lists) {
+    return lists.reduce((x, y) => x.concat(y), []);
+}

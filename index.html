@@ -11,14 +11,17 @@
             function doParse() {
                 console.log(Parser.parseString(getSource()));
             }
-            function doTranslate() {
-                console.log(translate(Parser.parseString(getSource())));
+            function doTranslateTail() {
+                console.log(Transpiler.translateTail(Parser.parseString(getSource())));
+            }
+            function doTranslateHead() {
+                console.log(Transpiler.translateHead(Parser.parseString(getSource())));
             }
             function doRunTail() {
-                console.log(eval(translate(Parser.parseString(getSource()), Context.fromTail())));
+                console.log(eval(Transpiler.translateTail(Parser.parseString(getSource()))));
             }
             function doRunHead() {
-                console.log(Thunk.runAll(eval(translate(Parser.parseString(getSource())))));
+                console.log(Thunk.runAll(eval(Transpiler.translateHead(Parser.parseString(getSource())))));
             }
         </script>
         <style>
@@ -32,7 +35,8 @@
         <textarea id="code"></textarea>
         <br>
         <button onclick="doParse();">Parse</button>
-        <button onclick="doTranslate();">Translate</button>
+        <button onclick="doTranslateTail();">Translate Tail</button>
+        <button onclick="doTranslateHead();">Translate Head</button>
         <button onclick="doRunTail();">Run Tail</button>
         <button onclick="doRunHead();">Run Head</button>
     </body>

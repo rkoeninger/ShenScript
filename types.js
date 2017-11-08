@@ -98,22 +98,16 @@ let asKlError = x => isError(x) ? x : err('not an error');
 let asKlStream = x => isStream(x) ? x : err('not a stream');
 let asKlFunction = x => isFunction(x) ? x : err('not a function');
 function asIndexOf(i, a) {
-    if (isNumber(i)) {
-        if (i % 1 === 0) {
-            if (i >= 0 && i < a.length) {
-                return i;
-            }
-            throw new Error('not in bounds: ' + i);
-        }
-        throw new Error('not an integer: ' + i);
-    }
-    throw new Error('not a valid index: ' + i);
+    if (!isNumber(i)) throw new Error('not a valid index: ' + i);
+    if (i % 1 !== 0) throw new Error('not an integer: ' + i);
+    if (i < 0 || i >= a.length) throw new Error('not in bounds: ' + i);
+    return i;
 }
 function asKlValue(x) {
     if (x === true) return new Sym('true');
     if (x === false) return new Sym('false');
-    if (isString(x) || isNumber(x) || isSymbol(x) || isCons(x)) return x;
-    return x || null;
+    if (isString(x) || isNumber(x) || isSymbol(x) || isCons(x) || isArray(x) || isStream(x) || isFunction(x)) return x;
+    return null; // No other values admissible to KL
 }
 function arrayToCons(x) {
     let result = null;

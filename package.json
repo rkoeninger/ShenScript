@@ -1,0 +1,30 @@
+{
+  "name": "ShenScript",
+  "version": "0.0.1",
+  "description": "Shen for JavaScript",
+  "author": "Robert Koeninger",
+  "license": "BSD-3-Clause",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rkoeninger/ShenScript.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rkoeninger/ShenScript/issues"
+  },
+  "homepage": "https://github.com/rkoeninger/ShenScript",
+  "engines": {
+    "node": "~6.9.2",
+    "npm": "~5.3.0"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-mocha": "^4.3.1",
+    "gulp-util": "^3.0.8",
+    "mocha": "^4.0.1"
+  },
+  "dependencies": {},
+  "scripts": {
+    "test": "gulp test"
+  }
+}

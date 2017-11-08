@@ -98,3 +98,7 @@ class Parser {
         return results;
     }
 }
+
+if (typeof module !== 'undefined') {
+    module.exports = Parser;
+}

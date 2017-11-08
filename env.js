@@ -3,19 +3,20 @@ var env = {
     os() {
         if (navigator) {
             if (navigator.platform) {
-                if (navigator.platform.toLowerCase() === 'win32') return "Windows";
-                if (navigator.platform.toLowerCase() === 'win64') return "Windows";
+                if (navigator.platform.toLowerCase() === 'win32') return 'Windows';
+                if (navigator.platform.toLowerCase() === 'win64') return 'Windows';
             }
-            if (navigator.appVersion) {
-                if (navigator.appVersion.indexOf("Win") != -1) return "Windows";
-                if (navigator.appVersion.indexOf("Mac") != -1) return "macOS";
-                if (navigator.appVersion.indexOf("iPhone") != -1) return "iOS";
-                if (navigator.appVersion.indexOf("iPad") != -1) return "iOS";
-                if (navigator.appVersion.indexOf("iOS") != -1) return "iOS";
-                if (navigator.appVersion.indexOf("Linux") != -1) return "Linux";
-                if (navigator.appVersion.indexOf("Android") != -1) return "Android";
-                if (navigator.appVersion.indexOf("X11") != -1) return "Unix";
+            if (navigator.userAgent) {
+                if (navigator.userAgent.indexOf('Win') != -1) return 'Windows';
+                if (navigator.userAgent.indexOf('Mac') != -1) return 'macOS';
+                if (navigator.userAgent.indexOf('iPhone') != -1) return 'iOS';
+                if (navigator.userAgent.indexOf('iPad') != -1) return 'iOS';
+                if (navigator.userAgent.indexOf('iOS') != -1) return 'iOS';
+                if (navigator.userAgent.indexOf('Linux') != -1) return 'Linux';
+                if (navigator.userAgent.indexOf('Android') != -1) return 'Android';
+                if (navigator.userAgent.indexOf('X11') != -1) return 'Unix';
             }
+            return 'Unknown';
         }
         if (process) {
             if (process.platform) {
@@ -25,24 +26,25 @@ var env = {
                 if (process.platform.toLowerCase() === 'linux') return 'Linux';
             }
         }
-        return "Unknown";
+        return 'Unknown';
     },
 
     name() {
         if (window) {
-            if (navigator.appVersion.indexOf('Edge') != -1) return 'Edge';
-            if (navigator.appVersion.indexOf('Trident') != -1) return 'Internet Explorer';
-            if (navigator.appVersion.indexOf('Chrome') != -1) return 'Chrome';
-            if (navigator.appVersion.indexOf('Opera') != -1) return 'Opera';
-            if (navigator.appVersion.indexOf('Firefox') != -1) return 'Firefox';
-            if (navigator.appVersion.indexOf('Safari') != -1) return 'Safari';
-            if (navigator.appVersion.indexOf('Vivaldi') != -1) return 'Vivaldi';
-            if (navigator.appVersion.indexOf('Android') != -1) return 'Android';
+            if (navigator.userAgent.indexOf('Edge') != -1) return 'Edge';
+            if (navigator.userAgent.indexOf('Trident') != -1) return 'Internet Explorer';
+            if (navigator.userAgent.indexOf('Chrome') != -1) return 'Chrome';
+            if (navigator.userAgent.indexOf('Opera') != -1) return 'Opera';
+            if (navigator.userAgent.indexOf('Firefox') != -1) return 'Firefox';
+            if (navigator.userAgent.indexOf('Safari') != -1) return 'Safari';
+            if (navigator.userAgent.indexOf('Vivaldi') != -1) return 'Vivaldi';
+            if (navigator.userAgent.indexOf('Android') != -1) return 'Android';
+            return 'Unknown';
         }
         if (process) {
             return 'Node.js';
         }
-        return "Unknown";
+        return 'Unknown';
     },
 
     version() {

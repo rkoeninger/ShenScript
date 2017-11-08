@@ -1,3 +1,5 @@
+'use strict';
+
 class Parser {
     static parseString(text) {
         return new Parser(text).parse();

@@ -1,3 +1,5 @@
+'use strict';
+
 /* Type mapping:
  *
  * KL Type            JS Type
@@ -28,6 +30,9 @@ class Trampoline {
 class Sym {
     constructor(name) {
         this.name = name;
+    }
+    toString() {
+        return this.name;
     }
 }
 class Cons {
@@ -115,11 +120,11 @@ function arrayToCons(x) {
     for (let i = x.length - 1; i >= 0; i--) result = new Cons(x[i], result);
     return result;
 }
-function consToArray(x, array) {
-    if (!array) array = [];
-    if (isCons(x)) {
+function consToArray(x) {
+    const array = [];
+    while (isCons(x)) {
         array.push(x.hd);
-        return consToArray(x.tl, array);
+        x = x.tl;
     }
     if (x !== null) {
         throw new Error('not a valid list');
@@ -139,4 +144,7 @@ function consLength(x) {
 }
 function concatAll(lists) {
     return lists.reduce((x, y) => x.concat(y), []);
+}
+function butLast(list) {
+    return [list.slice(0, list.length - 1), list[list.length - 1]];
 }

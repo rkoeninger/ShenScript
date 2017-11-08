@@ -1,11 +1,13 @@
-class Context {
+'use strict';
+
+class Scope {
     static fromHead() {
-        return new Context().inHead();
+        return new Scope().inHead();
     }
     static fromTail() {
-        const context = new Context();
-        context.position = 'tail';
-        return context;
+        const scope = new Scope();
+        scope.position = 'tail';
+        return scope;
     }
     constructor() {
         this.locals = [];
@@ -13,42 +15,46 @@ class Context {
         this.position = 'head';
     }
     clone() {
-        const context = new Context();
-        context.locals = this.locals.slice(0);
-        context.scopeName = this.scopeName;
-        context.position = this.position;
-        return context;
+        const scope = new Scope();
+        scope.locals = this.locals.slice(0);
+        scope.scopeName = this.scopeName;
+        scope.position = this.position;
+        return scope;
     }
     isLocal(name) {
+        if (isSymbol(name)) name = name.name;
         return this.locals.includes(name);
     }
     let(name) {
-        const context = this.clone();
-        context.locals.push(name);
-        return context;
+        if (isSymbol(name)) name = name.name;
+        const scope = this.clone();
+        scope.locals.push(name);
+        return scope;
     }
-    lambda(name) {
-        const context = this.clone();
-        context.locals.push(name);
-        context.position = 'tail';
-        return context;
+    lambda(param) {
+        if (isSymbol(param)) param = param.name;
+        const scope = this.clone();
+        scope.locals.push(param);
+        scope.position = 'tail';
+        return scope;
     }
     freeze() {
-        const context = this.clone();
-        context.position = 'tail';
-        return context;
+        const scope = this.clone();
+        scope.position = 'tail';
+        return scope;
     }
     defun(name, params) {
-        const context = this.clone();
-        context.locals = params.slice(0);
-        context.scopeName = name || null;
-        context.position = 'tail';
-        return context;
+        if (isSymbol(name)) name = name.name;
+        const scope = this.clone();
+        scope.locals = params.slice(0);
+        scope.scopeName = name;
+        scope.position = 'tail';
+        return scope;
     }
     inHead() {
-        const context = this.clone();
-        context.position = 'head';
-        return context;
+        const scope = this.clone();
+        scope.position = 'head';
+        return scope;
     }
     invoke(f, args) {
         return `${this.position === 'head' ? 'Kl.headCall' : 'Kl.tailCall'}(${f}, [${args}])`;
@@ -57,15 +63,16 @@ class Context {
 
 class Transpiler {
     static translateHead(expr) {
-        return new Transpiler().translate(expr, Context.fromHead());
+        return new Transpiler().translate(expr, Scope.fromHead());
     }
     static translateTail(expr) {
-        return new Transpiler().translate(expr, Context.fromTail());
+        return new Transpiler().translate(expr, Scope.fromTail());
     }
-    contructor(context) {
-        this.context = context;
+    contructor(scope) {
+        this.scope = scope;
     }
     static rename(name) {
+        if (isSymbol(name)) name = name.name;
         let result = "";
         for (let i = 0; i < name.length; ++i) {
             switch (name[i]) {
@@ -73,17 +80,30 @@ class Transpiler {
                 case '_': { result += '$un'; break; }
                 case '$': { result += '$dl'; break; }
                 case '.': { result += '$do'; break; }
-                case '+': { result += "$pl"; break; }
-                case '*': { result += "$st"; break; }
-                case '/': { result += "$sl"; break; }
-                case '<': { result += "$lt"; break; }
-                case '>': { result += "$gt"; break; }
-                case '%': { result += "$pe"; break; }
-                case '&': { result += "$am"; break; }
-                case '^': { result += "$ca"; break; }
-                case '=': { result += "$eq"; break; }
-                case '!': { result += "$ex"; break; }
-                case '?': { result += "$qu"; break; }
+                case ',': { result += '$cm'; break; }
+                case '`': { result += '$bt'; break; }
+                case '+': { result += '$pl'; break; }
+                case '*': { result += '$st'; break; }
+                case '<': { result += '$lt'; break; }
+                case '>': { result += '$gt'; break; }
+                case '%': { result += '$pe'; break; }
+                case '&': { result += '$am'; break; }
+                case '^': { result += '$ca'; break; }
+                case '=': { result += '$eq'; break; }
+                case '!': { result += '$ex'; break; }
+                case '?': { result += '$qu'; break; }
+                case '@': { result += '$at'; break; }
+                case '~': { result += '$ti'; break; }
+                case '#': { result += '$ha'; break; }
+                case '|': { result += '$pi'; break; }
+                case ':': { result += '$co'; break; }
+                case ';': { result += '$sc'; break; }
+                case '/': { result += '$sl'; break; }
+                case '{': { result += '$lc'; break; }
+                case '}': { result += '$rc'; break; }
+                case '[': { result += '$ls'; break; }
+                case ']': { result += '$rs'; break; }
+                case '\\': { result += '$bs'; break; }
                 default:  { result += name[i]; break; }
             }
         }
@@ -95,15 +115,45 @@ class Transpiler {
     static ifExpr(c, x, y) {
         return `asJsBool(${c})?(${x}):(${y})`;
     }
+    conditionExpr(expr, scope) {
+        return `asJsBool(${this.translate(expr, scope.inHead())})`;
+    }
+    renderLet(bindings, body) {
+        if (isCons(bindings)) {
+            body = `const ${Transpiler.rename(bindings.hd.sym)} = ${bindings.hd.value};
+                    ${body}`;
+            if (bindings.hd.redefinition) {
+                body = `{
+                  ${body}
+                }`;
+            }
+            return this.renderLet(bindings.tl, body);
+        }
+        return `(function () {
+                  ${body}
+                })()`;
+    }
+    translateLet(bindings, expr, scope) {
+        if (Transpiler.isForm(expr, 'let', 4)) {
+            const [_let, local, value, body] = consToArray(expr);
+            const binding = {
+                sym: local,
+                value: this.translate(value, scope),
+                redefinition: consToArray(bindings).some(x => x.sym.name === local.name)
+            };
+            return this.translateLet(new Cons(binding, bindings), body, scope.let(local));
+        }
+        return this.renderLet(bindings, `return ${this.translate(expr, scope)};`);
+    }
 
     // TODO: track expression types to simplify code
 
     // TODO: use fn.length to do partial application/overapplication
 
-    // TODO: convert Statements -> ExpressionContext with
+    // TODO: convert Statements -> Expressionscope with
     //       `function(){ ${butLastStmts.join(';')}; return ${lastStmt}; }()`
 
-    // TODO: convert Expression -> StatementContext with
+    // TODO: convert Expression -> Statementscope with
     //       `(${expr});`
 
     // function convertType(typedExpr, targetType) {
@@ -113,53 +163,48 @@ class Transpiler {
     // }
 
     // Value{Num, Str, Sym, Cons} -> JsString
-    translate(code, context) {
+    translate(code, scope) {
         if (isArray(code) || isFunction(code) || isError(code) || isStream(code)) {
             err('vectors, functions, errors and streams are not valid syntax');
         }
 
-        if (!context) context = this.context;
+        if (!scope) scope = this.scope;
 
         // Literals
         if (code === null) return 'null';
-        if (isNumber(code)) return '' + code;
+        if (isNumber(code)) return `${code}`;
         if (isString(code)) return `"${code}"`;
 
         // Local variables and idle symbols
-        if (isSymbol(code)) {
-            if (context.isLocal(code.name)) {
-                return Transpiler.rename(code.name);
-            }
-            return `new Sym("${code.name}")`;
-        }
+        if (isSymbol(code)) return scope.isLocal(code) ? Transpiler.rename(code) : `new Sym("${code}")`;
 
         // Conjunction and disjunction
         if (Transpiler.isForm(code, 'and', 3)) {
-            const left = this.translate(code.tl.hd, context.inHead());
-            const right = this.translate(code.tl.tl.hd, context.inHead());
-            return `asKlBool(asJsBool(${left}) && asJsBool(${right}))`;
+            const [_and, left, right] = consToArray(code);
+            return `asKlBool(asJsBool(${this.translate(left, scope.inHead())}) && asJsBool(${this.translate(right, scope.inHead())}))`;
         }
         if (Transpiler.isForm(code, 'or', 3)) {
-            const left = this.translate(code.tl.hd, context.inHead());
-            const right = this.translate(code.tl.tl.hd, context.inHead());
-            return `asKlBool(asJsBool(${left}) || asJsBool(${right}))`;
+            const [_or, left, right] = consToArray(code);
+            return `asKlBool(asJsBool(${this.translate(left, scope.inHead())}) || asJsBool(${this.translate(right, scope.inHead())}))`;
         }
 
         // Conditional evaluation
         if (Transpiler.isForm(code, 'if', 4)) {
+            const [_if, condition, consequent, alternative] = consToArray(code);
             return Transpiler.ifExpr(
-                this.translate(code.tl.hd, context.inHead()),
-                this.translate(code.tl.tl.hd, context),
-                this.translate(code.tl.tl.tl.hd, context));
+                this.translate(condition, scope.inHead()),
+                this.translate(consequent, scope),
+                this.translate(alternative, scope));
         }
         if (Transpiler.isForm(code, 'cond')) {
             function condRecur(code) {
                 if (code === null) {
                     return `kl.fns.${Transpiler.rename('simple-error')}("No clause was true")`;
                 } else {
+                    const [condition, consequent] = consToArray(code.hd);
                     return Transpiler.ifExpr(
-                        this.translate(code.hd.hd, context.inHead()),
-                        this.translate(code.hd.tl.hd, context),
+                        this.translate(condition, scope.inHead()),
+                        this.translate(consequent, scope),
                         condRecur(code.tl));
                 }
             }
@@ -168,141 +213,102 @@ class Transpiler {
 
         // Local variable binding
         if (Transpiler.isForm(code, 'let', 4)) {
-            const bindings = [];
-
-            while (Transpiler.isForm(code, 'let', 4)) {
-                const name = code.tl.hd.name;
-                bindings.push({
-                    name,
-                    value: this.translate(code.tl.tl.hd, context),
-                    redefinition: bindings.some(x => x.name === name)
-                });
-                context = context.let(name);
-                code = code.tl.tl.tl.hd;
-            }
-
-            let body = `return ${this.translate(code, context)};`;
-
-            for (let i = bindings.length - 1; i >= 0; --i) {
-                body = `const ${Transpiler.rename(bindings[i].name)} = ${bindings[i].value};
-                        ${body}`;
-                if (bindings[i].redefinition) {
-                    body = `{
-                        ${body}
-                    }`;
-                }
-            }
-
-            return `(function () {
-                      ${body}
-                    })()`;
+            return this.translateLet(null, code, scope);
         }
 
         // Global function definition
         if (Transpiler.isForm(code, 'defun', 4)) {
-            const defunName = code.tl.hd.name;
-            const paramNames = consToArray(code.tl.tl.hd).map(expr => expr.name);
-            const arity = paramNames.length;
-            const translatedParams = paramNames.map(Transpiler.rename).join();
-            const body = this.translate(code.tl.tl.tl.hd, context.defun(defunName, paramNames));
-            return `kl.defun('${defunName}', ${arity}, function (${translatedParams}) {
-                      return ${body};
+            const [_defun, name, params, body] = consToArray(code);
+            const paramNames = consToArray(params).map(expr => expr.name);
+            return `kl.defun('${name}', ${paramNames.length}, function (${paramNames.map(Transpiler.rename).join()}) {
+                      return ${this.translate(body, scope.defun(name, paramNames))};
                     })`;
         }
 
         // 1-arg anonymous function
         if (Transpiler.isForm(code, 'lambda', 3)) {
-            const param = Transpiler.rename(code.tl.hd.name);
-            const body = this.translate(code.tl.tl.hd, context.lambda(code.tl.hd.name));
-            return `Kl.setArity(1, function (${param}) {
-                      return ${body};
+            const [_lambda, param, body] = consToArray(code);
+            return `Kl.setArity(1, function (${Transpiler.rename(param)}) {
+                      return ${this.translate(body, scope.lambda(param))};
                     })`;
         }
 
         // 0-arg anonymous function
         if (Transpiler.isForm(code, 'freeze', 2)) {
-            const body = this.translate(code.tl.hd, context.freeze());
+            const [_freeze, body] = consToArray(code);
             return `Kl.setArity(0, function () {
-                      return ${body};
+                      return ${this.translate(body, scope.freeze())};
                     })`;
         }
 
         // Error handling
         if (Transpiler.isForm(code, 'trap-error', 3)) {
-            const body = this.translate(code.tl.hd, context);
-            const handler = this.translate(code.tl.tl.hd, context);
+            const [_trapError, body, handler] = consToArray(code);
             return `(function () {
                       try {
-                        return ${body};
+                        return ${this.translate(body, scope)};
                       } catch ($err) {
-                        return ${handler}($err);
+                        return ${this.translate(handler, scope)}($err);
                       }
                     })()`;
         }
 
         // Flattened, sequential, side-effecting expressions
         if (Transpiler.isForm(code, 'do')) {
-            function flattenDo(expr) {
-                return Transpiler.isForm(expr, 'do') ? concatAll(consToArray(expr.tl).map(flattenDo)) : [expr];
-            }
-
-            const statements = flattenDo(code).map(expr => this.translate(expr, context));
-            const butLastStatements = statements.slice(0, statements.length - 1).join(';\n');
-            const lastStatement = statements[statements.length - 1];
+            const flattenDo = expr => Transpiler.isForm(expr, 'do') ? concatAll(consToArray(expr.tl).map(flattenDo)) : [expr];
+            const [voids, last] = butLast(flattenDo(code).map(expr => this.translate(expr, scope)));
             return `(function () {
-                      ${butLastStatements};
-                      return ${lastStatement};
+                      ${voids.join(';\n')};
+                      return ${last};
                     })()`;
         }
 
         // Inlined global symbol assign
-        if (Transpiler.isForm(code, 'set', 3) && !context.isLocal(code.tl.hd.name)) {
-            const [, sym, value] = consToArray(code);
-            return `kl.symbols.${Transpiler.rename(sym.name)} = ${this.translate(value, context.inHead())}`;
+        if (Transpiler.isForm(code, 'set', 3)) {
+            const [_set, sym, value] = consToArray(code);
+            if (!scope.isLocal(sym)) {
+                return `kl.symbols.${Transpiler.rename(sym)} = ${this.translate(value, scope.inHead())}`;
+            }
         }
 
         // Inlined global symbol retrieve
-        if (Transpiler.isForm(code, 'value', 2) && !context.isLocal(code.tl.hd.name) && kl.isSymbolDefined(code.tl.hd.name)) {
-            const [, sym] = consToArray(code);
-            return `kl.symbols.${Transpiler.rename(sym.name)}`;
+        if (Transpiler.isForm(code, 'value', 2)) {
+            const [_value, sym] = consToArray(code);
+            if (!scope.isLocal(sym) && kl.isSymbolDefined(sym)) {
+                return `kl.symbols.${Transpiler.rename(sym)}`;
+            }
         }
 
-        const fexpr = code.hd;
-        const translatedArgs = consToArray(code.tl).map(expr => this.translate(expr, context.inHead())).join();
+        const [fexpr, ...argExprs] = consToArray(code);
+        const translatedArgs = argExprs.map(expr => this.translate(expr, scope.inHead())).join();
 
         if (isSymbol(fexpr)) {
 
             // JS-injection form
             if (fexpr.name === 'js.') {
-                if (consLength(code.length) === 1) {
-                    return 'null';
-                }
-                const statements = consToArray(code.tl);
-                const butLastStatements = statements.slice(0, statements.length - 1).join(';\n');
-                const lastStatement = statements[statements.length - 1];
+                if (consLength(code) === 1) return 'null';
+                const [voids, last] = butLast(consToArray(code.tl));
                 return `(function () {
-                          ${butLastStatements};
-                          return asKlValue(${lastStatement});
+                          ${voids.join(';\n')};
+                          return asKlValue(${last});
                         })()`;
             }
 
             // JS-namespace function call
             if (fexpr.name.indexOf('js.') === 0) {
-                const name = fexpr.name.slice(3);
-                return `${name}(${translatedArgs})`;
+                return `${fexpr.name.slice(3)}(${translatedArgs})`;
             }
 
             // KL function call
-            const name = Transpiler.rename(fexpr.name);
-            if (context.isLocal(fexpr.name)) {
-                return context.invoke(name, translatedArgs);
+            const name = Transpiler.rename(fexpr);
+            if (scope.isLocal(fexpr)) {
+                return scope.invoke(name, translatedArgs);
             } else {
-                return context.invoke(`kl.fns.${name}`, translatedArgs);
+                return scope.invoke(`kl.fns.${name}`, translatedArgs);
             }
         }
 
         // Application of function value
-        const f = this.translate(fexpr, context.inHead());
-        return context.invoke(`asKlFunction(${f})`, translatedArgs);
+        return scope.invoke(`asKlFunction(${this.translate(fexpr, scope.inHead())})`, translatedArgs);
     }
 }

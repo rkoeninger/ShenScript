@@ -1,14 +1,12 @@
-
+'use strict';
 
 function check(f) {
     if (!f()) console.error('fail');
 }
-
 function exec(x) {
     return eval(Transpiler.translateHead(Parser.parseString(x)));
 }
-
-function tests() {
+(function () {
     check(() => eq(Parser.parseString('"abc"'), 'abc'));
     check(() => eq(Parser.parseString('(abc)').hd, new Sym('abc')));
     check(() => Parser.parseString('5') === 5);
@@ -35,7 +33,7 @@ function tests() {
     });
     check(() => exec('((+ 6) 7)') === 13);
     check(() => exec('((lambda X (lambda Y (+ X Y))) 6 7)') === 13);
+    check(() => exec('(js. "2 + 3")') === 5);
+    check(() => exec('(js.Math.max 2 3)') === 3)
     console.log('done');
-}
-
-tests();
+})();

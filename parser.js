@@ -14,50 +14,61 @@ class Parser {
     get current() {
         return this.text[this.pos];
     }
-    get isDone() {
+    get next() {
+        return this.text[this.pos + 1];
+    }
+    get done() {
         return this.pos >= this.text.length;
     }
+    get more() {
+        return !this.done;
+    }
     skipWhitespace() {
-        while (!this.isDone && /\s/.test(this.current)) this.skipOne();
+        while (this.more && /\s/.test(this.current)) this.skipOne();
     }
     skipOne() {
         this.pos++;
     }
-    isDigitOrSign(ch) {
-        return /[\d]/.test(ch);
+    static isDigit(ch) {
+        return ch !== undefined && /\d/.test(ch);
     }
-    isSymbolChar(ch) {
-        return /\S/.test(ch) && ch !== '(' && ch !== ')';
+    static isSign(ch) {
+        return ch !== undefined && /[\-\+]/.test(ch);
+    }
+    static isSymbolChar(ch) {
+        return ch !== undefined && /[^\s\(\)]/.test(ch);
     }
     readString() {
         this.skipOne();
         const start = this.pos;
         while (this.current !== '"') {
-            if (this.isDone) throw new Error('unexpected end of input');
+            if (this.done) throw new Error('unexpected end of input');
             this.skipOne();
         }
         const end = this.pos;
         this.skipOne();
         return this.text.substring(start, end);
     }
-
-    // TODO: read fractional and negative numbers
-
     readNumber() {
         const start = this.pos;
-        while (this.isDigitOrSign(this.current) && !this.isDone) this.skipOne();
+        if (this.more && Parser.isSign(this.current)) this.skipOne();
+        while (this.more && Parser.isDigit(this.current)) this.skipOne();
+        if (this.more && this.current === '.') {
+            this.skipOne();
+            while (this.more && Parser.isDigit(this.current)) this.skipOne();
+        }
         const end = this.pos;
         return parseFloat(this.text.substring(start, end));
     }
     readSymbol() {
         const start = this.pos;
-        while (this.isSymbolChar(this.current) && !this.isDone) this.skipOne();
+        while (this.more && Parser.isSymbolChar(this.current)) this.skipOne();
         const end = this.pos;
         return new Sym(this.text.substring(start, end));
     }
     parse() {
         this.skipWhitespace();
-        if (this.isDone) throw new Error('unexpected end of input');
+        if (this.done) throw new Error('unexpected end of input');
         if (this.current === '(') {
             this.skipOne();
             const children = [];
@@ -73,13 +84,14 @@ class Parser {
             return undefined;
         }
         if (this.current === '"') return this.readString();
-        if (this.isDigitOrSign(this.current)) return this.readNumber();
+        if (Parser.isDigit(this.current) ||
+            (Parser.isSign(this.current) && Parser.isDigit(this.next))) return this.readNumber();
         return this.readSymbol();
     }
     parseAll() {
         this.skipWhitespace();
         const results = [];
-        while (!this.isDone) {
+        while (this.more) {
             results.add(this.parse());
             this.skipWhitespace();
         }

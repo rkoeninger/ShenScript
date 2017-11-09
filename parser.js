@@ -1,8 +1,6 @@
-'use strict';
-
 if (typeof require !== 'undefined') {
     const types = require('./types');
-    var Sym = types.Sym;
+    Sym = types.Sym;
 }
 
 class Parser {

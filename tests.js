@@ -1,18 +1,10 @@
 'use strict';
 
-// function check(f) {
-//     if (!f()) console.error('fail');
-// }
 // function exec(x) {
 //     return eval(Transpiler.translateHead(Parser.parseString(x)));
 // }
 // (function () {
-//     check(() => eq(Parser.parseString('"abc"'), 'abc'));
-//     check(() => eq(Parser.parseString('abc'), new Sym('abc')));
 //     check(() => eq(Parser.parseString('(abc)').hd, new Sym('abc')));
-//     check(() => Parser.parseString('5') === 5);
-//     check(() => Parser.parseString('-13') === -13);
-//     check(() => Parser.parseString('+1.25') === 1.25);
 //     check(() => exec('(+ 1 2)') === 3);
 //     check(() => exec('(value *language*)') === 'JavaScript');
 //     check(() => exec('(let X 123 X)') === 123);

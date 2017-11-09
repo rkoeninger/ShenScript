@@ -1,12 +1,38 @@
+const del = require('del');
 const gulp = require('gulp');
-const mocha = require('gulp-mocha')({reporter: 'spec'});
+const gunzip = require('gulp-gunzip')();
 const gutil = require('gulp-util');
+const mocha = require('gulp-mocha')({reporter: 'spec'});
+const rename = require('gulp-rename');
+const request = require('request');
+const source = require('vinyl-source-stream');
+const untar = require('gulp-untar')();
 
 const src = gulp.src.bind(gulp);
+const dest = gulp.dest.bind(gulp);
 const task = gulp.task.bind(gulp);
 
 const testFiles = 'tests.js';
 
-task('fetch', () => gutil.log('pull down klambda and extract'));
+const kernelVersion = '20.1';
+const kernelFolderName = `ShenOSKernel-${kernelVersion}`;
+const kernelArchiveName = `${kernelFolderName}.tar.gz`;
+const kernelArchiveUrl = `https://github.com/Shen-Language/shen-sources/releases/download/shen-${kernelVersion}/${kernelArchiveName}`;
 
-task('test', () => src(testFiles, {read: false}).pipe(mocha));
+task('clean-kernel', () => del(['kernel']));
+
+task('fetch-kernel', ['clean-kernel'], () =>
+    request(kernelArchiveUrl)
+        .pipe(source(kernelArchiveName))
+        .pipe(gunzip)
+        .pipe(untar)
+        .pipe(dest('.')));
+
+task('rename-kernel', ['fetch-kernel'], () =>
+    src(`./${kernelFolderName}/**/*`, { base: process.cwd() })
+        .pipe(rename(path => path.dirname = path.dirname.replace(kernelFolderName, 'kernel')))
+        .pipe(dest('.')));
+
+task('fetch', ['rename-kernel'], () => del([kernelFolderName]));
+
+task('test', () => src(testFiles, { read: false }).pipe(mocha));

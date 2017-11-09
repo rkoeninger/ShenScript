@@ -142,3 +142,7 @@ function concatAll(lists) {
 function butLast(list) {
     return [list.slice(0, list.length - 1), list[list.length - 1]];
 }
+
+if (typeof module !== 'undefined') {
+    module.exports = { Sym, Cons, Trampoline, Stream, eq };
+}

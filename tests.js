@@ -41,10 +41,17 @@
 //     console.log('done');
 // })();
 
-const {equal} = require('assert');
-require('./types.js');
+const { equal, ok } = require('assert');
+const { Sym, eq } = require('./types.js');
 const Parser = require('./parser.js');
 
 describe('parsing', () => {
     it('should read string literals', () => equal('abc', Parser.parseString('"abc"')));
+    it('should read symbols', () => ok(eq(new Sym('abc'), Parser.parseString('abc'))));
+    describe('numbers', () => {
+        it('should parse numeric literals', () => equal(5, Parser.parseString('5')));
+        it('should parse negative numeric literals', () => equal(-143, Parser.parseString('-143')));
+        it('should parse fractional numeric literals', () => equal(4.625, Parser.parseString('4.625')));
+        it('should parse explicitly positive numeric literals', () => equal(23, Parser.parseString('+23')));
+    });
 });

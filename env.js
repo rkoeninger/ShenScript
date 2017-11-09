@@ -1,7 +1,7 @@
 'use strict';
 var env = {
     os() {
-        if (navigator) {
+        if (typeof navigator !== 'undefined') {
             if (navigator.platform) {
                 if (navigator.platform.toLowerCase() === 'win32') return 'Windows';
                 if (navigator.platform.toLowerCase() === 'win64') return 'Windows';
@@ -18,7 +18,7 @@ var env = {
             }
             return 'Unknown';
         }
-        if (process) {
+        if (typeof process !== 'undefined') {
             if (process.platform) {
                 if (process.platform.toLowerCase() === 'win32') return 'Windows';
                 if (process.platform.toLowerCase() === 'win64') return 'Windows';
@@ -30,7 +30,7 @@ var env = {
     },
 
     name() {
-        if (window) {
+        if (typeof window !== 'undefined') {
             if (navigator.userAgent.indexOf('Edge') != -1) return 'Edge';
             if (navigator.userAgent.indexOf('Trident') != -1) return 'Internet Explorer';
             if (navigator.userAgent.indexOf('Chrome') != -1) return 'Chrome';
@@ -41,14 +41,14 @@ var env = {
             if (navigator.userAgent.indexOf('Android') != -1) return 'Android';
             return 'Unknown';
         }
-        if (process) {
+        if (typeof process !== 'undefined') {
             return 'Node.js';
         }
         return 'Unknown';
     },
 
     version() {
-        if (window) {
+        if (typeof window !== 'undefined') {
             var ua = navigator.userAgent,
                 tem,
                 M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
@@ -64,9 +64,13 @@ var env = {
             if ((tem = ua.match(/version\/(\d+)/i)) != null) M.splice(1, 1, tem[1]);
             return M[1];
         }
-        if (process) {
+        if (typeof process !== 'undefined') {
             return process.version.slice(1);
         }
         return "Unknown";
     }
 };
+
+if (typeof module !== 'undefined') {
+    module.exports = env;
+}

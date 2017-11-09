@@ -15,16 +15,9 @@
  */
 
 class Trampoline {
-    static runAll(x) {
-        while (isTrampoline(x)) x = x.run();
-        return x;
-    }
     constructor(f, args) {
         this.f = f;
         this.args = args;
-    }
-    run() {
-        return Kl.app(this.f, this.args);
     }
 }
 class Sym {
@@ -144,5 +137,38 @@ function butLast(list) {
 }
 
 if (typeof module !== 'undefined') {
-    module.exports = { Sym, Cons, Trampoline, Stream, eq };
+    module.exports = {
+        Sym,
+        Cons,
+        Trampoline,
+        Stream,
+        eq,
+        arrayToCons,
+        consLength,
+        concatAll,
+        butLast,
+        consToArray,
+        isArray,
+        isNumber,
+        isCons,
+        isFunction,
+        isSymbol,
+        isString,
+        isError,
+        isStream,
+        isTrampoline,
+        err,
+        asKlBool,
+        asKlNumber,
+        asKlString,
+        asKlSymbol,
+        asKlVector,
+        asKlCons,
+        asKlError,
+        asKlStream,
+        asKlFunction,
+        asIndexOf,
+        asKlValue,
+        asJsBool
+    };
 }

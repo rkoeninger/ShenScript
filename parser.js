@@ -1,6 +1,7 @@
 if (typeof require !== 'undefined') {
     const types = require('./types');
     Sym = types.Sym;
+    arrayToCons = types.arrayToCons;
 }
 
 class Parser {

@@ -1,4 +1,36 @@
-'use strict';
+if (typeof require !== 'undefined') {
+    env = require('./env');
+    Transpiler = require('./transpiler');
+    const types = require('./types');
+    Sym = types.Sym;
+    Trampoline = types.Trampoline;
+    arrayToCons = types.arrayToCons;
+    isArray = types.isArray;
+    isFunction = types.isFunction;
+    isStream = types.isStream;
+    isString = types.isString;
+    isNumber = types.isNumber;
+    isCons = types.isCons;
+    isSymbol = types.isSymbol;
+    isError = types.isError;
+    isTrampoline = types.isTrampoline;
+    consLength = types.consLength;
+    concatAll = types.concatAll;
+    butLast = types.butLast;
+    consToArray = types.consToArray;
+    err = types.err;
+    asKlBool = types.asKlBool;
+    asKlNumber = types.asKlNumber;
+    asKlString = types.asKlString;
+    asKlSymbol = types.asKlSymbol;
+    asKlVector = types.asKlVector;
+    asKlCons = types.asKlCons;
+    asKlError = types.asKlError;
+    asKlStream = types.asKlStream;
+    asKlFunction = types.asKlFunction;
+    asIndexOf = types.asIndexOf;
+    asKlValue = types.asKlValue;
+}
 
 // TODO: https://github.com/lukehoban/es6features
 
@@ -43,7 +75,7 @@ class Kl {
         });
     }
     static headCall(f, args) {
-        return Trampoline.runAll(Kl.app(f, args));
+        return Kl.runAll(Kl.app(f, args));
     }
     static tailCall(f, args) {
         return new Trampoline(f, args);
@@ -51,6 +83,13 @@ class Kl {
     static setArity(arity, f) {
         f.arity = arity;
         return f;
+    }
+    static runAll(t) {
+        while (isTrampoline(t)) t = Kl.run(t);
+        return t;
+    }
+    static run(t) {
+        return Kl.app(t.f, t.args);
     }
 }
 
@@ -125,3 +164,7 @@ kl.defun('open', 2, (path, d) => err('not implemented'));
 kl.defun('close', 1, s => err('not implemented'));
 kl.defun('read-byte', 1, s => err('not implemented'));
 kl.defun('write-byte', 2, (s, b) => err('not implemented'));
+
+if (typeof module !== 'undefined') {
+    module.exports = { Kl, kl };
+}

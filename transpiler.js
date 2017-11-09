@@ -1,4 +1,23 @@
-'use strict';
+if (typeof require !== 'undefined') {
+    const types = require('./types');
+    Sym = types.Sym;
+    Cons = types.Cons;
+    arrayToCons = types.arrayToCons;
+    isArray = types.isArray;
+    isFunction = types.isFunction;
+    isStream = types.isStream;
+    isString = types.isString;
+    isNumber = types.isNumber;
+    isCons = types.isCons;
+    isSymbol = types.isSymbol;
+    isError = types.isError;
+    consLength = types.consLength;
+    concatAll = types.concatAll;
+    butLast = types.butLast;
+    consToArray = types.consToArray;
+    asJsBool = types.asJsBool;
+    eq = types.eq;
+}
 
 class Scope {
     static fromHead() {
@@ -311,4 +330,8 @@ class Transpiler {
         // Application of function value
         return scope.invoke(`asKlFunction(${this.translate(fexpr, scope.inHead())})`, translatedArgs);
     }
+}
+
+if (typeof module !== 'undefined') {
+    module.exports = Transpiler;
 }

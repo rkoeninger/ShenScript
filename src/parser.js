@@ -96,7 +96,7 @@ class Parser {
         this.skipWhitespace();
         const results = [];
         while (this.more) {
-            results.add(this.parse());
+            results.push(this.parse());
             this.skipWhitespace();
         }
         return results;

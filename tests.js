@@ -1,8 +1,8 @@
 const { equal, ok } = require('assert');
-const { Sym, eq } = require('./types');
-const Parser = require('./parser');
-const Transpiler = require('./transpiler');
-const { Kl, kl } = require('./kl');
+const { Sym, eq } = require('./src/types');
+const Parser = require('./src/parser');
+const Transpiler = require('./src/transpiler');
+const { Kl, kl } = require('./src/kl');
 global.kl = kl;
 const exec = x => eval(Transpiler.translateHead(Parser.parseString(x)));
 

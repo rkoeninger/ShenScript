@@ -1,12 +1,13 @@
 const del = require('del');
 const gulp = require('gulp');
-const gunzip = require('gulp-gunzip')();
+const gunzip = require('gulp-gunzip');
 const gutil = require('gulp-util');
-const mocha = require('gulp-mocha')({ reporter: 'spec' });
+const minify = require('gulp-minify');
+const mocha = require('gulp-mocha');
 const rename = require('gulp-rename');
 const request = require('request');
 const source = require('vinyl-source-stream');
-const untar = require('gulp-untar')();
+const untar = require('gulp-untar');
 const webpackConfig = require('./webpack.config.js');
 const webpack = require('webpack-stream')(webpackConfig);
 
@@ -24,7 +25,11 @@ const kernelArchiveName = `${kernelFolderName}.tar.gz`;
 const kernelArchiveUrlBase = 'https://github.com/Shen-Language/shen-sources/releases/download';
 const kernelArchiveUrl = `${kernelArchiveUrlBase}/shen-${kernelVersion}/${kernelArchiveName}`;
 
-task('bundle', () => src(srcFiles).pipe(webpack).pipe(dest(distRoot)));
+task('bundle', () =>
+    src(srcFiles)
+        .pipe(webpack)
+        .pipe(minify())
+        .pipe(dest(distRoot)));
 
 task('clean', () => del([distRoot]));
 
@@ -33,8 +38,8 @@ task('clean-kernel', () => del(['kernel']));
 task('fetch-kernel', ['clean-kernel'], () =>
     request(kernelArchiveUrl)
         .pipe(source(kernelArchiveName))
-        .pipe(gunzip)
-        .pipe(untar)
+        .pipe(gunzip())
+        .pipe(untar())
         .pipe(dest('.')));
 
 task('rename-kernel', ['fetch-kernel'], () =>
@@ -44,4 +49,6 @@ task('rename-kernel', ['fetch-kernel'], () =>
 
 task('fetch', ['rename-kernel'], () => del([kernelFolderName]));
 
-task('test', () => src(testFiles, { read: false }).pipe(mocha));
+task('test', () =>
+    src(testFiles, { read: false })
+        .pipe(mocha({ reporter: 'spec' })));

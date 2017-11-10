@@ -18,6 +18,7 @@ describe('parsing', () => {
     });
 });
 describe('primitives', () => {
+    it('conds should act as if-else chains', () => equal(2, exec('(cond (false 1) (true 2) (false 3))')));
     it('+ should add numbers', () => equal(3, exec('(+ 1 2)')));
     it('value should accept idle symbols', () => exec('(value *language*)') === 'JavaScript');
     it('let should bind local variables', () => exec('(let X 123 X)') === 123);

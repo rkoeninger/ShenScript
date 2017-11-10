@@ -164,6 +164,17 @@ class Transpiler {
         }
         return this.renderLet(bindings, `return ${this.translate(expr, scope)};`);
     }
+    condRecur(code, scope) {
+        if (code === null) {
+            return `kl.fns.${Transpiler.rename('simple-error')}("No clause was true")`;
+        } else {
+            const [condition, consequent] = consToArray(code.hd);
+            return Transpiler.ifExpr(
+                this.translate(condition, scope.inHead()),
+                this.translate(consequent, scope),
+                this.condRecur(code.tl, scope));
+        }
+    }
 
     // TODO: track expression types to simplify code
 
@@ -216,18 +227,7 @@ class Transpiler {
                 this.translate(alternative, scope));
         }
         if (Transpiler.isForm(code, 'cond')) {
-            function condRecur(code) {
-                if (code === null) {
-                    return `kl.fns.${Transpiler.rename('simple-error')}("No clause was true")`;
-                } else {
-                    const [condition, consequent] = consToArray(code.hd);
-                    return Transpiler.ifExpr(
-                        this.translate(condition, scope.inHead()),
-                        this.translate(consequent, scope),
-                        condRecur(code.tl));
-                }
-            }
-            return condRecur(code.tl);
+            return this.condRecur(code.tl, scope);
         }
 
         // Local variable binding

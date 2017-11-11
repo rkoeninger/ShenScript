@@ -14,8 +14,8 @@
   },
   "homepage": "https://github.com/rkoeninger/ShenScript",
   "engines": {
-    "node": "~6.9.2",
-    "npm": "~5.3.0"
+    "node": "~6.11.5",
+    "npm": "~5.5.1"
   },
   "devDependencies": {
     "del": "^3.0.0",

@@ -128,6 +128,25 @@ class Transpiler {
         }
         return result;
     }
+    static escape(s) {
+        let result = "";
+        for (let i = 0; i < s.length; ++i) {
+            switch (s[i]) {
+                case '\\': { result += '\\\\'; break; }
+                case '\0': { result += '\\0'; break; }
+                case '\b': { result += '\\b'; break; }
+                case '\f': { result += '\\f'; break; }
+                case '\n': { result += '\\n'; break; }
+                case '\r': { result += '\\r'; break; }
+                case '\t': { result += '\\t'; break; }
+                case '\v': { result += '\\v'; break; }
+                case '\"': { result += '\\"'; break; }
+                case '\'': { result += "\\'"; break; }
+                default: { result += s[i]; break; }
+            }
+        }
+        return result;
+    }
     static isForm(expr, keyword, length) {
         return isCons(expr) && (!length || consLength(expr) === length) && isSymbol(expr.hd) && expr.hd.name === keyword;
     }
@@ -203,7 +222,7 @@ class Transpiler {
         // Literals
         if (code === null) return 'null';
         if (isNumber(code)) return `${code}`;
-        if (isString(code)) return `"${code}"`;
+        if (isString(code)) return `"${Transpiler.escape(code)}"`;
 
         // Local variables and idle symbols
         if (isSymbol(code)) return scope.isLocal(code) ? Transpiler.rename(code) : `new Sym("${code}")`;

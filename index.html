@@ -3,29 +3,16 @@
     <head>
         <meta charset="utf-8"/>
         <title>ShenScript</title>
-        <script src="dist/bundle-min.js"></script>
+        <script src="dist/bundle.js"></script>
         <script type="text/klambda">
-            (js.console.log (cn "Hello, " "World!"))
+            (js.
+              "window.getSource = () => document.getElementById('code').value"
+              "window.doParse = () => console.log(Parser.parseString(getSource()))"
+              "window.doTranslateTail = () => console.log(Transpiler.translateTail(Parser.parseString(getSource())))"
+              "window.doTranslateHead = () => console.log(Transpiler.translateHead(Parser.parseString(getSource())))"
+              "window.doRunTail = () => console.log(eval(Transpiler.translateTail(Parser.parseString(getSource()))))"
+              "window.doRunHead = () => console.log(Kl.runAll(eval(Transpiler.translateHead(Parser.parseString(getSource())))))")
         </script>
-        <script>
-            let getSource = () => document.getElementById('code').value;
-            function doParse() {
-                console.log(Parser.parseString(getSource()));
-            }
-            function doTranslateTail() {
-                console.log(Transpiler.translateTail(Parser.parseString(getSource())));
-            }
-            function doTranslateHead() {
-                console.log(Transpiler.translateHead(Parser.parseString(getSource())));
-            }
-            function doRunTail() {
-                console.log(eval(Transpiler.translateTail(Parser.parseString(getSource()))));
-            }
-            function doRunHead() {
-                console.log(Kl.runAll(eval(Transpiler.translateHead(Parser.parseString(getSource())))));
-            }
-        </script>
-        <script src="klambda_polyfill.js"></script>
         <style>
             #code {
                 height: 100px;

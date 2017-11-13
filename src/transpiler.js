@@ -354,3 +354,8 @@ class Transpiler {
 if (typeof module !== 'undefined') {
     module.exports = Transpiler;
 }
+
+if (typeof window !== 'undefined') {
+    window.Scope = Scope;
+    window.Transpiler = Transpiler;
+}

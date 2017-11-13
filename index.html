@@ -4,6 +4,9 @@
         <meta charset="utf-8"/>
         <title>ShenScript</title>
         <script src="dist/bundle-min.js"></script>
+        <script type="text/klambda">
+            (js.console.log (cn "Hello, " "World!"))
+        </script>
         <script>
             let getSource = () => document.getElementById('code').value;
             function doParse() {
@@ -22,6 +25,7 @@
                 console.log(Kl.runAll(eval(Transpiler.translateHead(Parser.parseString(getSource())))));
             }
         </script>
+        <script src="klambda_polyfill.js"></script>
         <style>
             #code {
                 height: 100px;

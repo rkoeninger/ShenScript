@@ -168,3 +168,8 @@ kl.defun('write-byte', 2, (s, b) => err('not implemented'));
 if (typeof module !== 'undefined') {
     module.exports = { Kl, kl };
 }
+
+if (typeof window !== 'undefined') {
+    window.Kl = Kl;
+    window.kl = kl;
+}

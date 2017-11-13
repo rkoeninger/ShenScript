@@ -28,7 +28,9 @@ const kernelArchiveUrl = `${kernelArchiveUrlBase}/shen-${kernelVersion}/${kernel
 task('bundle', () =>
     src(srcFiles)
         .pipe(webpack)
-        .pipe(minify())
+        .pipe(minify({
+            mangle: false
+        }))
         .pipe(dest(distRoot)));
 
 task('clean', () => del([distRoot]));

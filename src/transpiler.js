@@ -150,11 +150,11 @@ class Transpiler {
     static isForm(expr, keyword, length) {
         return isCons(expr) && (!length || consLength(expr) === length) && isSymbol(expr.hd) && expr.hd.name === keyword;
     }
-    static ifExpr(c, x, y) {
+    ifExpr(condition, x, y, scope) {
+        if (isSymbol(condition) && condition.name === 'true') return x;
+        if (isSymbol(condition) && condition.name === 'false') return y;
+        const c = this.translate(condition, scope.inHead());
         return `asJsBool(${c})?(${x}):(${y})`;
-    }
-    conditionExpr(expr, scope) {
-        return `asJsBool(${this.translate(expr, scope.inHead())})`;
     }
     renderLet(bindings, body) {
         if (isCons(bindings)) {
@@ -188,36 +188,22 @@ class Transpiler {
             return `kl.fns.${Transpiler.rename('simple-error')}("No clause was true")`;
         } else {
             const [condition, consequent] = consToArray(code.hd);
-            if (isSymbol(condition) && condition.name === 'true') {
-                return this.translate(consequent, scope);
-            }
-            if (isSymbol(condition) && condition.name === 'false') {
-                return this.condRecur(code.tl, scope);
-            }
-            return Transpiler.ifExpr(
-                this.translate(condition, scope.inHead()),
+            return this.ifExpr(
+                condition,
                 this.translate(consequent, scope),
-                this.condRecur(code.tl, scope));
+                this.condRecur(code.tl, scope),
+                scope);
         }
     }
 
     // TODO: track expression types to simplify code
-
-    // TODO: use fn.length to do partial application/overapplication
-
-    // TODO: convert Statements -> Expressionscope with
-    //       `function(){ ${butLastStmts.join(';')}; return ${lastStmt}; }()`
-
-    // TODO: convert Expression -> Statementscope with
-    //       `(${expr});`
-
     // function convertType(typedExpr, targetType) {
     //     if (typedExpr.type === 'js.bool' && targetType === 'kl.bool') return {expr: `asKlBool(${typedExpr})`, type: targetType};
     //     if (typedExpr.type === 'kl.bool' && targetType === 'js.bool') return {expr: `asJsBool(${typedExpr})`, type: targetType};
     //     return expr;
     // }
 
-    // Value{Num, Str, Sym, Cons} -> JsString
+    // Value of Num | Str | Sym | Cons -> JsString
     translate(code, scope) {
         if (isArray(code) || isFunction(code) || isError(code) || isStream(code)) {
             err('vectors, functions, errors and streams are not valid syntax');
@@ -246,16 +232,11 @@ class Transpiler {
         // Conditional evaluation
         if (Transpiler.isForm(code, 'if', 4)) {
             const [_if, condition, consequent, alternative] = consToArray(code);
-            if (isSymbol(condition) && condition.name === 'true') {
-                return this.translate(consequent, scope);
-            }
-            if (isSymbol(condition) && condition.name === 'false') {
-                return this.translate(alternative, scope);
-            }
-            return Transpiler.ifExpr(
-                this.translate(condition, scope.inHead()),
+            return this.ifExpr(
+                condition,
                 this.translate(consequent, scope),
-                this.translate(alternative, scope));
+                this.translate(alternative, scope),
+                scope);
         }
         if (Transpiler.isForm(code, 'cond')) {
             return this.condRecur(code.tl, scope);

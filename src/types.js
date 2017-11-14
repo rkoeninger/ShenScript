@@ -143,6 +143,7 @@ if (typeof module !== 'undefined') {
         Trampoline,
         Stream,
         eq,
+        toStr,
         arrayToCons,
         consLength,
         concatAll,

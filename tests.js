@@ -42,6 +42,7 @@ describe('primitives', () => {
     });
     it('partial application', () => exec('((+ 6) 7)') === 13);
     it('curried application', () => exec('((lambda X (lambda Y (+ X Y))) 6 7)') === 13);
+    it('kl eval', () => equal(5, exec('(eval-kl (cons + (cons 2 (cons 3 ()))))')));
     it('access to javascript namespaced functions', () => exec('(js.Math.max 2 3)') === 3);
     it('embedded javascript', () => exec('(js. "2 + 3")') === 5);
 });

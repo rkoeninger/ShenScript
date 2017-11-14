@@ -19,6 +19,7 @@ if (typeof require !== 'undefined') {
     butLast = types.butLast;
     consToArray = types.consToArray;
     err = types.err;
+    toStr = types.toStr;
     asKlBool = types.asKlBool;
     asKlNumber = types.asKlNumber;
     asKlString = types.asKlString;
@@ -151,7 +152,7 @@ kl.primitve('address->', (a, i, x) => {
 });
 kl.primitve('absvector?', a => asKlBool(isArray(a)));
 kl.primitve('type', (x, _) => x);
-kl.primitve('eval-kl', x => eval(translate(asKlValue(x))));
+kl.primitve('eval-kl', x => eval(Transpiler.translateHead(asKlValue(x))));
 kl.primitve('simple-error', x => err(asKlString(x)));
 kl.primitve('error-to-string', x => asKlError(x).message);
 kl.primitve('get-time', x => {

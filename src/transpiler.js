@@ -294,10 +294,12 @@ class Transpiler {
         // Flattened, sequential, side-effecting expressions
         if (Transpiler.isForm(code, 'do')) {
             const flattenDo = expr => Transpiler.isForm(expr, 'do') ? concatAll(consToArray(expr.tl).map(flattenDo)) : [expr];
-            const [voids, last] = butLast(flattenDo(code).map(expr => this.translate(expr, scope)));
+            const [voids, last] = butLast(flattenDo(code));
+            const translatedVoids = voids.map(expr => this.translate(expr, scope.inHead())).join(';\n');
+            const translatedLast = this.translate(last, scope);
             return `(function () {
-                      ${voids.join(';\n')};
-                      return ${last};
+                      ${translatedVoids};
+                      return ${translatedLast};
                     })()`;
         }
 

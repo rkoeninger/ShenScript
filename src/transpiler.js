@@ -176,7 +176,7 @@ class Transpiler {
             const [_let, local, value, body] = consToArray(expr);
             const binding = {
                 sym: local,
-                value: this.translate(value, scope),
+                value: this.translate(value, scope.inHead()),
                 redefinition: consToArray(bindings).some(x => x.sym.name === local.name)
             };
             return this.translateLet(new Cons(binding, bindings), body, scope.let(local));

@@ -15,7 +15,7 @@ const src = gulp.src.bind(gulp);
 const dest = gulp.dest.bind(gulp);
 const task = gulp.task.bind(gulp);
 
-const srcFiles = './src/**/*.js';
+const srcFiles = ['./src/**/*.js', './dist/kernel.js'];
 const testFiles = './tests.js';
 const distRoot = './dist';
 
@@ -26,6 +26,11 @@ const kernelArchiveUrlBase = 'https://github.com/Shen-Language/shen-sources/rele
 const kernelArchiveUrl = `${kernelArchiveUrlBase}/shen-${kernelVersion}/${kernelArchiveName}`;
 
 task('bundle', () =>
+    src(srcFiles)
+        .pipe(webpack)
+        .pipe(dest(distRoot)));
+
+task('bundle-min', () =>
     src(srcFiles)
         .pipe(webpack)
         .pipe(minify({

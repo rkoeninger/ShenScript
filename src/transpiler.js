@@ -217,7 +217,11 @@ class Transpiler {
         if (isString(code)) return `"${Transpiler.escape(code)}"`;
 
         // Local variables and idle symbols
-        if (isSymbol(code)) return scope.isLocal(code) ? Transpiler.rename(code) : `new Sym("${code}")`;
+        if (isSymbol(code)) {
+            if (code.name === 'true') return 'klTrue';
+            if (code.name === 'false') return 'klFalse';
+            return scope.isLocal(code) ? Transpiler.rename(code) : `new Sym("${code}")`;
+        }
 
         // Conjunction and disjunction
         if (Transpiler.isForm(code, 'and', 3)) {

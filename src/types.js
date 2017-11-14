@@ -40,6 +40,8 @@ class Stream {
     }
 }
 let consoleStream = new Stream('console');
+let klTrue  = new Sym('true');
+let klFalse = new Sym('false');
 let isTrampoline = x => x && x.constructor === Trampoline;
 let isSymbol     = x => x && x.constructor === Sym;
 let isCons       = x => x && x.constructor === Cons;
@@ -81,7 +83,7 @@ function asJsBool(x) {
     throw new Error('not a boolean');
 }
 let err = x => { throw new Error(x); };
-let asKlBool = x => new Sym(x ? 'true' : 'false');
+let asKlBool = x => x ? klTrue : klFalse;
 let asKlNumber = x => isNumber(x) ? x : err('not a number');
 let asKlString = x => isString(x) ? x : err('not a string');
 let asKlSymbol = x => isSymbol(x) ? x : err('not a symbol');
@@ -97,10 +99,10 @@ function asIndexOf(i, a) {
     return i;
 }
 function asKlValue(x) {
-    if (x === true) return new Sym('true');
-    if (x === false) return new Sym('false');
+    if (x === true) return klTrue;
+    if (x === false) return klFalse;
     if (isString(x) || isNumber(x) || isSymbol(x) || isCons(x) || isArray(x) || isStream(x) || isFunction(x)) return x;
-    return null; // No other values admissible to KL
+    return null; // TODO: No other values admissible to KL?
 }
 function arrayToCons(x) {
     let result = null;
@@ -142,6 +144,8 @@ if (typeof module !== 'undefined') {
         Cons,
         Trampoline,
         Stream,
+        klTrue,
+        klFalse,
         eq,
         toStr,
         arrayToCons,
@@ -172,4 +176,14 @@ if (typeof module !== 'undefined') {
         asKlValue,
         asJsBool
     };
+}
+
+if (typeof window !== 'undefined') {
+    window.klTrue = klTrue;
+    window.klFalse = klFalse;
+}
+
+if (typeof global !== 'undefined') {
+    global.klTrue = klTrue;
+    global.klFalse = klFalse;
 }

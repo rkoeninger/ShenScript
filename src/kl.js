@@ -112,7 +112,7 @@ kl.set('*language*', 'JavaScript');
 kl.set('*implementation*', env.name());
 kl.set('*release*', env.version());
 kl.set('*os*', env.os());
-kl.set('*port*', '0.1');
+kl.set('*port*', '0.1.0');
 kl.set('*porters*', 'Robert Koeninger');
 kl.primitve('if', (c, x, y) => asJsBool(c) ? x : y);
 kl.primitve('and', (x, y) => asKlBool(asJsBool(x) && asJsBool(y)));

@@ -6,27 +6,44 @@
         <script src="dist/bundle.js"></script>
         <script type="text/klambda">
             (js.
-              "window.getSource = () => document.getElementById('code').value"
-              "window.doParse = () => console.log(Parser.parseString(getSource()))"
-              "window.doTranslateTail = () => console.log(Transpiler.translateTail(Parser.parseString(getSource())))"
-              "window.doTranslateHead = () => console.log(Transpiler.translateHead(Parser.parseString(getSource())))"
-              "window.doRunTail = () => console.log(eval(Transpiler.translateTail(Parser.parseString(getSource()))))"
-              "window.doRunHead = () => console.log(Kl.runAll(eval(Transpiler.translateHead(Parser.parseString(getSource())))))")
+                "window.getSourceKl = () => document.getElementById('kl-code').value"
+                "window.doParseKl = () => console.log(Parser.parseString(getSourceKl()))"
+                "window.doTranslateTailKl = () => console.log(Transpiler.translateTail(Parser.parseString(getSourceKl())))"
+                "window.doTranslateHeadKl = () => console.log(Transpiler.translateHead(Parser.parseString(getSourceKl())))"
+                "window.doRunTailKl = () => console.log(eval(Transpiler.translateTail(Parser.parseString(getSourceKl()))))"
+                "window.doRunHeadKl = () => console.log(Kl.runAll(eval(Transpiler.translateHead(Parser.parseString(getSourceKl())))))"
+                "window.getSourceShen = () => document.getElementById('shen-code').value"
+                "window.getParsedSourceShen = () => { const s = Kl.headCall(kl.fns.shen$doelim_def, [Kl.headCall(kl.fns.read_from_string, [getSourceShen()])]); return s === null ? null : s.hd; }"
+                "window.doParseShen = () => console.log(getParsedSourceShen())"
+                "window.doTranslateTailShen = () => console.log(Transpiler.translateTail(getParsedSourceShen()))"
+                "window.doTranslateHeadShen = () => console.log(Transpiler.translateHead(getParsedSourceShen()))"
+                "window.doRunTailShen = () => console.log(eval(Transpiler.translateTail(getParsedSourceShen())))"
+                "window.doRunHeadShen = () => console.log(Kl.runAll(eval(Transpiler.translateHead(getParsedSourceShen()))))")
         </script>
         <style>
-            #code {
+            textarea {
                 height: 100px;
                 width: 700px;
             }
         </style>
     </head>
     <body>
-        <textarea id="code"></textarea>
+        <h3>KL</h3>
+        <textarea id="kl-code"></textarea>
         <br>
-        <button onclick="doParse();">Parse</button>
-        <button onclick="doTranslateTail();">Translate Tail</button>
-        <button onclick="doTranslateHead();">Translate Head</button>
-        <button onclick="doRunTail();">Run Tail</button>
-        <button onclick="doRunHead();">Run Head</button>
+        <button onclick="doParseKl();">Parse</button>
+        <button onclick="doTranslateTailKl();">Translate Tail</button>
+        <button onclick="doTranslateHeadKl();">Translate Head</button>
+        <button onclick="doRunTailKl();">Run Tail</button>
+        <button onclick="doRunHeadKl();">Run Head</button>
+        <br>
+        <h3>Shen</h3>
+        <textarea id="shen-code"></textarea>
+        <br>
+        <button onclick="doParseShen();">Parse</button>
+        <button onclick="doTranslateTailShen();">Translate Tail</button>
+        <button onclick="doTranslateHeadShen();">Translate Head</button>
+        <button onclick="doRunTailShen();">Run Tail</button>
+        <button onclick="doRunHeadShen();">Run Head</button>
     </body>
 </html>

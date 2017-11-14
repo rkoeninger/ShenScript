@@ -188,6 +188,12 @@ class Transpiler {
             return `kl.fns.${Transpiler.rename('simple-error')}("No clause was true")`;
         } else {
             const [condition, consequent] = consToArray(code.hd);
+            if (isSymbol(condition) && condition.name === 'true') {
+                return this.translate(consequent, scope);
+            }
+            if (isSymbol(condition) && condition.name === 'false') {
+                return this.condRecur(code.tl, scope);
+            }
             return Transpiler.ifExpr(
                 this.translate(condition, scope.inHead()),
                 this.translate(consequent, scope),
@@ -240,6 +246,12 @@ class Transpiler {
         // Conditional evaluation
         if (Transpiler.isForm(code, 'if', 4)) {
             const [_if, condition, consequent, alternative] = consToArray(code);
+            if (isSymbol(condition) && condition.name === 'true') {
+                return this.translate(consequent, scope);
+            }
+            if (isSymbol(condition) && condition.name === 'false') {
+                return this.translate(alternative, scope);
+            }
             return Transpiler.ifExpr(
                 this.translate(condition, scope.inHead()),
                 this.translate(consequent, scope),
@@ -339,23 +351,30 @@ class Transpiler {
                 return `${fexpr.name.slice(3)}(${translatedArgs})`;
             }
 
-            // KL function call
+            // Application of local variable function
             const name = Transpiler.rename(fexpr);
             if (scope.isLocal(fexpr)) {
                 return scope.invoke(name, translatedArgs);
             }
+
+            // Application of primitive
             const klf = kl.fns[name];
-            // TODO: only works if function is not re-defineable
             if (klf && klf.primitive) {
+
+                // Full application
                 if (klf.arity === argExprs.length) {
                     return `kl.fns.${name}(${translatedArgs})`;
                 }
+
+                // Partial application
                 return `Kl.app(kl.fns.${name}, [${translatedArgs}])`;
             }
+
+            // Application of any other named function
             return scope.invoke(`kl.fns.${name}`, translatedArgs);
         }
 
-        // Application of function value
+        // Application of function-typed expression
         return scope.invoke(`asKlFunction(${this.translate(fexpr, scope.inHead())})`, translatedArgs);
     }
 }

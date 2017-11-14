@@ -143,7 +143,7 @@ kl.primitve('tlstr', s => {
 });
 kl.primitve('cn', (x, y) => asKlString(x) + asKlString(y));
 kl.primitve('string->n', x => asKlString(x).charCodeAt(0));
-kl.primitve('n->string', x => String.fromCharCode(asKlString(x)));
+kl.primitve('n->string', x => String.fromCharCode(asKlNumber(x)));
 kl.primitve('absvector', n => new Array(n).fill(null));
 kl.primitve('<-address', (a, i) => asKlVector(a)[asIndexOf(i, a)]);
 kl.primitve('address->', (a, i, x) => {

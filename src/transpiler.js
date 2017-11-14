@@ -343,9 +343,16 @@ class Transpiler {
             const name = Transpiler.rename(fexpr);
             if (scope.isLocal(fexpr)) {
                 return scope.invoke(name, translatedArgs);
-            } else {
-                return scope.invoke(`kl.fns.${name}`, translatedArgs);
             }
+            const klf = kl.fns[name];
+            // TODO: only works if function is not re-defineable
+            if (klf && klf.primitive) {
+                if (klf.arity === argExprs.length) {
+                    return `kl.fns.${name}(${translatedArgs})`;
+                }
+                return `Kl.app(kl.fns.${name}, [${translatedArgs}])`;
+            }
+            return scope.invoke(`kl.fns.${name}`, translatedArgs);
         }
 
         // Application of function value

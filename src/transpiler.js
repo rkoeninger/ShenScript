@@ -92,7 +92,7 @@ class Transpiler {
     }
     static rename(name) {
         if (isSymbol(name)) name = name.name;
-        let result = "";
+        let result = '';
         for (let i = 0; i < name.length; ++i) {
             switch (name[i]) {
                 case '-': { result += '_'; break; }
@@ -129,7 +129,7 @@ class Transpiler {
         return result;
     }
     static escape(s) {
-        let result = "";
+        let result = '';
         for (let i = 0; i < s.length; ++i) {
             switch (s[i]) {
                 case '\\': { result += '\\\\'; break; }
@@ -304,7 +304,7 @@ class Transpiler {
         // Inlined global symbol assign
         if (Transpiler.isForm(code, 'set', 3)) {
             const [_set, sym, value] = consToArray(code);
-            if (!scope.isLocal(sym)) {
+            if (isSymbol(sym) && !scope.isLocal(sym)) {
                 return `kl.symbols.${Transpiler.rename(sym)} = ${this.translate(value, scope.inHead())}`;
             }
         }
@@ -312,7 +312,7 @@ class Transpiler {
         // Inlined global symbol retrieve
         if (Transpiler.isForm(code, 'value', 2)) {
             const [_value, sym] = consToArray(code);
-            if (!scope.isLocal(sym) && kl.isSymbolDefined(sym)) {
+            if (isSymbol(sym) && !scope.isLocal(sym) && kl.isSymbolDefined(sym)) {
                 return `kl.symbols.${Transpiler.rename(sym)}`;
             }
         }

@@ -37,7 +37,6 @@ function name() {
     if (typeof window !== 'undefined') {
         const lowerUserAgent = navigator.userAgent.toLowerCase();
         if (includesAny(lowerUserAgent, ['edge'])) return 'Edge';
-        if (includesAny(lowerUserAgent, ['trident'])) return 'Internet Explorer';
         if (includesAny(lowerUserAgent, ['opr'])) return 'Opera';
         if (includesAny(lowerUserAgent, ['vivaldi'])) return 'Vivaldi';
         if (includesAny(lowerUserAgent, ['firefox'])) return 'Firefox';
@@ -63,7 +62,6 @@ function version() {
         const ua = navigator.userAgent.toLowerCase();
         const ver =
             digitsAfter(ua, 'edge') ||
-            digitsAfter(ua, 'trident') ||
             digitsAfter(ua, 'opr') ||
             digitsAfter(ua, 'vivaldi') ||
             digitsAfter(ua, 'firefox') ||

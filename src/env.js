@@ -38,12 +38,12 @@ function name() {
         const lowerUserAgent = navigator.userAgent.toLowerCase();
         if (includesAny(lowerUserAgent, ['edge'])) return 'Edge';
         if (includesAny(lowerUserAgent, ['trident'])) return 'Internet Explorer';
-        if (includesAny(lowerUserAgent, ['chrome'])) return 'Chrome';
-        if (includesAny(lowerUserAgent, ['opera'])) return 'Opera';
-        if (includesAny(lowerUserAgent, ['safari'])) return 'Safari';
+        if (includesAny(lowerUserAgent, ['opr'])) return 'Opera';
         if (includesAny(lowerUserAgent, ['vivaldi'])) return 'Vivaldi';
         if (includesAny(lowerUserAgent, ['firefox'])) return 'Firefox';
+        if (includesAny(lowerUserAgent, ['chrome'])) return 'Chrome';
         if (includesAny(lowerUserAgent, ['android'])) return 'Android';
+        if (includesAny(lowerUserAgent, ['safari'])) return 'Safari';
     }
     else if (typeof process !== 'undefined') {
         return 'Node.js';
@@ -54,7 +54,8 @@ function name() {
 function digitsAfter(s, subs) {
     const i = s.indexOf(subs + '/');
     if (i < 0) return null;
-    return Number(s.substring(i + subs.length + 1).match(/\d+/));
+    const matches = s.substring(i + subs.length + 1).match(/\S*/);
+    return matches.length === 0 ? null : matches[0];
 }
 
 function version() {
@@ -63,10 +64,10 @@ function version() {
         const ver =
             digitsAfter(ua, 'edge') ||
             digitsAfter(ua, 'trident') ||
-            digitsAfter(ua, 'chrome') ||
-            digitsAfter(ua, 'opera') ||
+            digitsAfter(ua, 'opr') ||
             digitsAfter(ua, 'vivaldi') ||
             digitsAfter(ua, 'firefox') ||
+            digitsAfter(ua, 'chrome') ||
             digitsAfter(ua, 'android') ||
             digitsAfter(ua, 'safari');
         if (ver) return ver;

@@ -173,7 +173,8 @@ kl.primitve('write-byte', (s, b) => err('not implemented'));
 
 if (typeof document !== 'undefined') {
     setTimeout(function () {
-        for (let script of document.scripts) {
+        for (let i = 0; i < document.scripts.length; ++i) {
+            const script = document.scripts[i];
             if (script.type.toLowerCase() !== 'text/klambda') continue;
             if (script.executed) continue;
             script.executed = true;

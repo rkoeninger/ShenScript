@@ -1,4 +1,5 @@
 const { equal, ok } = require('assert');
+const { os, name, version } = require('./src/env');
 const { Sym, eq } = require('./src/types');
 const Parser = require('./src/parser');
 const Transpiler = require('./src/transpiler');
@@ -6,6 +7,11 @@ const { Kl, kl } = require('./src/kl');
 global.kl = kl;
 const exec = x => eval(Transpiler.translateHead(Parser.parseString(x)));
 
+describe('environment', () => {
+    it('operating system', () => console.log(os()));
+    it('implementation name', () => console.log(name()));
+    it('implementation version', () => console.log(version()));
+});
 describe('parsing', () => {
     it('should read string literals', () => equal('abc', Parser.parseString('"abc"')));
     it('should read symbols', () => ok(eq(new Sym('abc'), Parser.parseString('abc'))));

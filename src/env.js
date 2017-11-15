@@ -1,76 +1,86 @@
 'use strict';
-var env = {
-    os() {
-        if (typeof navigator !== 'undefined') {
-            if (navigator.platform) {
-                if (navigator.platform.toLowerCase() === 'win32') return 'Windows';
-                if (navigator.platform.toLowerCase() === 'win64') return 'Windows';
-            }
-            if (navigator.userAgent) {
-                if (navigator.userAgent.indexOf('Win') != -1) return 'Windows';
-                if (navigator.userAgent.indexOf('Mac') != -1) return 'macOS';
-                if (navigator.userAgent.indexOf('iPhone') != -1) return 'iOS';
-                if (navigator.userAgent.indexOf('iPad') != -1) return 'iOS';
-                if (navigator.userAgent.indexOf('iOS') != -1) return 'iOS';
-                if (navigator.userAgent.indexOf('Linux') != -1) return 'Linux';
-                if (navigator.userAgent.indexOf('Android') != -1) return 'Android';
-                if (navigator.userAgent.indexOf('X11') != -1) return 'Unix';
-            }
-            return 'Unknown';
-        }
-        if (typeof process !== 'undefined') {
-            if (process.platform) {
-                if (process.platform.toLowerCase() === 'win32') return 'Windows';
-                if (process.platform.toLowerCase() === 'win64') return 'Windows';
-                if (process.platform.toLowerCase() === 'darwin') return 'macOS';
-                if (process.platform.toLowerCase() === 'linux') return 'Linux';
-            }
-        }
-        return 'Unknown';
-    },
 
-    name() {
-        if (typeof window !== 'undefined') {
-            if (navigator.userAgent.indexOf('Edge') != -1) return 'Edge';
-            if (navigator.userAgent.indexOf('Trident') != -1) return 'Internet Explorer';
-            if (navigator.userAgent.indexOf('Chrome') != -1) return 'Chrome';
-            if (navigator.userAgent.indexOf('Opera') != -1) return 'Opera';
-            if (navigator.userAgent.indexOf('Firefox') != -1) return 'Firefox';
-            if (navigator.userAgent.indexOf('Safari') != -1) return 'Safari';
-            if (navigator.userAgent.indexOf('Vivaldi') != -1) return 'Vivaldi';
-            if (navigator.userAgent.indexOf('Android') != -1) return 'Android';
-            return 'Unknown';
-        }
-        if (typeof process !== 'undefined') {
-            return 'Node.js';
-        }
-        return 'Unknown';
-    },
+function includesAny(y, xs) {
+    return xs.some(x => y.includes(x));
+}
 
-    version() {
-        if (typeof window !== 'undefined') {
-            var ua = navigator.userAgent,
-                tem,
-                M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
-            if (/trident/i.test(M[1])) {
-                tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
-                return (tem[1] || '');
-            }
-            if (M[1] === 'Chrome'){
-                tem = ua.match(/\b(OPR|Edge)\/(\d+)/);
-                if (tem != null) return tem[2];
-            }
-            M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
-            if ((tem = ua.match(/version\/(\d+)/i)) != null) M.splice(1, 1, tem[1]);
-            return M[1];
+function os() {
+    if (typeof navigator !== 'undefined') {
+        if (navigator.platform) {
+            const lowerPlatform = navigator.platform.toLowerCase();
+            if (includesAny(lowerPlatform, ['win32', 'win64'])) return 'Windows';
+            if (includesAny(lowerPlatform, ['darwin'])) return 'macOS';
+            if (includesAny(lowerPlatform, ['linux'])) return 'Linux';
         }
-        if (typeof process !== 'undefined') {
-            return process.version.slice(1);
+        if (navigator.userAgent) {
+            const lowerUserAgent = navigator.userAgent.toLowerCase();
+            if (includesAny(lowerUserAgent, ['win', 'wow'])) return 'Windows';
+            if (includesAny(lowerUserAgent, ['mac'])) return 'macOS';
+            if (includesAny(lowerUserAgent, ['iphone', 'ipad', 'ios'])) return 'iOS';
+            if (includesAny(lowerUserAgent, ['linux'])) return 'Linux';
+            if (includesAny(lowerUserAgent, ['android'])) return 'Android';
+            if (includesAny(lowerUserAgent, ['x11'])) return 'Unix';
         }
-        return "Unknown";
     }
-};
+    else if (typeof process !== 'undefined') {
+        if (process.platform) {
+            const lowerPlatform = process.platform.toLowerCase();
+            if (includesAny(lowerPlatform, ['win32', 'win64'])) return 'Windows';
+            if (includesAny(lowerPlatform, ['darwin'])) return 'macOS';
+            if (includesAny(lowerPlatform, ['linux'])) return 'Linux';
+        }
+    }
+    return 'Unknown';
+}
+
+function name() {
+    if (typeof window !== 'undefined') {
+        const lowerUserAgent = navigator.userAgent.toLowerCase();
+        if (includesAny(lowerUserAgent, ['edge'])) return 'Edge';
+        if (includesAny(lowerUserAgent, ['trident'])) return 'Internet Explorer';
+        if (includesAny(lowerUserAgent, ['chrome'])) return 'Chrome';
+        if (includesAny(lowerUserAgent, ['opera'])) return 'Opera';
+        if (includesAny(lowerUserAgent, ['safari'])) return 'Safari';
+        if (includesAny(lowerUserAgent, ['vivaldi'])) return 'Vivaldi';
+        if (includesAny(lowerUserAgent, ['firefox'])) return 'Firefox';
+        if (includesAny(lowerUserAgent, ['android'])) return 'Android';
+    }
+    else if (typeof process !== 'undefined') {
+        return 'Node.js';
+    }
+    return 'Unknown';
+}
+
+function digitsAfter(s, subs) {
+    const i = s.indexOf(subs + '/');
+    if (i < 0) return null;
+    return Number(s.substring(i + subs.length + 1).match(/\d+/));
+}
+
+function version() {
+    if (typeof window !== 'undefined') {
+        const ua = navigator.userAgent.toLowerCase();
+        const ver =
+            digitsAfter(ua, 'edge') ||
+            digitsAfter(ua, 'trident') ||
+            digitsAfter(ua, 'chrome') ||
+            digitsAfter(ua, 'opera') ||
+            digitsAfter(ua, 'vivaldi') ||
+            digitsAfter(ua, 'firefox') ||
+            digitsAfter(ua, 'android') ||
+            digitsAfter(ua, 'safari');
+        if (ver) return ver;
+    }
+    else if (typeof process !== 'undefined') {
+        return process.version.slice(1);
+    }
+    return "Unknown";
+}
 
 if (typeof module !== 'undefined') {
-    module.exports = env;
+    module.exports = {
+        os,
+        name,
+        version
+    };
 }

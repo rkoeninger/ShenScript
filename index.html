@@ -6,6 +6,10 @@
         <script src="dist/bundle.js"></script>
         <script type="text/klambda">
             (js.
+                "window.setTextOn = (id, text) => document.getElementById(id).innerText = text"
+                "setTextOn('os', kl.symbols[Transpiler.rename('*os*')])"
+                "setTextOn('implementation', kl.symbols[Transpiler.rename('*implementation*')])"
+                "setTextOn('release', kl.symbols[Transpiler.rename('*release*')])"
                 "window.getSourceKl = () => document.getElementById('kl-code').value"
                 "window.doParseKl = () => console.log(Parser.parseString(getSourceKl()))"
                 "window.doTranslateTailKl = () => console.log(Transpiler.translateTail(Parser.parseString(getSourceKl())))"
@@ -28,6 +32,11 @@
         </style>
     </head>
     <body>
+        <p>
+            os:             <strong id="os"></strong>,
+            implementation: <strong id="implementation"></strong>,
+            release:        <strong id="release"></strong>
+        </p>
         <h3>KL</h3>
         <textarea id="kl-code"></textarea>
         <br>

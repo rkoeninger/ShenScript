@@ -195,6 +195,12 @@ class Transpiler {
                 scope);
         }
     }
+    flattenNested(expr, keyword, length) {
+        if (Transpiler.isForm(expr, keyword, length)) {
+            return concatAll(consToArray(expr.tl).map(x => this.flattenNested(x, keyword, length)));
+        }
+        return [expr];
+    }
 
     // TODO: track expression types to simplify code
     // function convertType(typedExpr, targetType) {
@@ -227,12 +233,10 @@ class Transpiler {
 
         // Conjunction and disjunction
         if (Transpiler.isForm(code, 'and', 3)) {
-            const [_and, left, right] = consToArray(code);
-            return `asKlBool(asJsBool(${this.translate(left, scope.inHead())}) && asJsBool(${this.translate(right, scope.inHead())}))`;
+            return `asKlBool(${this.flattenNested(code, 'and', 3).map(x => `asJsBool(${this.translate(x, scope.inHead())})`).join(' && ')})`;
         }
         if (Transpiler.isForm(code, 'or', 3)) {
-            const [_or, left, right] = consToArray(code);
-            return `asKlBool(asJsBool(${this.translate(left, scope.inHead())}) || asJsBool(${this.translate(right, scope.inHead())}))`;
+            return `asKlBool(${this.flattenNested(code, 'or', 3).map(x => `asJsBool(${this.translate(x, scope.inHead())})`).join(' || ')})`;
         }
 
         // Conditional evaluation
@@ -292,8 +296,7 @@ class Transpiler {
 
         // Flattened, sequential, side-effecting expressions
         if (Transpiler.isForm(code, 'do')) {
-            const flattenDo = expr => Transpiler.isForm(expr, 'do') ? concatAll(consToArray(expr.tl).map(flattenDo)) : [expr];
-            const [voids, last] = butLast(flattenDo(code));
+            const [voids, last] = butLast(this.flattenNested(code, 'do', 3));
             const translatedVoids = voids.map(expr => this.translate(expr, scope.inHead())).join(';\n');
             const translatedLast = this.translate(last, scope);
             return `(function () {

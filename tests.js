@@ -26,29 +26,30 @@ describe('parsing', () => {
 describe('primitives', () => {
     it('conds should act as if-else chains', () => equal(2, exec('(cond (false 1) (true 2) (false 3))')));
     it('+ should add numbers', () => equal(3, exec('(+ 1 2)')));
-    it('value should accept idle symbols', () => exec('(value *language*)') === 'JavaScript');
-    it('let should bind local variables', () => exec('(let X 123 X)') === 123);
-    it('let should mask outer bindings', () => exec('(let X 1 (let X 2 (let X 3 X)))') === 3);
+    it('value should accept idle symbols', () => equal('JavaScript', exec('(value *language*)')));
+    it('let should bind local variables', () => equal(123, exec('(let X 123 X)')));
+    it('let should mask outer bindings', () => equal(3, exec('(let X 1 (let X 2 (let X 3 X)))')));
     it('functions can be recursive', () => {
         exec('(defun fac (N) (if (= 0 N) 1 (* N (fac (- N 1)))))');
-        return (exec('(fac 5)') === 120) && (exec('(fac 7)') === 5040);
+        equal(120, exec('(fac 5)'));
+        equal(5040, exec('(fac 7)'));
     });
     it('argument expressions should be evaluated in order', () => {
         exec('(defun do (_ X) X)');
-        return exec('(do (let X 1 X) (let X 2 X))') === 2;
+        equal(2, exec('(do (let X 1 X) (let X 2 X))'));
     });
     it('trampolines should allow tail recursive functions to not blow the stack', () => {
         exec('(defun count-down (X) (if (= 0 X) "done" (count-down (- X 1))))');
-        return exec('(count-down 20000)') === 'done';
+        equal('done', exec('(count-down 20000)'));
     });
     it('trampolines should allow mutually recursive functions to not blow the stack', () => {
         exec('(defun even? (X) (if (= 0 X) true  (odd?  (- X 1))))');
         exec('(defun odd?  (X) (if (= 0 X) false (even? (- X 1))))');
-        return asJsBool(exec('(even? 20000)'));
+        ok(asJsBool(exec('(even? 20000)')));
     });
-    it('partial application', () => exec('((+ 6) 7)') === 13);
-    it('curried application', () => exec('((lambda X (lambda Y (+ X Y))) 6 7)') === 13);
+    it('partial application', () => equal(13, exec('((+ 6) 7)')));
+    it('curried application', () => equal(13, exec('((lambda X (lambda Y (+ X Y))) 6 7)')));
     it('kl eval', () => equal(5, exec('(eval-kl (cons + (cons 2 (cons 3 ()))))')));
-    it('access to javascript namespaced functions', () => exec('(js.Math.max 2 3)') === 3);
-    it('embedded javascript', () => exec('(js. "2 + 3")') === 5);
+    it('access to javascript namespaced functions', () => equal(3, exec('(js.Math.max 2 3)')));
+    it('embedded javascript', () => equal(5, exec('(js. "2 + 3")')));
 });

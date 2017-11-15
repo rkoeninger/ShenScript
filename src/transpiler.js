@@ -203,6 +203,8 @@ class Transpiler {
     //     return expr;
     // }
 
+    // TODO: inline template can be set on function object
+
     // Value of Num | Str | Sym | Cons -> JsString
     translate(code, scope) {
         if (isArray(code) || isFunction(code) || isError(code) || isStream(code)) {

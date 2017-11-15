@@ -33,15 +33,9 @@ if (typeof require !== 'undefined') {
     asKlValue = types.asKlValue;
 }
 
-// TODO: https://github.com/lukehoban/es6features
-
 //
 // Init KL environment
 //
-
-// TODO: inline template can be set on function object
-
-// TODO: all functions need to have arity property set
 
 class Kl {
     constructor() {
@@ -175,14 +169,27 @@ if (typeof document !== 'undefined') {
     setTimeout(function () {
         for (let i = 0; i < document.scripts.length; ++i) {
             const script = document.scripts[i];
-            if (script.type.toLowerCase() !== 'text/klambda') continue;
             if (script.executed) continue;
-            script.executed = true;
-            if (script.text) {
-                Parser.parseAllString(script.text).map(Transpiler.translateHead).map(eval);
+            if (script.type.toLowerCase() === 'text/klambda') {
+                script.executed = true;
+                if (script.text) {
+                    Parser.parseAllString(script.text).map(Transpiler.translateHead).map(eval);
+                    continue;
+                }
+                console.warn('text/klambda script tags must have embedded code');
                 continue;
             }
-            console.warn('klambda script tags must have embedded code');
+            if (script.type.toLowerCase() === 'text/shen') {
+                script.executed = true;
+                if (script.text) {
+                    const parsedShen = Kl.headCall(kl.fns[Transpiler.rename('read-from-string')], [script.text]);
+                    const parsedKl = Kl.headCall(kl.fns[Transpiler.rename('shen.elim-def')], [parsedShen]);
+                    consToArray(parsedKl).map(Transpiler.translateHead).map(eval);
+                    continue;
+                }
+                console.warn('text/shen script tags must have embedded code');
+                continue;
+            }
         }
     }, 0);
 }

@@ -3,3 +3,5 @@
 # ShenScript
 
 Shen for JavaScript
+
+https://github.com/lukehoban/es6features

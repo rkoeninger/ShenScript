@@ -68,9 +68,9 @@ class Kl {
     }
     static app(f, args) {
         if (args.length === f.arity) {
-            return f.apply(null, args);
+            return f(...args);
         } else if (args.length > f.arity) {
-            return Kl.app(f.apply(null, args.slice(0, f.arity)), args.slice(f.arity));
+            return Kl.app(f(...args.slice(0, f.arity)), args.slice(f.arity));
         }
         return Kl.setArity(f.arity - args.length, function (...args2) {
             return Kl.app(f, args.concat(args2));

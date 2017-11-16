@@ -5,9 +5,11 @@ if (typeof require !== 'undefined') {
     Sym = types.Sym;
     Trampoline = types.Trampoline;
     arrayToCons = types.arrayToCons;
+    consolePipe = types.consolePipe;
+    openFile = types.openFile;
     isArray = types.isArray;
     isFunction = types.isFunction;
-    isStream = types.isStream;
+    isPipe = types.isPipe;
     isString = types.isString;
     isNumber = types.isNumber;
     isCons = types.isCons;
@@ -108,6 +110,10 @@ kl.set('*release*', env.version());
 kl.set('*os*', env.os());
 kl.set('*port*', '0.1.0');
 kl.set('*porters*', 'Robert Koeninger');
+kl.set('*stinput*', consolePipe);
+kl.set('*stoutput*', consolePipe);
+kl.set('*sterror*', consolePipe);
+kl.set('*home-directory*', ''); // TODO: does this need a value?
 kl.primitve('if', (c, x, y) => asJsBool(c) ? x : y);
 kl.primitve('and', (x, y) => asKlBool(asJsBool(x) && asJsBool(y)));
 kl.primitve('or', (x, y) => asKlBool(asJsBool(x) || asJsBool(y)));
@@ -133,7 +139,7 @@ kl.primitve('str', x => toStr(asKlValue(x)));
 kl.primitve('pos', (s, x) => asKlString(s)[asIndexOf(x, s)]);
 kl.primitve('tlstr', s => {
     const ss = asKlString(s);
-    return ss.length === 0 ? new Sym('shen.eos') : ss.slice(1);
+    return ss.length > 0 ? ss.slice(1) : err('tlstr requires non-empty string');
 });
 kl.primitve('cn', (x, y) => asKlString(x) + asKlString(y));
 kl.primitve('string->n', x => asKlString(x).charCodeAt(0));
@@ -149,21 +155,22 @@ kl.primitve('type', (x, _) => x);
 kl.primitve('eval-kl', x => eval(Transpiler.translateHead(asKlValue(x))));
 kl.primitve('simple-error', x => err(asKlString(x)));
 kl.primitve('error-to-string', x => asKlError(x).message);
-kl.primitve('get-time', x => {
-    if (x.name === 'unix') return new Date().getTime();
-    if (x.name === 'run') return new Date().getTime() - kl.startTime;
+kl.primitve('get-time', mode => {
+    asKlSymbol(mode);
+    if (mode.name === 'unix') return new Date().getTime();
+    if (mode.name === 'run') return new Date().getTime() - kl.startTime;
     err("get-time only accepts 'unix or 'run");
 });
-
-// TODO: implement these:
-kl.set('*stinput*', ''); // TODO: console
-kl.set('*stoutput*', ''); // TODO: console
-kl.set('*sterror*', ''); // TODO: console
-kl.set('*home-directory*', ''); // TODO: current url
-kl.primitve('open', (path, d) => err('not implemented'));
-kl.primitve('close', s => err('not implemented'));
-kl.primitve('read-byte', s => err('not implemented'));
-kl.primitve('write-byte', (s, b) => err('not implemented'));
+kl.primitve('open', (path, mode) => {
+    asKlString(path);
+    asKlSymbol(mode);
+    if (mode.name === 'in') return openFile(path, true);
+    if (mode.name === 'out') return openFile(path, false);
+    err("open only accepts 'in and 'out as stream directions");
+});
+kl.primitve('close', s => asKlStream(s).close());
+kl.primitve('read-byte', s => asKlStream(s).readByte());
+kl.primitve('write-byte', (s, b) => asKlStream(s).writeByte(b));
 
 if (typeof document !== 'undefined') {
     setTimeout(function () {

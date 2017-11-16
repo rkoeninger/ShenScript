@@ -9,9 +9,10 @@
  * String             string
  * Function           function
  * AbsVector          array
+ * Error              Error
  * Symbol             Sym
  * Cons               Cons
- * Stream             Stream
+ * Stream             Pipe
  */
 
 class Trampoline {
@@ -34,12 +35,45 @@ class Cons {
         this.tl = tl;
     }
 }
-class Stream {
+class Pipe {
     constructor(name) {
         this.name = name;
     }
 }
-let consoleStream = new Stream('console');
+let err = x => { throw new Error(x); };
+let consolePipe = new Pipe('console');
+consolePipe.buffer = [];
+consolePipe.close = () => err('console stream cannot be closed');
+consolePipe.readByte = () => consolePipe.buffer.shift();
+consolePipe.writeByte = b => {
+    consolePipe.buffer.push(b);
+    return b;
+};
+function openFile(path, isIn) {
+    let pipe = new Pipe(path);
+    pipe.open = true;
+    pipe.close = () => {
+        pipe.open = false;
+        return null;
+    };
+    if (isIn) {
+        pipe.readByte = () => {
+            if (!pipe.open) err('cannot read from closed stream');
+            return err('file read not implemented'); // TODO: implement
+        };
+        pipe.writeByte = b => {
+            return err('cannot write to input streams');
+        };
+    } else {
+        pipe.readByte = () => {
+            return err('cannot read from output streams');
+        };
+        pipe.writeByte = b => {
+            if (!pipe.open) err('cannot write to closed stream');
+            return err('file write not implemented'); // TODO: implement
+        };
+    }
+}
 let klTrue  = new Sym('true');
 let klFalse = new Sym('false');
 let isTrampoline = x => x && x.constructor === Trampoline;
@@ -47,7 +81,7 @@ let isSymbol     = x => x && x.constructor === Sym;
 let isCons       = x => x && x.constructor === Cons;
 let isArray      = x => x && x.constructor === Array;
 let isError      = x => x && x.constructor === Error;
-let isStream     = x => x && x.constructor === Stream;
+let isPipe       = x => x && x.constructor === Pipe;
 let isNumber     = x => typeof x === 'number';
 let isString     = x => typeof x === 'string';
 let isFunction   = x => typeof x === 'function';
@@ -72,7 +106,7 @@ function toStr(x) {
     if (isFunction(x)) return `<Function ${x.name}>`;
     if (isArray(x)) return `<Vector ${x.length}>`;
     if (isError(x)) return `<Error "${x.message}">`;
-    if (isStream(x)) return `<Stream ${x.name}>`;
+    if (isPipe(x)) return `<Stream ${x.name}>`;
     return '' + x;
 }
 function asJsBool(x) {
@@ -82,7 +116,6 @@ function asJsBool(x) {
     }
     throw new Error('not a boolean');
 }
-let err = x => { throw new Error(x); };
 let asKlBool = x => x ? klTrue : klFalse;
 let asKlNumber = x => isNumber(x) ? x : err('not a number');
 let asKlString = x => isString(x) ? x : err('not a string');
@@ -90,7 +123,7 @@ let asKlSymbol = x => isSymbol(x) ? x : err('not a symbol');
 let asKlVector = x => isArray(x) ? x : err('not an absvector');
 let asKlCons = x => isCons(x) ? x : err('not a cons');
 let asKlError = x => isError(x) ? x : err('not an error');
-let asKlStream = x => isStream(x) ? x : err('not a stream');
+let asKlStream = x => isPipe(x) ? x : err('not a stream');
 let asKlFunction = x => isFunction(x) ? x : err('not a function');
 function asIndexOf(i, a) {
     if (!isNumber(i)) throw new Error('not a valid index: ' + i);
@@ -101,7 +134,7 @@ function asIndexOf(i, a) {
 function asKlValue(x) {
     if (x === true) return klTrue;
     if (x === false) return klFalse;
-    if (isString(x) || isNumber(x) || isSymbol(x) || isCons(x) || isArray(x) || isStream(x) || isFunction(x)) return x;
+    if (isString(x) || isNumber(x) || isSymbol(x) || isCons(x) || isArray(x) || isPipe(x) || isFunction(x)) return x;
     return null; // TODO: No other values admissible to KL?
 }
 function arrayToCons(x) {
@@ -143,7 +176,7 @@ if (typeof module !== 'undefined') {
         Sym,
         Cons,
         Trampoline,
-        Stream,
+        Pipe,
         klTrue,
         klFalse,
         eq,
@@ -153,6 +186,8 @@ if (typeof module !== 'undefined') {
         concatAll,
         butLast,
         consToArray,
+        consolePipe,
+        openFile,
         isArray,
         isNumber,
         isCons,
@@ -160,7 +195,7 @@ if (typeof module !== 'undefined') {
         isSymbol,
         isString,
         isError,
-        isStream,
+        isPipe,
         isTrampoline,
         err,
         asKlBool,

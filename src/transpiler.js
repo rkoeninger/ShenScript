@@ -5,7 +5,7 @@ if (typeof require !== 'undefined') {
     arrayToCons = types.arrayToCons;
     isArray = types.isArray;
     isFunction = types.isFunction;
-    isStream = types.isStream;
+    isPipe = types.isPipe;
     isString = types.isString;
     isNumber = types.isNumber;
     isCons = types.isCons;
@@ -213,7 +213,7 @@ class Transpiler {
 
     // Value of Num | Str | Sym | Cons -> JsString
     translate(code, scope) {
-        if (isArray(code) || isFunction(code) || isError(code) || isStream(code)) {
+        if (isArray(code) || isFunction(code) || isError(code) || isPipe(code)) {
             err('vectors, functions, errors and streams are not valid syntax');
         }
 

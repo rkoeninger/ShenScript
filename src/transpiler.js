@@ -287,7 +287,7 @@ class Transpiler {
             const [_trapError, body, handler] = consToArray(code);
             return `(function () {
                       try {
-                        return ${this.translate(body, scope)};
+                        return ${this.translate(body, scope.inHead())};
                       } catch ($err) {
                         return ${this.translate(handler, scope)}($err);
                       }

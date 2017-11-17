@@ -44,7 +44,7 @@ let err = x => { throw new Error(x); };
 let consolePipe = new Pipe('console');
 consolePipe.buffer = [];
 consolePipe.close = () => err('console stream cannot be closed');
-consolePipe.readByte = () => consolePipe.buffer.shift();
+consolePipe.readByte = () => consolePipe.buffer.shift() || -1;
 consolePipe.writeByte = b => {
     consolePipe.buffer.push(b);
     return b;

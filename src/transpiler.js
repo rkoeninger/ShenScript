@@ -102,6 +102,7 @@ class Transpiler {
                 case '.': { result += '$do'; break; }
                 case ',': { result += '$cm'; break; }
                 case '`': { result += '$bt'; break; }
+                case "'": { result += '$ap'; break; }
                 case '+': { result += '$pl'; break; }
                 case '*': { result += '$st'; break; }
                 case '<': { result += '$lt'; break; }

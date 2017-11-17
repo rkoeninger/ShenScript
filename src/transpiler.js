@@ -15,6 +15,7 @@ if (typeof require !== 'undefined') {
     concatAll = types.concatAll;
     butLast = types.butLast;
     consToArray = types.consToArray;
+    elementCount = types.elementCount;
     asJsBool = types.asJsBool;
     eq = types.eq;
 }
@@ -30,7 +31,7 @@ class Scope {
     }
     constructor() {
         this.locals = [];
-        this.scopeName = null;
+        this.scopeName = '$_toplevel';
         this.position = 'head';
     }
     clone() {
@@ -158,13 +159,10 @@ class Transpiler {
     }
     renderLet(bindings, body) {
         if (isCons(bindings)) {
-            body = `const ${Transpiler.rename(bindings.hd.sym)} = ${bindings.hd.value};
+            let renamed = Transpiler.rename(bindings.hd.sym);
+            if (bindings.hd.redefCount > 0) renamed += `_${bindings.hd.redefCount}`
+            body = `const ${renamed} = ${bindings.hd.value};
                     ${body}`;
-            if (bindings.hd.redefinition) {
-                body = `{
-                  ${body}
-                }`;
-            }
             return this.renderLet(bindings.tl, body);
         }
         return `(function () {
@@ -176,8 +174,8 @@ class Transpiler {
             const [_let, local, value, body] = consToArray(expr);
             const binding = {
                 sym: local,
-                value: this.translate(value, scope.inHead()),
-                redefinition: consToArray(bindings).some(x => x.sym.name === local.name)
+                redefCount: elementCount(scope.locals, x => x === local.name),
+                value: this.translate(value, scope.inHead())
             };
             return this.translateLet(new Cons(binding, bindings), body, scope.let(local));
         }
@@ -228,7 +226,13 @@ class Transpiler {
         if (isSymbol(code)) {
             if (code.name === 'true') return 'klTrue';
             if (code.name === 'false') return 'klFalse';
-            return scope.isLocal(code) ? Transpiler.rename(code) : `new Sym("${code}")`;
+            if (scope.isLocal(code)) {
+                const redefCount = elementCount(scope.locals, x => x === code.name) - 1;
+                let renamed = Transpiler.rename(code);
+                if (redefCount > 0) renamed += `_${redefCount}`;
+                return renamed;
+            }
+            return `new Sym("${code}")`;
         }
 
         // Conjunction and disjunction
@@ -269,7 +273,7 @@ class Transpiler {
         // 1-arg anonymous function
         if (Transpiler.isForm(code, 'lambda', 3)) {
             const [_lambda, param, body] = consToArray(code);
-            return `Kl.setArity(1, function (${Transpiler.rename(param)}) {
+            return `Kl.setArity("${scope.scopeName}_lambda", 1, function (${Transpiler.rename(param)}) {
                       return ${this.translate(body, scope.lambda(param))};
                     })`;
         }
@@ -277,7 +281,7 @@ class Transpiler {
         // 0-arg anonymous function
         if (Transpiler.isForm(code, 'freeze', 2)) {
             const [_freeze, body] = consToArray(code);
-            return `Kl.setArity(0, function () {
+            return `Kl.setArity("${scope.scopeName}_freeze", 0, function () {
                       return ${this.translate(body, scope.freeze())};
                     })`;
         }
@@ -292,6 +296,7 @@ class Transpiler {
                         return ${this.translate(handler, scope)}($err);
                       }
                     })()`;
+            // TODO: unwrap functions in catch
         }
 
         // Flattened, sequential, side-effecting expressions

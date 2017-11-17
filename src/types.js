@@ -50,16 +50,20 @@ consolePipe.writeByte = b => {
     return b;
 };
 function mountFile(path, callback) {
-    const reader = new FileReader();
-    reader.onloadend = e => {
-        kl.vfs[path] = e.target.result;
-        if (callback) callback();
-    };
-    reader.readAsText(new File([''], path));
+    fetch(path).then(response => response.text().then(text => {
+        kl.vfs[path] = text;
+        if (callback) {
+            callback();
+        } else {
+            console.log(`"${path} loaded"`);
+        }
+    }));
 }
 function openFileRead(path) {
+    path = kl.value('*home-directory*') + path;
     let pos = 0;
     const text = kl.vfs[path];
+    if (!text) err(`File "${path}" does not exist`);
     const pipe = new Pipe(path);
     pipe.open = true;
     pipe.close = () => {
@@ -106,7 +110,7 @@ function toStr(x) {
     if (isSymbol(x)) return x.name;
     if (isString(x)) return `"${x}"`;
     if (isCons(x)) return `[${consToArray(x).map(toStr).join(' ')}]`;
-    if (isFunction(x)) return `<Function ${x.name}>`;
+    if (isFunction(x)) return `<Function ${x.klName}>`;
     if (isArray(x)) return `<Vector ${x.length}>`;
     if (isError(x)) return `<Error "${x.message}">`;
     if (isPipe(x)) return `<Stream ${x.name}>`;
@@ -169,6 +173,11 @@ function concatAll(lists) {
 function butLast(list) {
     return [list.slice(0, list.length - 1), list[list.length - 1]];
 }
+function elementCount(array, f) {
+    let count = 0;
+    for (let x of array) if (f(x)) count++;
+    return count;
+}
 
 if (typeof module !== 'undefined') {
     module.exports = {
@@ -184,6 +193,7 @@ if (typeof module !== 'undefined') {
         consLength,
         concatAll,
         butLast,
+        elementCount,
         consToArray,
         consolePipe,
         mountFile,

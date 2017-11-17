@@ -29,6 +29,7 @@ describe('primitives', () => {
     it('value should accept idle symbols', () => equal('JavaScript', exec('(value *language*)')));
     it('let should bind local variables', () => equal(123, exec('(let X 123 X)')));
     it('let should mask outer bindings', () => equal(3, exec('(let X 1 (let X 2 (let X 3 X)))')));
+    it('let should handle nested bindings translated to iifes', () => equal(3, exec('(let X 1 (if (> X 0) (let X 2 (+ X 1)) 5))')));
     it('functions can be recursive', () => {
         exec('(defun fac (N) (if (= 0 N) 1 (* N (fac (- N 1)))))');
         equal(120, exec('(fac 5)'));

@@ -24,9 +24,31 @@
                 "window.doRunTailShen = () => console.log(eval(Transpiler.translateTail(getParsedSourceShen())))"
                 "window.doRunHeadShen = () => console.log(Kl.runAll(eval(Transpiler.translateHead(getParsedSourceShen()))))")
         </script>
+        <script>
+            setTimeout(function () {
+                const input = document.getElementById('repl-input');
+                const output = document.getElementById('repl-output');
+                input.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') {
+                        const text = input.value;
+                        for (let i = 0; i < text.length; ++i) {
+                            consolePipe.buffer.push(text[i]);
+                        }
+                        input.value = '';
+                    }
+                });
+                consolePipe.writeByte = b => output.value = output.value + String.fromCharCode(b);
+            }, 0);
+        </script>
         <style>
             textarea {
                 height: 100px;
+                width: 700px;
+            }
+            #repl-output {
+                height: 300px;
+            }
+            input {
                 width: 700px;
             }
         </style>
@@ -54,5 +76,10 @@
         <button onclick="doTranslateHeadShen();">Translate Head</button>
         <button onclick="doRunTailShen();">Run Tail</button>
         <button onclick="doRunHeadShen();">Run Head</button>
+        <br>
+        <h3>Shen REPL</h3>
+        <textarea id="repl-output"></textarea>
+        <br>
+        <input type="text" id="repl-input">
     </body>
 </html>

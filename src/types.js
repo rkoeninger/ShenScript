@@ -114,7 +114,7 @@ function asJsBool(x) {
         if (x.name === 'true') return true;
         if (x.name === 'false') return false;
     }
-    throw new Error('not a boolean');
+    err('not a boolean');
 }
 let asKlBool = x => x ? klTrue : klFalse;
 let asKlNumber = x => isNumber(x) ? x : err('not a number');
@@ -126,9 +126,9 @@ let asKlError = x => isError(x) ? x : err('not an error');
 let asKlStream = x => isPipe(x) ? x : err('not a stream');
 let asKlFunction = x => isFunction(x) ? x : err('not a function');
 function asIndexOf(i, a) {
-    if (!isNumber(i)) throw new Error('not a valid index: ' + i);
-    if (i % 1 !== 0) throw new Error('not an integer: ' + i);
-    if (i < 0 || i >= a.length) throw new Error('not in bounds: ' + i);
+    if (!isNumber(i)) err('not a valid index: ' + i);
+    if (i % 1 !== 0) err('not an integer: ' + i);
+    if (i < 0 || i >= a.length) err('not in bounds: ' + i);
     return i;
 }
 function asKlValue(x) {
@@ -148,9 +148,7 @@ function consToArray(x) {
         array.push(x.hd);
         x = x.tl;
     }
-    if (x !== null) {
-        throw new Error('not a valid list');
-    }
+    if (x !== null) err('not a valid list');
     return array;
 }
 function consLength(x) {
@@ -159,9 +157,7 @@ function consLength(x) {
         x = x.tl;
         length++;
     }
-    if (x !== null) {
-        throw new Error('not a valid list');
-    }
+    if (x !== null) err('not a valid list');
     return length;
 }
 function concatAll(lists) {

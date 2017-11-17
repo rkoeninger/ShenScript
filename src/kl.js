@@ -170,7 +170,7 @@ kl.primitve('open', (path, mode) => {
 });
 kl.primitve('close', s => asKlStream(s).close());
 kl.primitve('read-byte', s => asKlStream(s).readByte());
-kl.primitve('write-byte', (s, b) => asKlStream(s).writeByte(b));
+kl.primitve('write-byte', (b, s) => asKlStream(s).writeByte(b));
 
 if (typeof document !== 'undefined') {
     setTimeout(function () {
@@ -208,4 +208,5 @@ if (typeof module !== 'undefined') {
 if (typeof window !== 'undefined') {
     window.Kl = Kl;
     window.kl = kl;
+    window.consolePipe = consolePipe;
 }

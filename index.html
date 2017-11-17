@@ -38,6 +38,17 @@
                     }
                 });
                 consolePipe.writeByte = b => output.value = output.value + String.fromCharCode(b);
+                function readSingleFile(e) {
+                    var file = e.target.files[0];
+                    if (!file) return;
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        var contents = e.target.result;
+                        kl.vfs[file.name] = contents;
+                    };
+                    reader.readAsText(file);
+                }
+                document.getElementById('file-input').addEventListener('change', readSingleFile, false);
             }, 0);
         </script>
         <style>
@@ -81,5 +92,7 @@
         <textarea id="repl-output" readonly></textarea>
         <br>
         <input type="text" id="repl-input">
+        <br>
+        <input type="file" id="file-input">
     </body>
 </html>

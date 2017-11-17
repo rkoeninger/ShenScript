@@ -49,30 +49,33 @@ consolePipe.writeByte = b => {
     consolePipe.buffer.push(b);
     return b;
 };
-function openFile(path, isIn) {
-    let pipe = new Pipe(path);
+function mountFile(path, callback) {
+    const reader = new FileReader();
+    reader.onloadend = e => {
+        kl.vfs[path] = e.target.result;
+        if (callback) callback();
+    };
+    reader.readAsText(new File([''], path));
+}
+function openFileRead(path) {
+    let pos = 0;
+    const text = kl.vfs[path];
+    const pipe = new Pipe(path);
     pipe.open = true;
     pipe.close = () => {
         pipe.open = false;
         return null;
     };
-    if (isIn) {
-        pipe.readByte = () => {
-            if (!pipe.open) err('cannot read from closed stream');
-            return err('file read not implemented'); // TODO: implement
-        };
-        pipe.writeByte = b => {
-            return err('cannot write to input streams');
-        };
-    } else {
-        pipe.readByte = () => {
-            return err('cannot read from output streams');
-        };
-        pipe.writeByte = b => {
-            if (!pipe.open) err('cannot write to closed stream');
-            return err('file write not implemented'); // TODO: implement
-        };
-    }
+    pipe.readByte = () => {
+        if (pos >= text.length) return -1;
+        return text.charCodeAt(pos++);
+    };
+    pipe.writeByte = b => err('write not supported');
+    return pipe;
+}
+function openFile(path, isIn) {
+    if (isIn) return openFileRead(path);
+    err('writing files not implemented');
 }
 let klTrue  = new Sym('true');
 let klFalse = new Sym('false');
@@ -183,6 +186,7 @@ if (typeof module !== 'undefined') {
         butLast,
         consToArray,
         consolePipe,
+        mountFile,
         openFile,
         isArray,
         isNumber,
@@ -212,9 +216,11 @@ if (typeof module !== 'undefined') {
 if (typeof window !== 'undefined') {
     window.klTrue = klTrue;
     window.klFalse = klFalse;
+    window.mountFile = mountFile;
 }
 
 if (typeof global !== 'undefined') {
     global.klTrue = klTrue;
     global.klFalse = klFalse;
+    global.mountFile = mountFile;
 }

@@ -45,6 +45,7 @@ class Kl {
         this.uniqueSuffix = 0;
         this.symbols = {};
         this.fns = {};
+        this.vfs = {};
     }
     defun(name, arity, f) {
         f.klName = name;

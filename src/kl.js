@@ -51,7 +51,7 @@ class Kl {
         f.klName = name;
         f.arity = arity;
         this.fns[Transpiler.rename(name)] = f;
-        return f;
+        return new Sym(name);
     }
     primitve(name, f) {
         this.defun(name, f.length, f);

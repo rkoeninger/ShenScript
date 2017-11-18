@@ -131,6 +131,7 @@ class Transpiler {
         return result;
     }
     static escape(s) {
+        if (isSymbol(s)) s = s.name;
         let result = '';
         for (let i = 0; i < s.length; ++i) {
             switch (s[i]) {
@@ -233,7 +234,7 @@ class Transpiler {
                 if (redefCount > 0) renamed += `_${redefCount}`;
                 return renamed;
             }
-            return `new Sym("${code}")`;
+            return `new Sym("${Transpiler.escape(code)}")`;
         }
 
         // Conjunction and disjunction
@@ -266,7 +267,7 @@ class Transpiler {
         if (Transpiler.isForm(code, 'defun', 4)) {
             const [_defun, name, params, body] = consToArray(code);
             const paramNames = consToArray(params).map(expr => expr.name);
-            return `kl.defun('${name}', ${paramNames.length}, function (${paramNames.map(Transpiler.rename).join()}) {
+            return `kl.defun("${Transpiler.escape(name)}", ${paramNames.length}, function (${paramNames.map(Transpiler.rename).join()}) {
                       return ${this.translate(body, scope.defun(name, paramNames))};
                     })`;
         }
@@ -274,7 +275,7 @@ class Transpiler {
         // 1-arg anonymous function
         if (Transpiler.isForm(code, 'lambda', 3)) {
             const [_lambda, param, body] = consToArray(code);
-            return `Kl.setArity("${scope.scopeName}_lambda", 1, function (${Transpiler.rename(param)}) {
+            return `Kl.setArity("${Transpiler.escape(scope.scopeName)}_lambda", 1, function (${Transpiler.rename(param)}) {
                       return ${this.translate(body, scope.lambda(param))};
                     })`;
         }
@@ -282,7 +283,7 @@ class Transpiler {
         // 0-arg anonymous function
         if (Transpiler.isForm(code, 'freeze', 2)) {
             const [_freeze, body] = consToArray(code);
-            return `Kl.setArity("${scope.scopeName}_freeze", 0, function () {
+            return `Kl.setArity("${Transpiler.escape(scope.scopeName)}_freeze", 0, function () {
                       return ${this.translate(body, scope.freeze())};
                     })`;
         }

@@ -267,7 +267,7 @@ class Transpiler {
         if (Transpiler.isForm(code, 'defun', 4)) {
             const [_defun, name, params, body] = consToArray(code);
             const paramNames = consToArray(params).map(expr => expr.name);
-            return `kl.defun("${Transpiler.escape(name)}", ${paramNames.length}, function (${paramNames.map(Transpiler.rename).join()}) {
+            return `kl.defun("${Transpiler.escape(name)}", ${paramNames.length}, function (${paramNames.map(Transpiler.rename).join(', ')}) {
                       return ${this.translate(body, scope.defun(name, paramNames))};
                     })`;
         }
@@ -275,7 +275,10 @@ class Transpiler {
         // 1-arg anonymous function
         if (Transpiler.isForm(code, 'lambda', 3)) {
             const [_lambda, param, body] = consToArray(code);
-            return `Kl.setArity("${Transpiler.escape(scope.scopeName)}_lambda", 1, function (${Transpiler.rename(param)}) {
+            const redefCount = elementCount(scope.locals, x => x === param.name);
+            let renamed = Transpiler.rename(param);
+            if (redefCount > 0) renamed += `_${redefCount}`;
+            return `Kl.setArity("${Transpiler.escape(scope.scopeName)}_lambda", 1, function (${renamed}) {
                       return ${this.translate(body, scope.lambda(param))};
                     })`;
         }
@@ -329,7 +332,7 @@ class Transpiler {
         }
 
         const [fexpr, ...argExprs] = consToArray(code);
-        const translatedArgs = argExprs.map(expr => this.translate(expr, scope.inHead())).join();
+        const translatedArgs = argExprs.map(expr => this.translate(expr, scope.inHead())).join(', ');
 
         if (isSymbol(fexpr)) {
 

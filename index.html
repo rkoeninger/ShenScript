@@ -95,27 +95,31 @@
             implementation: <strong id="implementation"></strong>,
             release:        <strong id="release"></strong>
         </p>
-        <h3>KL</h3>
-        <textarea id="kl-code"></textarea>
-        <br>
-        <button onclick="doParseKl();">Parse</button>
-        <button onclick="doTranslateTailKl();">Translate Tail</button>
-        <button onclick="doTranslateHeadKl();">Translate Head</button>
-        <button onclick="doRunTailKl();">Run Tail</button>
-        <button onclick="doRunHeadKl();">Run Head</button>
-        <br>
-        <h3>Shen</h3>
-        <textarea id="shen-code"></textarea>
-        <br>
-        <button onclick="doParseShen();">Parse</button>
-        <button onclick="doTranslateTailShen();">Translate Tail</button>
-        <button onclick="doTranslateHeadShen();">Translate Head</button>
-        <button onclick="doRunTailShen();">Run Tail</button>
-        <button onclick="doRunHeadShen();">Run Head</button>
-        <br>
-        <h3>Shen REPL</h3>
-        <textarea id="repl-output" readonly></textarea>
-        <br>
-        <input type="text" id="repl-input">
+        <details>
+            <summary>KL</summary>
+            <textarea id="kl-code"></textarea>
+            <br>
+            <button onclick="doParseKl();">Parse</button>
+            <button onclick="doTranslateTailKl();">Translate Tail</button>
+            <button onclick="doTranslateHeadKl();">Translate Head</button>
+            <button onclick="doRunTailKl();">Run Tail</button>
+            <button onclick="doRunHeadKl();">Run Head</button>
+        </details>
+        <details>
+            <summary>Shen</summary>
+            <textarea id="shen-code"></textarea>
+            <br>
+            <button onclick="doParseShen();">Parse</button>
+            <button onclick="doTranslateTailShen();">Translate Tail</button>
+            <button onclick="doTranslateHeadShen();">Translate Head</button>
+            <button onclick="doRunTailShen();">Run Tail</button>
+            <button onclick="doRunHeadShen();">Run Head</button>
+        </details>
+        <details>
+            <summary>Shen REPL</summary>
+            <textarea id="repl-output" readonly></textarea>
+            <br>
+            <input type="text" id="repl-input">
+        </details>
     </body>
 </html>

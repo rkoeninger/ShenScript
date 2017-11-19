@@ -87,7 +87,7 @@ let isTrampoline = x => x && x.constructor === Trampoline;
 let isSymbol     = x => x && x.constructor === Sym;
 let isCons       = x => x && x.constructor === Cons;
 let isArray      = x => x && x.constructor === Array;
-let isError      = x => x && x.constructor === Error;
+let isError      = x => x instanceof Error;
 let isPipe       = x => x && x.constructor === Pipe;
 let isNumber     = x => typeof x === 'number';
 let isString     = x => typeof x === 'string';

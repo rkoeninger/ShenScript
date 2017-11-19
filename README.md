@@ -5,12 +5,14 @@
 
 An implementation of the [Shen Language](http://www.shenlanguage.org) by [Mark Tarver](http://marktarver.com/) for JavaScript. Built for modern browsers using the [latest features](https://github.com/lukehoban/es6features) of the ES6 standard.
 
-Goals of this implementation are:
+## Project Goals
 
   * Generate straight-forward JavaScript that is as idiomatic as possible.
-  * Render a small release package (current minified bundle is about ~500KB).
+  * Make the most use of ES6 features.
+  * Render a small npm release package (current minified bundle is about ~570KB).
   * Make interop with JavaScript easy, especially in the browser.
-  * Release package should be available through npm.
+  * Make REPL work in node.
+  * Try running environment for REPL in service worker in browser.
 
 ## Prerequisites
 

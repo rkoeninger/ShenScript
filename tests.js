@@ -39,6 +39,7 @@ describe('primitives', () => {
         exec('(defun do (_ X) X)');
         equal(2, exec('(do (let X 1 X) (let X 2 X))'));
     });
+    it('trap-error should provide error to handler', () => equal('hi', exec('(trap-error (simple-error "hi") (lambda X (error-to-string X)))')))
     it('trampolines should allow tail recursive functions to not blow the stack', () => {
         exec('(defun count-down (X) (if (= 0 X) "done" (count-down (- X 1))))');
         equal('done', exec('(count-down 20000)'));

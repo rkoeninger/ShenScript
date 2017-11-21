@@ -294,6 +294,16 @@ class Transpiler {
         // Error handling
         if (Transpiler.isForm(code, 'trap-error', 3)) {
             const [_trapError, body, handler] = consToArray(code);
+            if (Transpiler.isForm(handler, 'lambda', 3)) {
+                const [_lambda, handlerParam, handlerBody] = consToArray(handler);
+                return `(function () {
+                          try {
+                            return ${this.translate(body, scope.inHead())};
+                          } catch (${Transpiler.rename(handlerParam)}) {
+                            return ${this.translate(handlerBody, scope.let(handlerParam))};
+                          }
+                        })()`;
+            }
             return `(function () {
                       try {
                         return ${this.translate(body, scope.inHead())};
@@ -301,7 +311,6 @@ class Transpiler {
                         return ${this.translate(handler, scope)}($err);
                       }
                     })()`;
-            // TODO: unwrap functions in catch
         }
 
         // Flattened, sequential, side-effecting expressions

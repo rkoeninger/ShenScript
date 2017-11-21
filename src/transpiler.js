@@ -31,7 +31,7 @@ class Scope {
     }
     constructor() {
         this.locals = [];
-        this.scopeName = '$_toplevel';
+        this.scopeName = '$$';
         this.position = 'head';
     }
     clone() {
@@ -150,6 +150,9 @@ class Transpiler {
         }
         return result;
     }
+    static string(s) {
+        return `"${Transpiler.escape(s)}"`;
+    }
     static isForm(expr, keyword, length) {
         return isCons(expr) && (!length || consLength(expr) === length) && isSymbol(expr.hd) && expr.hd.name === keyword;
     }
@@ -161,9 +164,10 @@ class Transpiler {
     }
     renderLet(bindings, body) {
         if (isCons(bindings)) {
-            let renamed = Transpiler.rename(bindings.hd.sym);
-            if (bindings.hd.redefCount > 0) renamed += `_${bindings.hd.redefCount}`
-            body = `const ${renamed} = ${bindings.hd.value};
+            const binding = bindings.hd;
+            let renamed = Transpiler.rename(binding.sym);
+            if (binding.redefCount > 0) renamed += `_${bindings.hd.redefCount}`
+            body = `const ${renamed} = ${binding.value};
                     ${body}`;
             return this.renderLet(bindings.tl, body);
         }
@@ -185,7 +189,7 @@ class Transpiler {
     }
     condRecur(code, scope) {
         if (code === null) {
-            return `kl.fns.${Transpiler.rename('simple-error')}("No clause was true")`;
+            return `kl.fns.${Transpiler.rename('simple-error')}(${Transpiler.string('No clause was true')})`;
         } else {
             const [condition, consequent] = consToArray(code.hd);
             return this.ifExpr(
@@ -222,7 +226,7 @@ class Transpiler {
         // Literals
         if (code === null) return 'null';
         if (isNumber(code)) return `${code}`;
-        if (isString(code)) return `"${Transpiler.escape(code)}"`;
+        if (isString(code)) return Transpiler.string(code);
 
         // Local variables and idle symbols
         if (isSymbol(code)) {
@@ -234,7 +238,7 @@ class Transpiler {
                 if (redefCount > 0) renamed += `_${redefCount}`;
                 return renamed;
             }
-            return `new Sym("${Transpiler.escape(code)}")`;
+            return `new Sym(${Transpiler.string(code)})`;
         }
 
         // Conjunction and disjunction
@@ -267,7 +271,7 @@ class Transpiler {
         if (Transpiler.isForm(code, 'defun', 4)) {
             const [_defun, name, params, body] = consToArray(code);
             const paramNames = consToArray(params).map(expr => expr.name);
-            return `kl.defun("${Transpiler.escape(name)}", ${paramNames.length}, function (${paramNames.map(Transpiler.rename).join(', ')}) {
+            return `kl.defun(${Transpiler.string(name)}, ${paramNames.length}, function (${paramNames.map(Transpiler.rename).join(', ')}) {
                       return ${this.translate(body, scope.defun(name, paramNames))};
                     })`;
         }
@@ -278,7 +282,7 @@ class Transpiler {
             const redefCount = elementCount(scope.locals, x => x === param.name);
             let renamed = Transpiler.rename(param);
             if (redefCount > 0) renamed += `_${redefCount}`;
-            return `Kl.setArity("${Transpiler.escape(scope.scopeName)}_lambda", 1, function (${renamed}) {
+            return `Kl.setArity(${Transpiler.string(scope.scopeName + '_lambda')}, 1, function (${renamed}) {
                       return ${this.translate(body, scope.lambda(param))};
                     })`;
         }
@@ -286,7 +290,7 @@ class Transpiler {
         // 0-arg anonymous function
         if (Transpiler.isForm(code, 'freeze', 2)) {
             const [_freeze, body] = consToArray(code);
-            return `Kl.setArity("${Transpiler.escape(scope.scopeName)}_freeze", 0, function () {
+            return `Kl.setArity(${Transpiler.string(scope.scopeName + '_freeze')}, 0, function () {
                       return ${this.translate(body, scope.freeze())};
                     })`;
         }

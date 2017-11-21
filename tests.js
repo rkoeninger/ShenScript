@@ -23,6 +23,9 @@ describe('parsing', () => {
         it('should parse explicitly positive numeric literals', () => equal(23, Parser.parseString('+23')));
     });
 });
+describe('transpiler', () => {
+    it('should properly escape strings', () => equal('x\'', exec('(str x\')')));
+});
 describe('primitives', () => {
     it('conds should act as if-else chains', () => equal(2, exec('(cond (false 1) (true 2) (false 3))')));
     it('+ should add numbers', () => equal(3, exec('(+ 1 2)')));

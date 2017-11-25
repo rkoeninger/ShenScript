@@ -55,11 +55,13 @@ class Scope {
         if (isSymbol(param)) param = param.name;
         const scope = this.clone();
         scope.locals.push(param);
+        scope.scopeName = `${scope.scopeName}_lambda`;
         scope.position = 'tail';
         return scope;
     }
     freeze() {
         const scope = this.clone();
+        scope.scopeName = `${scope.scopeName}_freeze`;
         scope.position = 'tail';
         return scope;
     }

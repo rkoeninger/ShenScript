@@ -73,7 +73,8 @@ class Kl {
         } else if (args.length > f.arity) {
             return Kl.app(f(...args.slice(0, f.arity)), args.slice(f.arity));
         }
-        return Kl.setArity(f.klName, f.arity - args.length, function (...args2) {
+        const arity = f.arity - args.length;
+        return Kl.setArity(`${f.klName}/${arity}`, arity, function (...args2) {
             return Kl.app(f, args.concat(args2));
         });
     }

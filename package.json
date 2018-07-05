@@ -26,6 +26,7 @@
     "gulp-rename": "^1.2.2",
     "gulp-untar": "0.0.6",
     "gulp-util": "^3.0.8",
+    "hoek": "^4.2.1",
     "mocha": "^4.0.1",
     "request": "^2.83.0",
     "vinyl-source-stream": "^1.1.0",

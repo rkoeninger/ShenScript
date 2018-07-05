@@ -30,7 +30,7 @@ The Shen Kernel sources can be retrieved with `gulp fetch`. Shen Kernel version 
 
 Running `node build.js` will render the KL files to JavaScript and output `dist/kernel.js`.
 
-Webpack bundle can be built with `gulp bundle` and minified bundle can be built with `gulp bundle-min`.
+Webpack bundle can be built with `gulp bundle`.
 
 ## Running
 

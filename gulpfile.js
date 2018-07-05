@@ -2,7 +2,6 @@ const del = require('del');
 const gulp = require('gulp');
 const gunzip = require('gulp-gunzip');
 const gutil = require('gulp-util');
-const minify = require('gulp-minify');
 const mocha = require('gulp-mocha');
 const rename = require('gulp-rename');
 const request = require('request');
@@ -28,14 +27,6 @@ const kernelArchiveUrl = `${kernelArchiveUrlBase}/shen-${kernelVersion}/${kernel
 task('bundle', () =>
     src(srcFiles)
         .pipe(webpack)
-        .pipe(dest(distRoot)));
-
-task('bundle-min', () =>
-    src(srcFiles)
-        .pipe(webpack)
-        .pipe(minify({
-            mangle: false
-        }))
         .pipe(dest(distRoot)));
 
 task('clean', () => del([distRoot]));

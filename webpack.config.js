@@ -1,5 +1,5 @@
 module.exports = {
     output: {
-        filename: 'bundle.js'
+        filename: 'shenscript.js'
     }
 };

@@ -6,27 +6,28 @@ const { Kl, kl } = require('./src/kl');
 global.kl = kl;
 
 const files = [
-    'toplevel.kl',
-    'core.kl',
-    'sys.kl',
-    'sequent.kl',
-    'yacc.kl',
-    'reader.kl',
-    'prolog.kl',
-    'track.kl',
-    'load.kl',
-    'writer.kl',
-    'macros.kl',
-    'declarations.kl',
-    'types.kl',
-    't-star.kl'
+    'toplevel',
+    'core',
+    'sys',
+    'dict',
+    'sequent',
+    'yacc',
+    'reader',
+    'prolog',
+    'track',
+    'load',
+    'writer',
+    'macros',
+    'declarations',
+    'types',
+    't-star'
 ];
 
 const defuns = [];
 const toplevels = [];
 
 for (let file of files) {
-    const text = fs.readFileSync(`./kernel/klambda/${file}`, 'utf-8');
+    const text = fs.readFileSync(`./kernel/klambda/${file}.kl`, 'utf-8');
     const exprs = Parser.parseAllString(text);
     for (let expr of exprs) {
         if (isCons(expr)) {

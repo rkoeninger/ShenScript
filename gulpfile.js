@@ -19,7 +19,7 @@ const srcFiles = ['./src/**/*.js', './dist/kernel.js'];
 const testFiles = './tests.js';
 const distRoot = './dist';
 
-const kernelVersion = '20.1';
+const kernelVersion = '21.0';
 const kernelFolderName = `ShenOSKernel-${kernelVersion}`;
 const kernelArchiveName = `${kernelFolderName}.tar.gz`;
 const kernelArchiveUrlBase = 'https://github.com/Shen-Language/shen-sources/releases/download';

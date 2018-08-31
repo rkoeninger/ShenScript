@@ -42,6 +42,6 @@ Webpack bundle can be built with `gulp bundle`.
 
 ## Running
 
-`index.html` contains a basic KL/Shen test bed. There, one can experiment with parsing, translating and running Shen code.
+`index.html` contains a basic KL/Shen test bed. There, one can experiment with parsing, translating and running Shen code. It will not be able to mount files to the virtual file system unless it is loaded through a web server like `http-server`.
 
-`dist/bundle.js` must already be built for `index.html` to work.
+`dist/bundle.js` must be built for `index.html` to work.

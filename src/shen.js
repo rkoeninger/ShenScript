@@ -23,6 +23,7 @@ const produce = (proceed, render, next, state) => {
 };
 
 const raise = x => { throw new Error(x); };
+const comp = (f, g) => x => f(g(x));
 
 const Cons = class {
   constructor(head, tail) {
@@ -42,13 +43,15 @@ export const isCons     = x => x instanceof Cons;
 export const isStream   = x => false; // TODO: implement this
 
 export const empty = null;
-export const head = cons => cons.head;
-export const tail = cons => cons.tail;
+export const head = c => c.head;
+export const tail = c => c.tail;
 export const cons = (head, tail) => new Cons(head, tail);
-export const consToArray = cons => produce(isCons, head, tail, cons);
-export const arrayToCons = array => array.reduceRight((tail, head) => cons(head, tail), empty);
+export const consFromArray = a => a.reduceRight((tail, head) => cons(head, tail), empty);
+export const consToArray = c => produce(isCons, head, tail, c);
+export const consToArrayTree = c => produce(isCons, comp(x => isCons(x) ? consToArrayTree(x) : x, head), tail, c);
 
 export const intern = name => Symbol.for(name);
+export const nameOf = symbol => Symbol.keyFor(symbol);
 
 const stringTail   = s => s.substring(1);
 const stringConcat = (s, t) => s + t;
@@ -105,6 +108,13 @@ export const set = (id, value) => {
 };
 export const value = id => globals.has(id) ? globals.get(id) : raise(`Symbol ${show(id)} not defined`);
 
+const functions = new Map();
+export const defun = (id, parameters, body) => {
+  functions.set(id, new Function(...[...parameters, body]));
+  return id;
+};
+export const lookup = id => functions.has(id) ? functions.get(id) : raise(`Function ${show(id)} not defined`);
+
 const type = (x, _) => x;
 
 const errorToString = x => x.message;
@@ -112,13 +122,6 @@ const errorToString = x => x.message;
 const both   = (x, y) => x && y;
 const either = (x, y) => x || y;
 const when   = (c, x, y) => c ? x : y;
-
-const functions = new Map();
-export const defun = (id, parameters, body) => {
-  functions.set(id, new Function(...[...parameters, body]));
-  return id;
-};
-export const lookup = id => functions.has(id) ? functions.get(id) : raise(`Function ${show(id)} not defined`);
 
 
 
@@ -155,7 +158,7 @@ const isForm = (expr, lead, length) => (!length || expr.length === length) && ex
 const flattenForm = (expr, lead) => isForm(expr, lead) ? expr.slice(1).flatMap(flattenForm) : [expr];
 const flattenBooleanForm = (expr, lead) =>
   flattenForm(expr, lead)
-    .map(x => build({ ...context, shenType: 'boolean' }, x)) // TODO: wrap in asJsBool if necessary
+    .map(x => buildTree({ ...context, shenType: 'boolean' }, x)) // TODO: wrap in asJsBool if necessary
     .reduceRight((combined, argument) => ({
       type: 'LogicalExpression',
       operator: lead === 'and' ? '&&' : '||',
@@ -163,10 +166,20 @@ const flattenBooleanForm = (expr, lead) =>
       right: combined
     })); // TODO: wrap in asKlBool if necessary
 
+// TODO: needs to check defun's ?
+const isReferenced = (symbol, expr) =>
+  expr === symbol
+  || isForm(expr, 'let', 4)
+    && (isReferenced(symbol, expr[2]) || expr[1] !== symbol && isReferenced(symbol, expr[3]))
+  || isForm(expr, 'lambda', 3)
+    && expr[1] !== symbol && isReferenced(symbol, expr[2])
+  || isArray(expr)
+    && expr.some(x => isReferenced(symbol, x));
+
 // TODO: async/await
 // TODO: inlining, type checking
 
-export const build = (context, expr) => {
+const buildTree = (context, expr) => {
   if (isEmpty(expr)) {
     return { type: 'Identifier', name: 'empty' };
   } else if (isNumber(expr) || isString(expr)) {
@@ -176,11 +189,11 @@ export const build = (context, expr) => {
     // TODO: what about nested shadowing?
     return context.locals.contains(expr) ? {
         type: 'Identifier', 
-        name: Symbol.keyFor(expr)
+        name: nameOf(expr)
       } : {
         type: 'CallExpression',
         callee: { type: 'Identifier', name: 'intern' },
-        arguments: [{ type: 'Literal', value: Symbol.keyFor(expr) }]
+        arguments: [{ type: 'Literal', value: nameOf(expr) }]
       };
   } else if (isForm(expr, 'and')) {
     return flattenBooleanForm(expr, 'and');
@@ -189,9 +202,9 @@ export const build = (context, expr) => {
   } else if (isForm(expr, 'if', 4)) {
     return {
       type: context.statement ? 'IfStatement' : 'ConditionalExpression',
-      test: build({ ...context, shenType: 'boolean' }, expr[1]),
-      consequent: build(context, expr[2]),
-      alternative: build(context, expr[3])
+      test: buildTree({ ...context, shenType: 'boolean' }, expr[1]),
+      consequent: buildTree(context, expr[2]),
+      alternative: buildTree(context, expr[3])
     };
   } else if (isForm(expr, 'cond')) {
     // TODO: handle true and false conditions
@@ -199,8 +212,8 @@ export const build = (context, expr) => {
     return expr.slice(1).reduceRight(
       (chain, [test, consequent]) => ({
         type: context.statement ? 'IfStatement' : 'ConditionalExpression',
-        test: build({ ...context, shenType: 'boolean' }, test),
-        consequent: build(context, consequent), // TODO: if cond is in return position, wrap in ReturnStatement
+        test: buildTree({ ...context, shenType: 'boolean' }, test),
+        consequent: buildTree(context, consequent), // TODO: if cond is in return position, wrap in ReturnStatement
         alternative: chain
       }), {
         type: 'CallExpression',
@@ -212,44 +225,46 @@ export const build = (context, expr) => {
     // in a statement context, we can just add a declaration, maybe surround in a block
     // in an expression context, we might have to put it in an ifee, or attempt inlining
     // binding may also be ignored in subsequent context, if so, just turn it into a do
-    // [let X Binding Body] -> [do Binding Body] where (free-variable-in? X Body)
-    return {
-      type: 'ExpressionStatement',
-      expression: {
-        type: 'CallExpression',
-        callee: {
-          type: 'ArrowFunctionExpression',
-          params: [{ type: 'Identifier', name: Symbol.keyFor(expr[1]) }],
-          body: build(context, expr[2])
-        },
-        arguments: [build(context, expr[3])]
-      }
-    };
+    // [let X Binding Body] -> [do Binding Body] where (not (referenced? X Body))
+    return nameOf(expr[1]) === '_' || !isReferenced(expr[1], expr[3])
+      ? build(context, [intern('do'), expr[2], expr[3]])
+      : {
+        type: 'ExpressionStatement',
+        expression: {
+          type: 'CallExpression',
+          callee: {
+            type: 'ArrowFunctionExpression',
+            params: [{ type: 'Identifier', name: nameOf(expr[1]) }],
+            body: buildTree(context, expr[2])
+          },
+          arguments: [buildTree(context, expr[3])]
+        }
+      };
   } else if (isForm(expr, 'do')) {
     return {
       type: 'BlockStatement',
-      body: flattenForm(expr, 'do').map(x => build(context, x))
+      body: flattenForm(expr, 'do').map(x => buildTree(context, x))
       // TODO: return butlast(exprs)
       // if do is assigned to a variable, just make last line an assignment to a variable
     };
   } else if (isForm(expr, 'lambda', 3)) {
     return { // TODO: check body to see if function should be a statement or expression lambda
       type: 'ArrowFunctionExpression',
-      params: [{ type: 'Identifier', name: Symbol.keyFor(expr[1]) }],
+      params: [{ type: 'Identifier', name: nameOf(expr[1]) }],
       expression: true,
-      body: build(context, expr[2])
+      body: buildTree(context, expr[2])
     };
   } else if (isForm(expr, 'freeze', 2)) {
     return {
       type: 'ArrowFunctionExpression',
       params: [],
       expression: true,
-      body: build(context, expr[1])
+      body: buildTree(context, expr[1])
     };
   } else if (isForm(expr, 'trap-error', 3)) {
     return {
       type: 'TryStatement',
-      block: build(context, expr[1]), // TODO: wrap in block statement, make it statement context
+      block: buildTree(context, expr[1]), // TODO: wrap in block statement, make it statement context
       handler: { // TODO: if handler is a lambda, just inline its body, name catch var after lambda param
         type: 'CatchClause',
         param: { type: 'Identifier', name: 'E' },
@@ -264,6 +279,8 @@ export const build = (context, expr) => {
   // TODO: application form
   // TODO: what about non-empty, non-number, non-string, non-symbol, non-cons values
 };
+
+export const build = (context, expr) => buildTree(context, consToArrayTree(expr));
 
 
 

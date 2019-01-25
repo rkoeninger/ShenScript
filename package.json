@@ -32,7 +32,9 @@
     "vinyl-source-stream": "^1.1.0",
     "webpack-stream": "^4.0.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "astring": "^1.3.1"
+  },
   "scripts": {
     "test": "gulp test"
   }

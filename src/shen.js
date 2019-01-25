@@ -136,6 +136,8 @@ const Trampoline = class {
 const isTrampoline = x => x instanceof Trampoline;
 const runTrampoline = ({ f, args }) => f(...args);
 
+// TODO: partial applications, curried applications
+
 
 
 
@@ -143,40 +145,124 @@ const runTrampoline = ({ f, args }) => f(...args);
 // NOTE:
 // context.statement  // if location in target context can be a statement
 // context.expression // if location in target context must be an expression
-// context.locals     // list of local variables and parameters defined at this point
+// context.return     // location is the last statement which needs to be returned
+// context.head       // if context is in head position
+// context.tail       // if context is in tail position
+// context.locals     // Set of local variables and parameters defined at this point
 // context.shenType   // specific type is expected for expression, undefined if unknown
 
 const isForm = (expr, lead, length) => (!length || expr.length === length) && expr[0] === intern(lead);
 const flattenForm = (expr, lead) => isForm(expr, lead) ? expr.slice(1).flatMap(flattenForm) : [expr];
+const flattenBooleanForm = (expr, lead) =>
+  flattenForm(expr, lead)
+    .map(x => build({ ...context, shenType: 'boolean' }, x)) // TODO: wrap in asJsBool if necessary
+    .reduceRight((combined, argument) => ({
+      type: 'LogicalExpression',
+      operator: lead === 'and' ? '&&' : '||',
+      left: argument,
+      right: combined
+    })); // TODO: wrap in asKlBool if necessary
 
 // TODO: async/await
+// TODO: inlining, type checking
 
 export const build = (context, expr) => {
-  if (isForm(expr, 'and')) {
-
+  if (isEmpty(expr)) {
+    return { type: 'Identifier', name: 'empty' };
+  } else if (isNumber(expr) || isString(expr)) {
+    return { type: 'Literal', value: expr };
+  } else if (isSymbol(expr)) {
+    // TODO: true and false symbols
+    // TODO: what about nested shadowing?
+    return context.locals.contains(expr) ? {
+        type: 'Identifier', 
+        name: Symbol.keyFor(expr)
+      } : {
+        type: 'CallExpression',
+        callee: { type: 'Identifier', name: 'intern' },
+        arguments: [{ type: 'Literal', value: Symbol.keyFor(expr) }]
+      };
+  } else if (isForm(expr, 'and')) {
+    return flattenBooleanForm(expr, 'and');
   } else if (isForm(expr, 'or')) {
-
+    return flattenBooleanForm(expr, 'or');
   } else if (isForm(expr, 'if', 4)) {
-    const [_, test, consequent, alternative] = expr;
     return {
       type: context.statement ? 'IfStatement' : 'ConditionalExpression',
-      test: build({ ...context, shenType: 'boolean' }, test),
-      consequent: build(context, consequent),
-      alternative: build(context, alternative)
+      test: build({ ...context, shenType: 'boolean' }, expr[1]),
+      consequent: build(context, expr[2]),
+      alternative: build(context, expr[3])
     };
   } else if (isForm(expr, 'cond')) {
-
+    // TODO: handle true and false conditions
+    // TODO: build if/else chain in statement context, ?/: chain in expression context
+    return expr.slice(1).reduceRight(
+      (chain, [test, consequent]) => ({
+        type: context.statement ? 'IfStatement' : 'ConditionalExpression',
+        test: build({ ...context, shenType: 'boolean' }, test),
+        consequent: build(context, consequent), // TODO: if cond is in return position, wrap in ReturnStatement
+        alternative: chain
+      }), {
+        type: 'CallExpression',
+        callee: { type: 'Identifier', name: 'raise' },
+        arguments: [{ type: 'Literal', value: 'no condition was true' }]
+      });
   } else if (isForm(expr, 'let', 4)) {
-    const [_, symbol, binding, body] = expr;
     // TODO:
     // in a statement context, we can just add a declaration, maybe surround in a block
     // in an expression context, we might have to put it in an ifee, or attempt inlining
     // binding may also be ignored in subsequent context, if so, just turn it into a do
     // [let X Binding Body] -> [do Binding Body] where (free-variable-in? X Body)
     return {
-      
+      type: 'ExpressionStatement',
+      expression: {
+        type: 'CallExpression',
+        callee: {
+          type: 'ArrowFunctionExpression',
+          params: [{ type: 'Identifier', name: Symbol.keyFor(expr[1]) }],
+          body: build(context, expr[2])
+        },
+        arguments: [build(context, expr[3])]
+      }
+    };
+  } else if (isForm(expr, 'do')) {
+    return {
+      type: 'BlockStatement',
+      body: flattenForm(expr, 'do').map(x => build(context, x))
+      // TODO: return butlast(exprs)
+      // if do is assigned to a variable, just make last line an assignment to a variable
+    };
+  } else if (isForm(expr, 'lambda', 3)) {
+    return { // TODO: check body to see if function should be a statement or expression lambda
+      type: 'ArrowFunctionExpression',
+      params: [{ type: 'Identifier', name: Symbol.keyFor(expr[1]) }],
+      expression: true,
+      body: build(context, expr[2])
+    };
+  } else if (isForm(expr, 'freeze', 2)) {
+    return {
+      type: 'ArrowFunctionExpression',
+      params: [],
+      expression: true,
+      body: build(context, expr[1])
+    };
+  } else if (isForm(expr, 'trap-error', 3)) {
+    return {
+      type: 'TryStatement',
+      block: build(context, expr[1]), // TODO: wrap in block statement, make it statement context
+      handler: { // TODO: if handler is a lambda, just inline its body, name catch var after lambda param
+        type: 'CatchClause',
+        param: { type: 'Identifier', name: 'E' },
+        body: {
+          type: 'BlockStatement',
+          body: null // TODO: apply handler expr[2] to E
+        }
+      }
     };
   }
+
+  // TODO: application form
+  // TODO: what about non-empty, non-number, non-string, non-symbol, non-cons values
 };
 
 

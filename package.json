@@ -28,6 +28,7 @@
     "gulp-util": "^3.0.8",
     "hoek": "^4.2.1",
     "mocha": "^5.2.0",
+    "parsimmon": "^1.12.0",
     "request": "^2.83.0",
     "vinyl-source-stream": "^1.1.0",
     "webpack-stream": "^4.0.0"

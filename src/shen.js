@@ -119,6 +119,7 @@ const runTrampoline = async x => isTrampoline(x) ? runTrampoline(await x.promise
 
 
 const validId = /[a-zA-Z_$][0-9a-zA-Z_$]*/;
+// TODO: still need renaming logic for local variables, parameters
 
 // NOTE:
 // context.statement  // if location in target context can be a statement
@@ -156,10 +157,11 @@ const flattenLogicalForm = (context, expr, lead) =>
 
 const isReferenced = (symbol, expr) =>
   expr === symbol
-  || isForm(expr, 'let', 4) && (isReferenced(symbol, expr[2]) || expr[1] !== symbol && isReferenced(symbol, expr[3]))
-  || isForm(expr, 'lambda', 3) && expr[1] !== symbol && isReferenced(symbol, expr[2])
-  || isForm(expr, 'defun', 4) && !expr[2].includes(symbol) && isReferenced(symbol, expr[3])
-  || isArray(expr) && expr.some(x => isReferenced(symbol, x));
+  || isArray(expr)
+    && (isForm(expr, 'let', 4) && (isReferenced(symbol, expr[2]) || expr[1] !== symbol && isReferenced(symbol, expr[3]))
+     || isForm(expr, 'lambda', 3) && expr[1] !== symbol && isReferenced(symbol, expr[2])
+     || isForm(expr, 'defun', 4) && !expr[2].includes(symbol) && isReferenced(symbol, expr[3])
+     || expr.some(x => isReferenced(symbol, x)));
 
 // TODO: async/await
 // TODO: inlining, type-inferred optimizations
@@ -168,7 +170,7 @@ const build = (context, expr) =>
   isNull(expr) || isNumber(expr) || isString(expr) ? literal(expr) :
   isSymbol(expr) ? (
     context.locals.has(expr)
-      ? identifier(nameOf(expr))
+      ? identifier(nameOf(expr)) // TODO: what if variable is not a valid identifier?
       : invoke(identifier('intern'), [literal(nameOf(expr))])) :
   isArray(expr) ? (
     isForm(expr, 'and') ? flattenLogicalForm(context, expr, 'and') :
@@ -192,10 +194,8 @@ const build = (context, expr) =>
             chain),
         invoke(identifier('raise'), [literal('no condition was true')])) :
     isForm(expr, 'let', 4) ? (
-      // TODO:
-      // in a statement context, we can just add a declaration, maybe surround in a block
+      // TODO: in a statement context, we can just add a declaration, maybe surround in a block
       // in an expression context, we might have to put it in an ifee, or attempt inlining
-      // binding may also be ignored in subsequent context, if so, just turn it into a do
       nameOf(expr[1]) === '_' || !isReferenced(expr[1], expr[3])
         ? build(context, [intern('do'), expr[2], expr[3]])
         : statement(invoke(arrow([literal(nameOf(expr[1]))], build(context, expr[2])), [build(context, expr[3])]))) :
@@ -213,8 +213,6 @@ const build = (context, expr) =>
     // TODO: set params as locals, set root function context
     null // TODO: application form
   ) : raise('not a valid form');
-
-  // TODO: what about non-empty, non-number, non-string, non-symbol, non-cons values
 
 export const transpile = expr => build({ locals: new Set(), head: true }, consToArrayTree(expr));
 

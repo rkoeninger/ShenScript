@@ -284,10 +284,11 @@ const build = (context, expr) =>
     isForm(expr, 'lambda', 3) ? arrow([identifier(nameOf(expr[1]))], build(context, expr[2])) :
     // TODO: check body to see if function should be a statement or expression lambda
     isForm(expr, 'freeze', 2) ? arrow([], build(context, expr[1])) :
-    isForm(expr, 'trap-error', 3) ? attempt(build(context, expr[1]), identifier('E'), block([])) :
+    isForm(expr, 'trap-error', 3) ? (
+      isForm(expr[2], 'lambda', 2)
+        ? attempt(build(context, expr[1]), identifier(nameOf(expr[2][1])), build(but(context, 'statement', true), expr[2][2]))
+        : attempt(build(context, expr[1]), identifier('$error'), invoke(build(context, expr[2]), [identifier('$error')]))) :
     // TODO: wrap in block statement, make it statement context
-    // TODO: if handler is a lambda, just inline its body, name catch var after lambda param
-    // TODO: apply handler expr[2] to E
     isForm(expr, 'defun', 4) ? (functions.set(expr[1], expr[2], build(context, expr[3])), expr[1]) :
     // TODO: set params as locals, set root function context
     isForm(expr, 'type', 2) ? expr[1] : // TODO: tag returned expr as having type nameof(expr[2])

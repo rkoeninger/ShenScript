@@ -320,6 +320,7 @@ const build = (context, expr) =>
     null // TODO: application form
   ) : raise('not a valid form');
 
+// TODO: transpile function needs to know if we're doing async/await
 export const transpile = expr => build({ locals: new Set(), head: true }, consToArrayTree(expr));
 
 functions['number?']         = isNumber;
@@ -368,4 +369,23 @@ symbols['*stinput*']         = consoleSource;
 symbols['*stoutput*']        = consoleSink;
 symbols['*sterror*']         = consoleSink;
 
-// TODO: IO operations, file system, console
+// TODO: needs createShenEnv function that takes impls of certain IO functions
+//       like fs, terminal, stinput, stoutput
+//       Depending on how library is packaged or deployed, these could work very
+//       differently
+//       may not need to generate async/await syntax if IO functions don't use promises
+
+const Shen = (opts = {}) => {
+  const terminal = opts.terminal; // undefined terminal means writing does console.log and reading raises error
+  const fileSystem = opts.fileSystem; // undefined filesystem means opening files raises error
+  const useAsync = opts.useAsync; // async defaults to false, especially if terminal and filesystem opts are undefined
+  const clock = opts.clock || () => new Date().getDate();
+  const port = opts.port || 'Unknown';
+  const porters = opts.porters || 'Unknown';
+  const version = opts.version || 'Unknown';
+  const implementation = opts.implementation || 'Unknown';
+  const release = opts.release || 'Unknown';
+  const os = opts.os || 'Unknown';
+};
+
+export default Shen;

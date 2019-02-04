@@ -171,16 +171,43 @@ const getTime = mode =>
   mode === intern('run')  ? now() - startTime :
   raise('get-time only accepts symbols unix or run');
 
+const globalMap = adjective => {
+  const map = {};
+  return {
+    get: id => {
+      const value = map[id];
+      return value !== undefined ? value : raise(`${adjective} ${id} not defined`);
+    },
+    set: (id, value) => map[id] = value
+  };
+};
+
+export const symbols = globalMap('symbol');
+export const functions = globalMap('function');
+
 // TODO: what about async/await?
 // how to combine trampoline evaluation with promise chaining?
 const Trampoline = class {
-  constructor(promise) {
-    this.promise = promise;
+  constructor(f, args) {
+    this.f = f;
+    this.args = args;
+  }
+  run() {
+    return this.f(...this.args);
   }
 };
 
-const isTrampoline = x => x instanceof Trampoline;
-const runTrampoline = async x => isTrampoline(x) ? runTrampoline(await x.promise) : x;
+export const bounce = (f, ...args) => new Trampoline(f, ...args);
+export const settle = async x => {
+  while (true) {
+    const y = await x;
+    if (y instanceof Trampoline) {
+      x = y.run();
+    } else {
+      return y;
+    }
+  }
+};
 
 // TODO: partial applications, curried applications
 
@@ -205,9 +232,8 @@ const wait = argument => ({ type: 'AwaitExpression', argument });
 const invoke = (callee, arguments) => wait({ type: 'CallExpression', callee, arguments });
 // TODO: only wrap invocation in await if in async context
 
-const conditional = (statement, test, consequent, alternative) => ({
-  type: statement ? 'IfStatement' : 'ConditionalExpression', test, consequent, alternative
-});
+const conditional = (statement, test, consequent, alternative) =>
+  ({ type: statement ? 'IfStatement' : 'ConditionalExpression', test, consequent, alternative });
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
 const attempt = (block, param, body) => ({ type: 'TryStatement', block, handler: { type: 'CatchClause', param, body } });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Literal', object, property });
@@ -264,11 +290,10 @@ const build = (context, expr) =>
       // TODO: if cond is in return/expression position, wrap in ReturnStatement
       expr.slice(1).reduceRight(
         (chain, [test, consequent]) =>
-          test === trueSymbol  ? build(context, consequent) :
-          test === falseSymbol ? chain :
+          test === trueSymbol ? build(context, consequent) :
           conditional(
             context.statement,
-            build(but(context, 'kind', 'boolean'), test),
+            build(but(context, 'kind', 'boolean'), test), // TODO: need 1 function that sets kind on context and does ensure()
             build(context, consequent),
             chain),
         invoke(identifier('raise'), [literal('no condition was true')])) :
@@ -296,20 +321,6 @@ const build = (context, expr) =>
   ) : raise('not a valid form');
 
 export const transpile = expr => build({ locals: new Set(), head: true }, consToArrayTree(expr));
-
-const globalMap = adjective => {
-  const map = {};
-  return {
-    get: id => {
-      const value = map[id];
-      return value !== undefined ? value : raise(`${adjective} ${id} not defined`);
-    },
-    set: (id, value) => map[id] = value
-  };
-};
-
-export const symbols = globalMap('symbol');
-export const functions = globalMap('function');
 
 functions['number?']         = isNumber;
 functions['string?']         = isString;

@@ -23,7 +23,6 @@ const produce = (proceed, render, next, state) => {
 };
 
 const butLast = a => [a.slice(0, -1), a[a.length - 1]];
-const comp = (f, g) => x => f(g(x));
 const raise = x => { throw new Error(x); };
 
 export const intern = name => Symbol.for(name);
@@ -146,7 +145,7 @@ export const tail = c => c.tail;
 export const cons = (h, t) => new Cons(h, t);
 export const consFromArray = a => a.reduceRight((t, h) => cons(h, t), null);
 export const consToArray = c => produce(isCons, head, tail, c);
-export const consToArrayTree = c => produce(isCons, comp(x => isCons(x) ? consToArrayTree(x) : x, head), tail, c);
+export const consToArrayTree = c => produce(isCons, x => isCons(head(x)) ? consToArrayTree(head(x)) : head(x), tail, c);
 
 export const equate = (x, y) =>
   x === y
@@ -328,13 +327,13 @@ functions['string?']         = isString;
 functions['symbol?']         = isSymbol;
 functions['absvector?']      = isArray;
 functions['cons?']           = isCons;
-functions['hd']              = comp(head, asCons);
-functions['tl']              = comp(tail, asCons);
+functions['hd']              = c => head(asCons(c));
+functions['tl']              = c => tail(asCons(c));
 functions['cons']            = cons;
 functions['tlstr']           = s => asString(s).substring(1);
 functions['cn']              = (s, t) => asString(s) + asString(t);
 functions['string->n']       = s => asString(s).charCodeAt(0);
-functions['n->string']       = comp(String.fromCharCode, asNumber);
+functions['n->string']       = n => String.fromCharCode(asNumber(n));
 functions['pos']             = (s, i) => asString(s)[asNumber(i)];
 functions['str']             = show;
 functions['absvector']       = n => new Array(asNumber(n)).fill(null);
@@ -349,22 +348,24 @@ functions['>']               = (x, y) => asNumber(x) >  asNumber(y);
 functions['<']               = (x, y) => asNumber(x) <  asNumber(y);
 functions['>=']              = (x, y) => asNumber(x) >= asNumber(y);
 functions['<=']              = (x, y) => asNumber(x) <= asNumber(y);
-functions['intern']          = comp(intern, asString);
-functions['get-time']        = comp(getTime, asSymbol);
+functions['intern']          = s => intern(asString(s));
+functions['get-time']        = s => getTime(asSymbol(s));
 functions['type']            = (x, _) => x;
-functions['simple-error']    = comp(raise, asString);
+functions['simple-error']    = s => raise(asString(s));
 functions['error-to-string'] = x => asError(x).message;
-functions['if']              = (c, x, y) => asJsBool(c) ? x : y;
+functions['if']              = (b, x, y) => asJsBool(b) ? x : y;
 functions['and']             = (x, y) => asShenBool(asJsBool(x) && asJsBool(y));
 functions['or']              = (x, y) => asShenBool(asJsBool(x) || asJsBool(y));
 functions['set']             = (s, x) => symbols.set(nameOf(asSymbol(s)), x);
 functions['value']           = s => symbols.get(nameOf(asSymbol(s)), x);
 
+// TODO: these don't need to be platform specific?
+functions['read-byte']       = s => asInStream(s).read(); // TODO: define asInStream
+functions['write-byte']      = (s, b) => asOutStream(s).write(b); // TODO: define asOutStream
+
 // TODO: these get moved to node/browser packaging?
 functions['open']            = undefined; // TODO: define these
 functions['close']           = s => asStream(s).close();
-functions['read-byte']       = s => asInStream(s).read(); // TODO: define asInStream
-functions['write-byte']      = (s, b) => asOutStream(s).write(b); // TODO: define asOutStream
 symbols['*stinput*']         = consoleSource;
 symbols['*stoutput*']        = consoleSink;
 symbols['*sterror*']         = consoleSink;
@@ -377,6 +378,9 @@ symbols['*sterror*']         = consoleSink;
 
 const Shen = (opts = {}) => {
   const terminal = opts.terminal; // undefined terminal means writing does console.log and reading raises error
+  symbols['*stinput*']  = terminal.in;
+  symbols['*stoutput*'] = terminal.out;
+  symbols['*sterror*']  = terminal.err;
   const fileSystem = opts.fileSystem; // undefined filesystem means opening files raises error
   const useAsync = opts.useAsync; // async defaults to false, especially if terminal and filesystem opts are undefined
   const clock = opts.clock || () => new Date().getDate();
@@ -389,3 +393,5 @@ const Shen = (opts = {}) => {
 };
 
 export default Shen;
+
+// TODO: new Kl() ... translated code ... new Shen()

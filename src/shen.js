@@ -181,9 +181,6 @@ const globalMap = adjective => {
   };
 };
 
-export const symbols = globalMap('symbol');
-export const functions = globalMap('function');
-
 // TODO: what about async/await?
 // how to combine trampoline evaluation with promise chaining?
 const Trampoline = class {
@@ -235,7 +232,8 @@ const conditional = (statement, test, consequent, alternative) =>
   ({ type: statement ? 'IfStatement' : 'ConditionalExpression', test, consequent, alternative });
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
 const attempt = (block, param, body) => ({ type: 'TryStatement', block, handler: { type: 'CatchClause', param, body } });
-const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Literal', object, property });
+const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
+const assign = (left, right, operator = '=') => ({ type: 'AssignmentExpression', left, right, operator });
 const block = (statement, body) => statement ? { type: 'BlockStatement', body } : access(array(body), literal(body.length - 1));
 const statement = expression => ({ type: 'ExpressionStatement', expression });
 const arrow = (params, body, expression = true) => ({ type: 'ArrowFunctionExpression', async: true, expression, params, body });
@@ -275,7 +273,7 @@ const build = (context, expr) =>
   isSymbol(expr) ? (
     context.locals.has(expr)
       ? identifier(nameOf(expr)) // TODO: what if variable is not a valid identifier?
-      : invoke(identifier('intern'), [literal(nameOf(expr))])) :
+      : invoke(identifier('intern'), [literal(nameOf(expr))])) : // TODO: make sure intern is in scope
   isArray(expr) ? (
     isForm(expr, 'and') ? flattenLogicalForm(context, expr, 'and') :
     isForm(expr, 'or')  ? flattenLogicalForm(context, expr, 'or') :
@@ -313,62 +311,18 @@ const build = (context, expr) =>
         ? attempt(build(context, expr[1]), identifier(nameOf(expr[2][1])), build(but(context, 'statement', true), expr[2][2]))
         : attempt(build(context, expr[1]), identifier('$error'), invoke(build(context, expr[2]), [identifier('$error')]))) :
     // TODO: wrap in block statement, make it statement context
+    // TODO: emit functions.set instead of doing it (how to scope it?)
     isForm(expr, 'defun', 4) ? (functions.set(expr[1], expr[2], build(context, expr[3])), expr[1]) :
     // TODO: set params as locals, set root function context
+    isForm(expr, 'value', 2) ? access(identifier('symbols'), literal(nameOf(expr[1]))) : // TODO: make identifier if valid identifier
+    // TODO: extract code for value to use in set
+    isForm(expr, 'set', 3) ? assign(access(identifier('symbols', literal(nameOf(expr[1])))), build(context, expr[2])) :
     isForm(expr, 'type', 2) ? expr[1] : // TODO: tag returned expr as having type nameof(expr[2])
     null // TODO: application form
   ) : raise('not a valid form');
 
 // TODO: transpile function needs to know if we're doing async/await
 export const transpile = expr => build({ locals: new Set(), head: true }, consToArrayTree(expr));
-
-functions['number?']         = isNumber;
-functions['string?']         = isString;
-functions['symbol?']         = isSymbol;
-functions['absvector?']      = isArray;
-functions['cons?']           = isCons;
-functions['hd']              = c => head(asCons(c));
-functions['tl']              = c => tail(asCons(c));
-functions['cons']            = cons;
-functions['tlstr']           = s => asString(s).substring(1);
-functions['cn']              = (s, t) => asString(s) + asString(t);
-functions['string->n']       = s => asString(s).charCodeAt(0);
-functions['n->string']       = n => String.fromCharCode(asNumber(n));
-functions['pos']             = (s, i) => asString(s)[asNumber(i)];
-functions['str']             = show;
-functions['absvector']       = n => new Array(asNumber(n)).fill(null);
-functions['<-absvector']     = (a, i) => asArray(a)[asIndex(i, a)];
-functions['absvector->']     = (a, i, x) => (asArray(a)[asIndex(i, a)] = x, a);
-functions['=']               = equate;
-functions['+']               = (x, y) => asNumber(x) +  asNumber(y);
-functions['-']               = (x, y) => asNumber(x) -  asNumber(y);
-functions['*']               = (x, y) => asNumber(x) *  asNumber(y);
-functions['/']               = (x, y) => asNumber(x) /  asNumber(y);
-functions['>']               = (x, y) => asNumber(x) >  asNumber(y);
-functions['<']               = (x, y) => asNumber(x) <  asNumber(y);
-functions['>=']              = (x, y) => asNumber(x) >= asNumber(y);
-functions['<=']              = (x, y) => asNumber(x) <= asNumber(y);
-functions['intern']          = s => intern(asString(s));
-functions['get-time']        = s => getTime(asSymbol(s));
-functions['type']            = (x, _) => x;
-functions['simple-error']    = s => raise(asString(s));
-functions['error-to-string'] = x => asError(x).message;
-functions['if']              = (b, x, y) => asJsBool(b) ? x : y;
-functions['and']             = (x, y) => asShenBool(asJsBool(x) && asJsBool(y));
-functions['or']              = (x, y) => asShenBool(asJsBool(x) || asJsBool(y));
-functions['set']             = (s, x) => symbols.set(nameOf(asSymbol(s)), x);
-functions['value']           = s => symbols.get(nameOf(asSymbol(s)), x);
-
-// TODO: these don't need to be platform specific?
-functions['read-byte']       = s => asInStream(s).read(); // TODO: define asInStream
-functions['write-byte']      = (s, b) => asOutStream(s).write(b); // TODO: define asOutStream
-
-// TODO: these get moved to node/browser packaging?
-functions['open']            = undefined; // TODO: define these
-functions['close']           = s => asStream(s).close();
-symbols['*stinput*']         = consoleSource;
-symbols['*stoutput*']        = consoleSink;
-symbols['*sterror*']         = consoleSink;
 
 // TODO: needs createShenEnv function that takes impls of certain IO functions
 //       like fs, terminal, stinput, stoutput
@@ -377,10 +331,55 @@ symbols['*sterror*']         = consoleSink;
 //       may not need to generate async/await syntax if IO functions don't use promises
 
 const Shen = (opts = {}) => {
+  const symbols = globalMap('symbol');
+  const functions = globalMap('function');
   const terminal = opts.terminal; // undefined terminal means writing does console.log and reading raises error
-  symbols['*stinput*']  = terminal.in;
-  symbols['*stoutput*'] = terminal.out;
-  symbols['*sterror*']  = terminal.err;
+  terminal.in  = terminal.in  || ;
+  terminal.out = terminal.out || ;
+  terminal.err = terminal.err || ;
+  symbols['*stinput*']         = terminal.in;
+  symbols['*stoutput*']        = terminal.out;
+  symbols['*sterror*']         = terminal.err;
+  functions['open']            = undefined; // TODO: define these
+  functions['close']           = s => asStream(s).close();
+  functions['read-byte']       = s => asInStream(s).read(); // TODO: define asInStream
+  functions['write-byte']      = (s, b) => asOutStream(s).write(b); // TODO: define asOutStream
+  functions['number?']         = isNumber;
+  functions['string?']         = isString;
+  functions['symbol?']         = isSymbol;
+  functions['absvector?']      = isArray;
+  functions['cons?']           = isCons;
+  functions['hd']              = c => head(asCons(c));
+  functions['tl']              = c => tail(asCons(c));
+  functions['cons']            = cons;
+  functions['tlstr']           = s => asString(s).substring(1);
+  functions['cn']              = (s, t) => asString(s) + asString(t);
+  functions['string->n']       = s => asString(s).charCodeAt(0);
+  functions['n->string']       = n => String.fromCharCode(asNumber(n));
+  functions['pos']             = (s, i) => asString(s)[asNumber(i)];
+  functions['str']             = show;
+  functions['absvector']       = n => new Array(asNumber(n)).fill(null);
+  functions['<-absvector']     = (a, i) => asArray(a)[asIndex(i, a)];
+  functions['absvector->']     = (a, i, x) => (asArray(a)[asIndex(i, a)] = x, a);
+  functions['=']               = equate;
+  functions['+']               = (x, y) => asNumber(x) +  asNumber(y);
+  functions['-']               = (x, y) => asNumber(x) -  asNumber(y);
+  functions['*']               = (x, y) => asNumber(x) *  asNumber(y);
+  functions['/']               = (x, y) => asNumber(x) /  asNumber(y);
+  functions['>']               = (x, y) => asNumber(x) >  asNumber(y);
+  functions['<']               = (x, y) => asNumber(x) <  asNumber(y);
+  functions['>=']              = (x, y) => asNumber(x) >= asNumber(y);
+  functions['<=']              = (x, y) => asNumber(x) <= asNumber(y);
+  functions['intern']          = s => intern(asString(s));
+  functions['get-time']        = s => getTime(asSymbol(s));
+  functions['type']            = (x, _) => x;
+  functions['simple-error']    = s => raise(asString(s));
+  functions['error-to-string'] = x => asError(x).message;
+  functions['if']              = (b, x, y) => asJsBool(b) ? x : y;
+  functions['and']             = (x, y) => asShenBool(asJsBool(x) && asJsBool(y));
+  functions['or']              = (x, y) => asShenBool(asJsBool(x) || asJsBool(y));
+  functions['set']             = (s, x) => symbols.set(nameOf(asSymbol(s)), x);
+  functions['value']           = s => symbols.get(nameOf(asSymbol(s)), x);
   const fileSystem = opts.fileSystem; // undefined filesystem means opening files raises error
   const useAsync = opts.useAsync; // async defaults to false, especially if terminal and filesystem opts are undefined
   const clock = opts.clock || () => new Date().getDate();
@@ -390,8 +389,22 @@ const Shen = (opts = {}) => {
   const implementation = opts.implementation || 'Unknown';
   const release = opts.release || 'Unknown';
   const os = opts.os || 'Unknown';
+  return {
+    symbols,
+    functions,
+    terminal,
+    fileSystem,
+    clock,
+    port,
+    porters,
+    version,
+    implementation,
+    release,
+    os
+  };
 };
 
 export default Shen;
 
-// TODO: new Kl() ... translated code ... new Shen()
+// TODO: kl() ... translated code ... shen() ... shen.repl()
+//       no constructors!

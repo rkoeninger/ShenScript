@@ -262,15 +262,15 @@ const kl = (options = {}) => {
   const clock = options.clock || () => new Date().getTime();
   const startTime = clock();
   const getTime = mode =>
-    mode === intern('unix') ? clock() :
-    mode === intern('run')  ? clock() - startTime :
-    raise('get-time only accepts symbols unix or run');
+    mode === 'unix' ? clock() :
+    mode === 'run'  ? clock() - startTime :
+    raise(`get-time only accepts symbols unix or run, not ${mode}`);
   const openRead  = options.openRead  || () => raise('open(in) not supported');
   const openWrite = options.openWrite || () => raise('open(out) not supported');
   const open = (mode, path) =>
-    mode === intern('in')  ? openRead(path) :
-    mode === intern('out') ? openWrite(path) :
-    raise('open only accepts symbols in or out');
+    mode === 'in'  ? openRead(path) :
+    mode === 'out' ? openWrite(path) :
+    raise(`open only accepts symbols in or out, not ${mode}`);
   const symbols = {
     '*language*':       'JavaScript',
     '*implementation*': options.implementation || 'Unknown',
@@ -283,11 +283,13 @@ const kl = (options = {}) => {
     '*sterror*':        options.sterror  || () => raise('standard error not supported')
   };
   const functions = {
-    'open':            open,
+    'if':              (b, x, y) => asJsBool(b) ? x : y,
+    'and':             (x, y) => asShenBool(asJsBool(x) && asJsBool(y)),
+    'or':              (x, y) => asShenBool(asJsBool(x) || asJsBool(y)),
+    'open':            (m, p) => open(nameOf(asSymbol(m)), asString(p)),
     'close':           s => asStream(s).close(),
     'read-byte':       s => asInStream(s).read(),
     'write-byte':      (s, b) => asOutStream(s).write(b),
-    'get-time':        getTime,
     'number?':         isNumber,
     'string?':         isString,
     'symbol?':         isSymbol,
@@ -315,15 +317,13 @@ const kl = (options = {}) => {
     '>=':              (x, y) => asNumber(x) >= asNumber(y),
     '<=':              (x, y) => asNumber(x) <= asNumber(y),
     'intern':          s => intern(asString(s)),
-    'get-time':        s => getTime(asSymbol(s)),
-    'type':            (x, _) => x,
+    'get-time':        m => getTime(nameOf(asSymbol(m))),
     'simple-error':    s => raise(asString(s)),
-    'error-to-string': x => asError(x).message,
-    'if':              (b, x, y) => asJsBool(b) ? x : y,
-    'and':             (x, y) => asShenBool(asJsBool(x) && asJsBool(y)),
-    'or':              (x, y) => asShenBool(asJsBool(x) || asJsBool(y)),
+    'error-to-string': e => asError(e).message,
     'set':             (s, x) => symbols[nameOf(asSymbol(s))] = x,
-    'value':           s => symbols[nameOf(asSymbol(s))]
+    'value':           s => symbols[nameOf(asSymbol(s))],
+    'type':            (x, _) => x,
+    'eval-kl':         x => eval(astring(transpile(undefined, x, useAsync))) // TODO: create new context
   };
   return {
     symbols,

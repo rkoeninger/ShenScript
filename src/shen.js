@@ -115,9 +115,6 @@ export const settle = async x => {
 
 // TODO: partial applications, curried applications
 
-const validId = /[a-zA-Z_$][0-9a-zA-Z_$]*/;
-// TODO: still need renaming logic for local variables, parameters
-
 // NOTE:
 // context.statement  // if location in target context can be a statement
 // context.expression // if location in target context must be an expression
@@ -142,7 +139,7 @@ const logical = (operator, left, right) => ({ type: 'LogicalExpression', operato
 const attempt = (block, param, body) => ({ type: 'TryStatement', block, handler: { type: 'CatchClause', param, body } });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
 const assign = (left, right, operator = '=') => ({ type: 'AssignmentExpression', left, right, operator });
-const block = (statement, body) => statement ? { type: 'BlockStatement', body } : access(array(body), literal(body.length - 1));
+const block = (statement, body) => statement ? { type: 'BlockStatement', body } : { type: 'SequenceExpression', expressions: body };
 const statement = expression => ({ type: 'ExpressionStatement', expression });
 const arrow = (params, body, expression = true) => ({ type: 'ArrowFunctionExpression', async: true, expression, params, body });
 // TODO: track async in context, and should async always be there for generated code?
@@ -155,6 +152,7 @@ const converters = {
 const ensure = (kind, expr) => expr.kind === kind ? expr : invoke(identifier(converters[kind]), [expr]);
 
 const but = (x, name, value) => ({ ...x, [name]: value });
+const withLocals = (x, locals) => ({ ...x, locals: [...x.locals, ...locals] });
 
 const isForm = (expr, lead, length) =>
   (!length || expr.length === length || raise(`${lead} must have ${length - 1} argument forms`))
@@ -173,7 +171,16 @@ const isReferenced = (symbol, expr) =>
      || isForm(expr, 'defun', 4) && !expr[2].includes(symbol) && isReferenced(symbol, expr[3])
      || expr.some(x => isReferenced(symbol, x)));
 
-const accessSymbol = symbol => access(identifier('symbols'), literal(nameOf(symbol)));
+const validCharacter = ch => ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z' || ch >= 0 && ch <= 9 || ch === '_' || ch === '$';
+const validCharactersRegex = /[_$A-Za-z][_$A-Za-z0-9]*/;
+const validIdentifier = s => validCharactersRegex.test(s);
+const escapeCharacter = ch =>
+  validCharacter(ch) ? ch :
+  ch === '-'         ? '_' :
+  '$' + ch.charCodeAt(0);
+const escapeIdentifier = s => s.split('').map(escapeCharacter).join('');
+
+const lookup = (namespace, name) => access(identifier(namespace), validIdentifier(name) ? identifier(name) : literal(name));
 
 // TODO: async/await
 // TODO: inlining, type-inferred optimizations
@@ -182,8 +189,8 @@ const build = (context, expr) =>
   isNull(expr) || isNumber(expr) || isString(expr) ? literal(expr) :
   isSymbol(expr) ? (
     context.locals.has(expr)
-      ? identifier(nameOf(expr)) // TODO: what if variable is not a valid identifier?
-      : invoke(identifier('intern'), [literal(nameOf(expr))])) : // TODO: make sure intern is in scope
+      ? identifier(escapeIdentifier(nameOf(expr)))
+      : invoke(identifier('intern'), [literal(nameOf(expr))])) :
   isArray(expr) ? (
     isForm(expr, 'and') ? flattenLogicalForm(context, expr, 'and') :
     isForm(expr, 'or')  ? flattenLogicalForm(context, expr, 'or') :
@@ -209,33 +216,32 @@ const build = (context, expr) =>
       // in an expression context, we might have to put it in an ifee, or attempt inlining
       nameOf(expr[1]) === '_' || !isReferenced(expr[1], expr[3])
         ? build(context, [intern('do'), expr[2], expr[3]]) // (let _ X Y) => (do X Y)
-        : statement(invoke(arrow([literal(nameOf(expr[1]))], build(context, expr[2])), [build(context, expr[3])]))) :
+        : statement(invoke(arrow([identifier(nameOf(expr[1]))], build(context, expr[2])), [build(context, expr[3])]))) :
     isForm(expr, 'do') ? block(context.statement, flattenForm(expr, 'do').map(x => build(context, x))) :
     // TODO: return butlast(exprs)
     // if do is assigned to a variable, just make last line an assignment to a variable
     isForm(expr, 'lambda', 3) ? arrow([identifier(nameOf(expr[1]))], build(context, expr[2])) :
     // TODO: check body to see if function should be a statement or expression lambda
     isForm(expr, 'freeze', 2) ? arrow([], build(context, expr[1])) :
+    // TODO: wrap in block statement, make it statement context
     isForm(expr, 'trap-error', 3) ? (
       isForm(expr[2], 'lambda', 2)
         ? attempt(build(context, expr[1]), identifier(nameOf(expr[2][1])), build(but(context, 'statement', true), expr[2][2]))
         : attempt(build(context, expr[1]), identifier('$error'), invoke(build(context, expr[2]), [identifier('$error')]))) :
-    // TODO: wrap in block statement, make it statement context
-    // TODO: emit functions.set instead of doing it (how to scope it?)
-    // TODO: defuns dot not capture local scope
-    isForm(expr, 'defun', 4) ? (
-      invoke(
-        access(literal('functions'), literal('set')),
+    // TODO: defuns do not capture local scope
+    isForm(expr, 'defun', 4) ?
+      block(
+        false,
         [
-          literal(nameOf(expr[1])),
-          array(expr[2].map(x => identifier(nameOf(x)))),
-          build(context, expr[3])
-        ]),
-      expr[1]) :
+          assign(
+            lookup('functions', nameOf(expr[1])),
+            arrow(expr[2].map(x => identifier(escapeIdentifier(nameOf(x)))), build(withLocals(context, expr[2].map(x => nameOf(x))), expr[3]))),
+          build(context, expr[1]) // TODO: what if it's a variable?
+        ]) :
     // TODO: set params as locals, set root function context
-    isForm(expr, 'value', 2) ? accessSymbol(expr[1]) : // TODO: make identifier if valid identifier
+    isForm(expr, 'value', 2) ? lookup('symbols', nameOf(expr[1])) :
     // TODO: extract code for value to use in set
-    isForm(expr, 'set', 3) ? assign(accessSymbol(expr[1]), build(context, expr[2])) :
+    isForm(expr, 'set', 3) ? assign(lookup('symbols', nameOf(expr[1])), build(context, expr[2])) :
     isForm(expr, 'type', 2) ? expr[1] : // TODO: tag returned expr as having type nameof(expr[2])
     null // TODO: application form
   ) : raise('not a valid form');
@@ -265,58 +271,60 @@ const kl = (options = {}) => {
     mode === intern('in')  ? openRead(path) :
     mode === intern('out') ? openWrite(path) :
     raise('open only accepts symbols in or out');
-  const symbols = {}; // TODO: raise error when reading undefined symbols
-  symbols['*language*']         = 'JavaScript';
-  symbols['*implementation*']   = options.implementation || 'Unknown';
-  symbols['*release*']          = options.release        || 'Unknown';
-  symbols['*os*']               = options.os             || 'Unknown';
-  symbols['*port*']             = options.port           || 'Unknown';
-  symbols['*porters*']          = options.porters        || 'Unknown';
-  symbols['*stinput*']          = options.stinput  || () => raise('standard input not supported');
-  symbols['*stoutput*']         = options.stoutput || () => raise('standard output not supported');
-  symbols['*sterror*']          = options.sterror  || () => raise('standard error not supported');
-  const functions = {}; // TODO: raise error when reading undefined symbols
-  functions['open']             = open;
-  functions['close']            = s => asStream(s).close();
-  functions['read-byte']        = s => asInStream(s).read();
-  functions['write-byte']       = (s, b) => asOutStream(s).write(b);
-  functions['get-time']         = getTime;
-  functions['number?']          = isNumber;
-  functions['string?']          = isString;
-  functions['symbol?']          = isSymbol;
-  functions['absvector?']       = isArray;
-  functions['cons?']            = isCons;
-  functions['hd']               = c => head(asCons(c));
-  functions['tl']               = c => tail(asCons(c));
-  functions['cons']             = cons;
-  functions['tlstr']            = s => asString(s).substring(1);
-  functions['cn']               = (s, t) => asString(s) + asString(t);
-  functions['string->n']        = s => asString(s).charCodeAt(0);
-  functions['n->string']        = n => String.fromCharCode(asNumber(n));
-  functions['pos']              = (s, i) => asString(s)[asNumber(i)];
-  functions['str']              = show;
-  functions['absvector']        = n => new Array(asNumber(n)).fill(null);
-  functions['<-absvector']      = (a, i) => asArray(a)[asIndex(i, a)];
-  functions['absvector->']      = (a, i, x) => (asArray(a)[asIndex(i, a)] = x, a);
-  functions['=']                = equate;
-  functions['+']                = (x, y) => asNumber(x) +  asNumber(y);
-  functions['-']                = (x, y) => asNumber(x) -  asNumber(y);
-  functions['*']                = (x, y) => asNumber(x) *  asNumber(y);
-  functions['/']                = (x, y) => asNumber(x) /  asNumber(y);
-  functions['>']                = (x, y) => asNumber(x) >  asNumber(y);
-  functions['<']                = (x, y) => asNumber(x) <  asNumber(y);
-  functions['>=']               = (x, y) => asNumber(x) >= asNumber(y);
-  functions['<=']               = (x, y) => asNumber(x) <= asNumber(y);
-  functions['intern']           = s => intern(asString(s));
-  functions['get-time']         = s => getTime(asSymbol(s));
-  functions['type']             = (x, _) => x;
-  functions['simple-error']     = s => raise(asString(s));
-  functions['error-to-string']  = x => asError(x).message;
-  functions['if']               = (b, x, y) => asJsBool(b) ? x : y;
-  functions['and']              = (x, y) => asShenBool(asJsBool(x) && asJsBool(y));
-  functions['or']               = (x, y) => asShenBool(asJsBool(x) || asJsBool(y));
-  functions['set']              = (s, x) => symbols[nameOf(asSymbol(s))] = x;
-  functions['value']            = s => symbols[nameOf(asSymbol(s))];
+  const symbols = {
+    '*language*':       'JavaScript',
+    '*implementation*': options.implementation || 'Unknown',
+    '*release*':        options.release        || 'Unknown',
+    '*os*':             options.os             || 'Unknown',
+    '*port*':           options.port           || 'Unknown',
+    '*porters*':        options.porters        || 'Unknown',
+    '*stinput*':        options.stinput  || () => raise('standard input not supported'),
+    '*stoutput*':       options.stoutput || () => raise('standard output not supported'),
+    '*sterror*':        options.sterror  || () => raise('standard error not supported')
+  };
+  const functions = {
+    'open':            open,
+    'close':           s => asStream(s).close(),
+    'read-byte':       s => asInStream(s).read(),
+    'write-byte':      (s, b) => asOutStream(s).write(b),
+    'get-time':        getTime,
+    'number?':         isNumber,
+    'string?':         isString,
+    'symbol?':         isSymbol,
+    'absvector?':      isArray,
+    'cons?':           isCons,
+    'hd':              c => head(asCons(c)),
+    'tl':              c => tail(asCons(c)),
+    'cons':            cons,
+    'tlstr':           s => asString(s).substring(1),
+    'cn':              (s, t) => asString(s) + asString(t),
+    'string->n':       s => asString(s).charCodeAt(0),
+    'n->string':       n => String.fromCharCode(asNumber(n)),
+    'pos':             (s, i) => asString(s)[asNumber(i)],
+    'str':             show,
+    'absvector':       n => new Array(asNumber(n)).fill(null),
+    '<-absvector':     (a, i) => asArray(a)[asIndex(i, a)],
+    'absvector->':     (a, i, x) => (asArray(a)[asIndex(i, a)] = x, a),
+    '=':               equate,
+    '+':               (x, y) => asNumber(x) +  asNumber(y),
+    '-':               (x, y) => asNumber(x) -  asNumber(y),
+    '*':               (x, y) => asNumber(x) *  asNumber(y),
+    '/':               (x, y) => asNumber(x) /  asNumber(y),
+    '>':               (x, y) => asNumber(x) >  asNumber(y),
+    '<':               (x, y) => asNumber(x) <  asNumber(y),
+    '>=':              (x, y) => asNumber(x) >= asNumber(y),
+    '<=':              (x, y) => asNumber(x) <= asNumber(y),
+    'intern':          s => intern(asString(s)),
+    'get-time':        s => getTime(asSymbol(s)),
+    'type':            (x, _) => x,
+    'simple-error':    s => raise(asString(s)),
+    'error-to-string': x => asError(x).message,
+    'if':              (b, x, y) => asJsBool(b) ? x : y,
+    'and':             (x, y) => asShenBool(asJsBool(x) && asJsBool(y)),
+    'or':              (x, y) => asShenBool(asJsBool(x) || asJsBool(y)),
+    'set':             (s, x) => symbols[nameOf(asSymbol(s))] = x,
+    'value':           s => symbols[nameOf(asSymbol(s))]
+  };
   return {
     symbols,
     functions,
@@ -325,7 +333,8 @@ const kl = (options = {}) => {
     asOutStream,
     isStream,
     isInStream,
-    isOutStream
+    isOutStream,
+    intern
   };
 };
 

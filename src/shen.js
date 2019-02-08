@@ -156,7 +156,7 @@ const withLocals = (x, locals) => ({ ...x, locals: [...x.locals, ...locals] });
 
 const isForm = (expr, lead, length) =>
   (!length || expr.length === length || raise(`${lead} must have ${length - 1} argument forms`))
-  && expr[0] === intern(lead);
+  && nameOf(asSymbol(expr[0])) === lead;
 const flattenForm = (expr, lead) => isForm(expr, lead) ? expr.slice(1).flatMap(x => flattenForm(x, lead)) : [expr];
 const flattenLogicalForm = (context, expr, lead) =>
   flattenForm(expr, lead)
@@ -178,7 +178,7 @@ const escapeCharacter = ch =>
   validCharacter(ch) ? ch :
   ch === '-'         ? '_' :
   '$' + ch.charCodeAt(0);
-const escapeIdentifier = s => s.split('').map(escapeCharacter).join('');
+const escapeIdentifier = s => identifier(s.split('').map(escapeCharacter).join(''));
 
 const lookup = (namespace, name) => access(identifier(namespace), validIdentifier(name) ? identifier(name) : literal(name));
 
@@ -189,7 +189,7 @@ const build = (context, expr) =>
   isNull(expr) || isNumber(expr) || isString(expr) ? literal(expr) :
   isSymbol(expr) ? (
     context.locals.has(expr)
-      ? identifier(escapeIdentifier(nameOf(expr)))
+      ? escapeIdentifier(nameOf(expr))
       : invoke(identifier('intern'), [literal(nameOf(expr))])) :
   isArray(expr) ? (
     isForm(expr, 'and') ? flattenLogicalForm(context, expr, 'and') :
@@ -235,7 +235,9 @@ const build = (context, expr) =>
         [
           assign(
             lookup('functions', nameOf(expr[1])),
-            arrow(expr[2].map(x => identifier(escapeIdentifier(nameOf(x)))), build(withLocals(context, expr[2].map(x => nameOf(x))), expr[3]))),
+            arrow(
+              expr[2].map(nameOf).map(escapeIdentifier),
+              build(but(context, 'locals', expr[2].map(x => nameOf(x))), expr[3]))),
           build(context, expr[1]) // TODO: what if it's a variable?
         ]) :
     // TODO: set params as locals, set root function context

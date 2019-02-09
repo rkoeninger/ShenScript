@@ -257,8 +257,8 @@ export const transpile = expr => build({ locals: new Set(), head: true }, consTo
 //       may not need to generate async/await syntax if IO functions don't use promises
 
 const kl = (options = {}) => {
-  const asInStream  = (x => options.isInStream(x)  ? x : raise('input stream expected'))  || () => false;
-  const asOutStream = (x => options.isOutStream(x) ? x : raise('output stream expected')) || () => false;
+  const asInStream  = options.isInStream  ? (x => options.isInStream(x)  ? x : raise('input stream expected'))  : (_ => false);
+  const asOutStream = options.isOutStream ? (x => options.isOutStream(x) ? x : raise('output stream expected')) : (_ => false);
   const isStream = x => options.isInStream(x) || options.isOutStream(x);
   const asStream = x => isStream(x) ? x : raise('stream expected');
   const clock = options.clock || () => new Date().getTime();

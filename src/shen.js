@@ -1,6 +1,6 @@
-/* Type mapping:
- *
- * KL Type      JS Type
+import { generate } from 'astring'
+
+/* KL Type      JS Type
  * -------      -------
  * Empty        null
  * Number       number
@@ -89,8 +89,6 @@ export const show = x =>
   isStream(x)   ? `<Stream ${x.name}>` : // TODO: how to access isStream ?
   `${x}`;
 
-// TODO: what about async/await?
-// how to combine trampoline evaluation with promise chaining?
 const Trampoline = class {
   constructor(f, args) {
     this.f = f;
@@ -102,7 +100,13 @@ const Trampoline = class {
 };
 
 export const bounce = (f, ...args) => new Trampoline(f, ...args);
-export const settle = async x => {
+export const settle = x => {
+  while (x instanceof Trampoline) {
+    x = x.run();
+  }
+  return x;
+};
+export const settleAsync = async x => {
   while (true) {
     const y = await x;
     if (y instanceof Trampoline) {
@@ -113,7 +117,16 @@ export const settle = async x => {
   }
 };
 
-// TODO: partial applications, curried applications
+export const func = (f, arity, identifier) => {
+  f.arity = arity;
+  f.identifier = identifier;
+  return f;
+};
+
+export const run = (f, args) =>
+  f.arity === undefined || f.arity === args.length ? f(...args) :
+  f.arity > args.length ? run(f(...args.slice(0, f.arity)), args.slice(f.arity)) :
+  func((...more) => run(f, [...args, ...more]), args.length - f.arity);
 
 // NOTE:
 // context.statement  // if location in target context can be a statement
@@ -130,6 +143,7 @@ const literal = value => ({ type: 'Literal', value });
 const array = elements => ({ type: 'ArrayExpression', elements });
 const identifier = name => ({ type: 'Identifier', name });
 const wait = argument => ({ type: 'AwaitExpression', argument });
+const spread = argument => ({ type: 'SpreadElement', argument });
 const invoke = (callee, arguments) => wait({ type: 'CallExpression', callee, arguments });
 // TODO: only wrap invocation in await if in async context
 
@@ -144,12 +158,7 @@ const statement = expression => ({ type: 'ExpressionStatement', expression });
 const arrow = (params, body, expression = true) => ({ type: 'ArrowFunctionExpression', async: true, expression, params, body });
 // TODO: track async in context, and should async always be there for generated code?
 
-const converters = {
-  'number': 'asNumber',
-  'string': 'asString'
-  // TODO: etc: esp. shen bool vs js bool
-};
-const ensure = (kind, expr) => expr.kind === kind ? expr : invoke(identifier(converters[kind]), [expr]);
+const ensure = (kind, expr) => expr.kind === kind ? expr : invoke(identifier('as' + kind), [expr]);
 
 const but = (x, name, value) => ({ ...x, [name]: value });
 const withLocals = (x, locals) => ({ ...x, locals: [...x.locals, ...locals] });
@@ -160,7 +169,7 @@ const isForm = (expr, lead, length) =>
 const flattenForm = (expr, lead) => isForm(expr, lead) ? expr.slice(1).flatMap(x => flattenForm(x, lead)) : [expr];
 const flattenLogicalForm = (context, expr, lead) =>
   flattenForm(expr, lead)
-    .map(x => build(but(context, 'kind', 'boolean'), x)) // TODO: wrap in asJsBool if necessary
+    .map(x => build(but(context, 'kind', 'JsBool'), x)) // TODO: wrap in asJsBool if necessary
     .reduceRight((right, left) => logical(lead === 'and' ? '&&' : '||', left, right)); // TODO: wrap in asKlBool if necessary
 
 const isReferenced = (symbol, expr) =>
@@ -197,7 +206,7 @@ const build = (context, expr) =>
     isForm(expr, 'if', 4) ?
       conditional(
         context.statement,
-        build(but(context, 'kind', 'boolean'), expr[1]),
+        build(but(context, 'kind', 'JsBool'), expr[1]),
         build(context, expr[2]),
         build(context, expr[3])) :
     isForm(expr, 'cond') ?
@@ -207,7 +216,7 @@ const build = (context, expr) =>
           test === trueSymbol ? build(context, consequent) :
           conditional(
             context.statement,
-            build(but(context, 'kind', 'boolean'), test), // TODO: need 1 function that sets kind on context and does ensure()
+            build(but(context, 'kind', 'JsBool'), test), // TODO: need 1 function that sets kind on context and does ensure()
             build(context, consequent),
             chain),
         invoke(identifier('raise'), [literal('no condition was true')])) :
@@ -248,17 +257,11 @@ const build = (context, expr) =>
     null // TODO: application form
   ) : raise('not a valid form');
 
-// TODO: transpile function needs to know if we're doing async/await
-export const transpile = expr => build({ locals: new Set(), head: true }, consToArrayTree(expr));
-
-// TODO: needs createShenEnv function that takes impls of certain IO functions
-//       like fs, terminal, stinput, stoutput
-//       Depending on how library is packaged or deployed, these could work very differently
-//       may not need to generate async/await syntax if IO functions don't use promises
+// TODO: include all functions needed by generated code in the object returned by kl
 
 const kl = (options = {}) => {
-  const asInStream  = options.isInStream  ? (x => options.isInStream(x)  ? x : raise('input stream expected'))  : (_ => false);
-  const asOutStream = options.isOutStream ? (x => options.isOutStream(x) ? x : raise('output stream expected')) : (_ => false);
+  const asInStream  = x => options.isInStream  && (options.isInStream(x)  ? x : raise('input stream expected'));
+  const asOutStream = x => options.isOutStream && (options.isOutStream(x) ? x : raise('output stream expected'));
   const isStream = x => options.isInStream(x) || options.isOutStream(x);
   const asStream = x => isStream(x) ? x : raise('stream expected');
   const clock = options.clock || () => new Date().getTime();
@@ -325,7 +328,8 @@ const kl = (options = {}) => {
     'set':             (s, x) => symbols[nameOf(asSymbol(s))] = x,
     'value':           s => symbols[nameOf(asSymbol(s))],
     'type':            (x, _) => x,
-    'eval-kl':         x => eval(astring(transpile(undefined, x, useAsync))) // TODO: create new context
+    'eval-kl':         x => eval(generate(build({ locals: new Set(), head: true, useAsync: options.useAsync }, consToArrayTree(expr))))
+    // TODO: use new Function() instead of eval? (also maintains proper scoping)
   };
   return {
     symbols,

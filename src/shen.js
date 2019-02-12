@@ -241,6 +241,20 @@ const isShenBool  = x => x === shenTrue || x === shenFalse;
 const isShenTrue  = x => x === shenTrue;
 const isShenFalse = x => x === shenFalse;
 
+const jsToShen = x =>
+  isArray(x)      ? x.map(jsToShen) :
+  isCons(x)       ? cons(jsToShen(x.head), jsToShen(x.tail)) :
+  x === undefined ? null :
+  x === shenTrue  ? true :
+  x === shenFalse ? false :
+  x;
+const shenToJs = x =>
+  isArray(x)  ? x.map(shenToJs) :
+  isCons(x)   ? cons(shenToJs(x.head), shenToJs(x.tail)) :
+  x === true  ? shenTrue :
+  x === false ? shenFalse :
+  x;
+
 // TODO: include all functions needed by generated code in the object returned by kl
 // TODO: kl() ... translated code ... shen() ... shen.repl()       no constructors!
 

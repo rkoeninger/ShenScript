@@ -229,8 +229,6 @@ const asIndex  = (i, a) =>
   i < 0 || i >= a.length ? raise(`index ${i} is not with bounds of array length ${a.length}`) :
   i;
 
-// TODO: general, recursive js<->shen data structure conversion
-
 const asJsBool = x =>
   x === shenTrue  ? true :
   x === shenFalse ? false :

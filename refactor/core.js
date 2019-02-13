@@ -184,26 +184,28 @@ const build = (context, expr) =>
             chain,
             context.statement),
         invoke(buildKlAccess('raise'), [literal('no condition was true')])) :
-    isForm(expr, 'let', 4) ? (
+    isForm(expr, 'let', 4) ?
       // TODO: in a statement context, we can just add a declaration, maybe surround in a block
       // in an expression context, we might have to put it in an ifee, or attempt inlining
-      nameOf(expr[1]) === '_' || !isReferenced(expr[1], expr[3])
-        ? build(context, [symbolOf('do'), expr[2], expr[3]]) // (let _ X Y) => (do X Y)
+      //nameOf(expr[1]) === '_' || !isReferenced(expr[1], expr[3])
+        //? build(context, [symbolOf('do'), expr[2], expr[3]]) // (let _ X Y) => (do X Y)
         // TODO: do an actual const declaration
-        : statement(invoke(
-            arrow([identifier(nameOf(expr[1]))], build(inHead(context), expr[2])),
-            [build(addLocals(context, [expr[1]]), expr[3])]))) :
-    isForm(expr, 'do') ? block(flattenForm(expr, 'do').map(x => build(context, x)), context.statement) :
+        //: statement(invoke(
+      invoke(
+        arrow([identifier(nameOf(expr[1]))], build(inHead(context), expr[2])),
+        [build(addLocals(context, [expr[1]]), expr[3])]) :
+    //isForm(expr, 'do') ? block(flattenForm(expr, 'do').map(x => build(context, x)), context.statement) :
     // TODO: return butlast(exprs)
     // TODO: if do is assigned to a variable, just make last line an assignment to a variable
     isForm(expr, 'lambda', 3) ? arrow([identifier(nameOf(expr[1]))], build(addLocals(context, [expr[1]]), expr[2])) :
     // TODO: check body to see if function should be a statement or expression lambda
     isForm(expr, 'freeze', 2) ? arrow([], build(context, expr[1])) :
     // TODO: wrap in block statement, make it statement context
-    isForm(expr, 'trap-error', 3) ? (
-      isForm(expr, 'lambda', 2)
-        ? attempt(build(context, expr[1]), identifier(nameOf(expr[2][1])), build(inStatement(context), expr[2][2]))
-        : attempt(build(context, expr[1]), identifier('$error'), invoke(build(context, expr[2]), [identifier('$error')]))) :
+    isForm(expr, 'trap-error', 3) ?
+      //isForm(expr, 'lambda', 2)
+        //? attempt(build(context, expr[1]), identifier(nameOf(expr[2][1])), build(inStatement(context), expr[2][2]))
+        //: 
+      attempt(build(context, expr[1]), identifier('$error'), invoke(build(context, expr[2]), [identifier('$error')])) :
     isForm(expr, 'defun', 4) ?
       block([
         assign(
@@ -359,7 +361,6 @@ export default (options = {}) => {
     expression: true,
     async: options.async
   });
-  // TODO: when generating non-expressions, need to figure out how to make last statement a return
   kl.functions['eval-kl'] = expr => Function('$kl', generate(answer(build(context, consToArrayTree(expr)))))(kl);
   return kl;
 };

@@ -30,6 +30,7 @@ const Cons = class {
   constructor(head, tail) {
     this.head = head;
     this.tail = tail;
+    Object.freeze(this);
   }
 };
 
@@ -37,6 +38,7 @@ const Trampoline = class {
   constructor(f, args) {
     this.f = f;
     this.args = args;
+    Object.freeze(this);
   }
   run() {
     return this.args ? this.f(...this.args) : this.f();

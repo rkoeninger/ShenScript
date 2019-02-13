@@ -22,9 +22,9 @@ const produce = (proceed, render, next, state) => {
 const nop = x => x;
 const raise = x => { throw new Error(x); };
 const nameOf = symbol => Symbol.keyFor(symbol);
-const intern = name => Symbol.for(name);
-const shenTrue = intern('true');
-const shenFalse = intern('false');
+const symbolOf = name => Symbol.for(name);
+const shenTrue = symbolOf('true');
+const shenFalse = symbolOf('false');
 
 const Cons = class {
   constructor(head, tail) {
@@ -65,7 +65,7 @@ const settle = x => {
   }
   return x;
 };
-const settleAsync = async x => {
+const future = async x => {
   while (true) {
     const y = await x;
     if (y instanceof Trampoline) {
@@ -91,6 +91,9 @@ const array = elements => ({ type: 'ArrayExpression', elements });
 const identifier = name => ({ type: 'Identifier', name });
 const wait = argument => ({ type: 'AwaitExpression', argument });
 const spread = argument => ({ type: 'SpreadElement', argument });
+const assign = (left, right, operator = '=') => ({ type: 'AssignmentExpression', left, right, operator });
+const statement = expression => ({ type: 'ExpressionStatement', expression });
+const answer = argument => ({ type: 'ReturnStatement', argument });
 const block = (body, statement = false) => statement ? { type: 'BlockStatement', body } : { type: 'SequenceExpression', expressions: body };
 const arrow = (params, body, expression = true, async = false) => ({ type: 'ArrowFunctionExpression', async, expression, params, body });
 const invoke = (callee, arguments, async = false) => (async ? nop : wait)({ type: 'CallExpression', callee, arguments });
@@ -99,8 +102,6 @@ const logical = (operator, left, right) => ({ type: 'LogicalExpression', operato
 const ifee = expr => invoke(arrow([], block([expr], true)), []);
 const attempt = (block, param, body, statement = false) => (statement ? nop : ifee)({ type: 'TryStatement', block, handler: { type: 'CatchClause', param, body } });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
-const assign = (left, right, operator = '=') => ({ type: 'AssignmentExpression', left, right, operator });
-const statement = expression => ({ type: 'ExpressionStatement', expression });
 
 const tag = (x, name, value) => (x[name] = value, x);
 const but = (x, name, value) => ({ ...x, [name]: value });
@@ -117,7 +118,7 @@ const inKind = (kind, x) => ({ ...x, kind });
 
 const isForm = (expr, lead, length) =>
   (!length || expr.length === length || raise(`${lead} must have ${length - 1} argument forms`))
-  && expr[0] === intern(lead);
+  && expr[0] === symbolOf(lead);
 const flattenForm = (expr, lead) => isForm(expr, lead) ? expr.slice(1).flatMap(x => flattenForm(x, lead)) : [expr];
 const flattenLogicalForm = (context, expr, lead) =>
   ensure(
@@ -136,8 +137,8 @@ const isReferenced = (symbol, expr) =>
 
 const hex = ch => ('0' + ch.charCodeAt(0).toString(16)).slice(-2);
 
-const validCharacterRegex = /^[_$A-Za-z0-9]$/;
-const validCharactersRegex = /^[_$A-Za-z][_$A-Za-z0-9]*$/;
+const validCharacterRegex = /^[_A-Za-z0-9]$/;
+const validCharactersRegex = /^[_A-Za-z][_A-Za-z0-9]*$/;
 const validIdentifier = s => validCharactersRegex.test(s);
 const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '_' : `$${hex(ch)}`;
 const escapeIdentifier = s => identifier(nameOf(s).split('').map(escapeCharacter).join(''));
@@ -156,14 +157,13 @@ const escapeIdentifier = s => identifier(nameOf(s).split('').map(escapeCharacter
 // TODO: inlining, type-inferred optimizations
 //       context.kind signals expected, ast.kind signals actual
 
-const buildIdleSymbol = symbol => invoke(identifier('intern'), [literal(nameof(symbol))]);
-const buildLookup = (namespace, name) => access(identifier(namespace), validIdentifier(name) ? identifier(name) : literal(name));
-
-const buildKind(kind, context, expr) => ensure(kind, build(inKind(kind, context), expr));
-
+const buildIdleSymbol = symbol => invoke(buildKlAccess('symbolOf'), [literal(nameof(symbol))]);
+const buildKlAccess = namespace => access(identifier('$kl'), identifier(namespace));
+const buildLookup = (namespace, name) => access(buildKlAccess(namespace), (validIdentifier(name) ? identifier : literal)(name));
+const buildKind = (kind, context, expr) => ensure(kind, build(inKind(kind, context), expr));
 const build = (context, expr) =>
   isNull(expr) || isNumber(expr) || isString(expr) ? literal(expr) :
-  isSymbol(expr) ? (context.locals.includes(expr) ? escapeIdentifier(expr) : buildIdleSymbol(expr)) :
+  isSymbol(expr) ? (context.locals.includes(expr) ? escapeIdentifier : buildIdleSymbol)(expr) :
   isArray(expr) ? (
     isForm(expr, 'and') ? flattenLogicalForm(context, expr, 'and') :
     isForm(expr, 'or')  ? flattenLogicalForm(context, expr, 'or') :
@@ -183,12 +183,12 @@ const build = (context, expr) =>
             build(context, consequent),
             chain,
             context.statement),
-        invoke(identifier('raise'), [literal('no condition was true')])) :
+        invoke(buildKlAccess('raise'), [literal('no condition was true')])) :
     isForm(expr, 'let', 4) ? (
       // TODO: in a statement context, we can just add a declaration, maybe surround in a block
       // in an expression context, we might have to put it in an ifee, or attempt inlining
       nameOf(expr[1]) === '_' || !isReferenced(expr[1], expr[3])
-        ? build(context, [intern('do'), expr[2], expr[3]]) // (let _ X Y) => (do X Y)
+        ? build(context, [symbolOf('do'), expr[2], expr[3]]) // (let _ X Y) => (do X Y)
         // TODO: do an actual const declaration
         : statement(invoke(
             arrow([identifier(nameOf(expr[1]))], build(inHead(context), expr[2])),
@@ -234,15 +234,14 @@ const asIndex  = (i, a) =>
   i < 0 || i >= a.length ? raise(`index ${i} is not with bounds of array length ${a.length}`) :
   i;
 
-const asJsBool = x =>
+const isShenTrue  = x => x === shenTrue;
+const isShenFalse = x => x === shenFalse;
+const isShenBool  = x => x === shenTrue || x === shenFalse;
+const asShenBool  = x => x ? shenTrue : shenFalse;
+const asJsBool    = x =>
   x === shenTrue  ? true :
   x === shenFalse ? false :
   raise(`value ${x} is not a valid boolean`);
-const asShenBool = x => x ? shenTrue : shenFalse;
-
-const isShenBool  = x => x === shenTrue || x === shenFalse;
-const isShenTrue  = x => x === shenTrue;
-const isShenFalse = x => x === shenFalse;
 
 const jsToShen = x =>
   isArray(x)      ? x.map(jsToShen) :
@@ -287,10 +286,10 @@ export default (options = {}) => {
     isError(x)    ? `<Error "${x.message}">` :
     isStream(x)   ? `<Stream ${x.name}>` :
     `${x}`;
-  const equate = (x, y) =>
+  const equal = (x, y) =>
     x === y
-    || isCons(x) && isCons(y) && equate(x.head, y.head) && equate(x.tail, y.tail)
-    || isArray(x) && isArray(y) && x.length === y.length && x.every((v, i) => equate(v, y[i]));
+    || isCons(x) && isCons(y) && equal(x.head, y.head) && equal(x.tail, y.tail)
+    || isArray(x) && isArray(y) && x.length === y.length && x.every((v, i) => equal(v, y[i]));
   const symbols = {
     '*language*':       'JavaScript',
     '*implementation*': options.implementation || 'Unknown',
@@ -303,12 +302,6 @@ export default (options = {}) => {
     '*sterror*':        options.sterror        || (() => raise('standard error not supported')),
     '*home-directory*': options.homeDirectory  || ''
   };
-  const context = Object.freeze({
-    locals: new Set(),
-    head: true,
-    expression: true,
-    async: options.async
-  });
   const functions = {
     'if':              (b, x, y) => asJsBool(b) ? x : y,
     'and':             (x, y) => asShenBool(asJsBool(x) && asJsBool(y)),
@@ -342,24 +335,31 @@ export default (options = {}) => {
     '<':               (x, y) => asShenBool(asNumber(x) <  asNumber(y)),
     '>=':              (x, y) => asShenBool(asNumber(x) >= asNumber(y)),
     '<=':              (x, y) => asShenBool(asNumber(x) <= asNumber(y)),
-    '=':               (x, y) => asShenBool(equate(x, y)),
-    'intern':          s => intern(asString(s)),
+    '=':               (x, y) => asShenBool(equal(x, y)),
+    'intern':          s => symbolOf(asString(s)),
     'get-time':        m => getTime(nameOf(asSymbol(m))),
     'simple-error':    s => raise(asString(s)),
     'error-to-string': e => asError(e).message,
     'set':             (s, x) => symbols[nameOf(asSymbol(s))] = x,
     'value':           s => symbols[nameOf(asSymbol(s))],
-    'type':            (x, _) => x,
-    'eval-kl':         x => eval(generate(build(context, consToArrayTree(expr))))
-    // TODO: use new Function() instead of eval? (also maintains proper scoping)
+    'type':            (x, _) => x
   };
-  return {
+  const kl = {
     cons, consFromArray, consToArray, consToArrayTree,
-    asJsBool, asShenBool, isShenBool, isShenTrue, isShenFalse, isNull,
+    asJsBool, asShenBool, isShenBool, isShenTrue, isShenFalse,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
-    intern, nameOf, show, equate,
-    bounce, settle, settleAsync, func, app,
+    symbolOf, nameOf, show, equal,
+    bounce, settle, future, func, app,
     symbols, functions
   };
+  const context = Object.freeze({
+    locals: new Set(),
+    head: true,
+    expression: true,
+    async: options.async
+  });
+  // TODO: when generating non-expressions, need to figure out how to make last statement a return
+  kl.functions['eval-kl'] = expr => Function('$kl', generate(answer(build(context, consToArrayTree(expr)))))(kl);
+  return kl;
 };

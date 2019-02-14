@@ -132,18 +132,17 @@ const flattenLogicalForm = (context, expr, lead) =>
 const isReferenced = (symbol, expr) =>
   expr === symbol
   || isArray(expr)
+    && expr.length > 0
+    && !isForm(expr, 'defun', 4)
     && (isForm(expr, 'let', 4) && (isReferenced(symbol, expr[2]) || expr[1] !== symbol && isReferenced(symbol, expr[3]))
      || isForm(expr, 'lambda', 3) && expr[1] !== symbol && isReferenced(symbol, expr[2])
-     || isForm(expr, 'defun', 4) && !expr[2].includes(symbol) && isReferenced(symbol, expr[3])
      || expr.some(x => isReferenced(symbol, x)));
 
 const hex = ch => ('0' + ch.charCodeAt(0).toString(16)).slice(-2);
-
 const validCharacterRegex = /^[_A-Za-z0-9]$/;
 const validCharactersRegex = /^[_A-Za-z][_A-Za-z0-9]*$/;
 const validIdentifier = s => validCharactersRegex.test(s);
 const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '_' : `$${hex(ch)}`;
-const escapeIdentifier = s => identifier(nameOf(s).split('').map(escapeCharacter).join(''));
 
 /* statement    if location in target context can be a statement               *
  * expression   if location in target context must be an expression            *
@@ -159,14 +158,16 @@ const escapeIdentifier = s => identifier(nameOf(s).split('').map(escapeCharacter
 // TODO: inlining, type-inferred optimizations
 //       context.kind signals expected, ast.kind signals actual
 
+const buildIdentifier = s => identifier(nameOf(s).split('').map(escapeCharacter).join(''));
 const buildIdleSymbol = symbol => invoke(buildKlAccess('symbolOf'), [literal(nameof(symbol))]);
 const buildKlAccess = namespace => access(identifier('$kl'), identifier(namespace));
 const buildLookup = (namespace, name) => access(buildKlAccess(namespace), (validIdentifier(name) ? identifier : literal)(name));
 const buildKind = (kind, context, expr) => ensure(kind, build(inKind(kind, context), expr));
 const build = (context, expr) =>
   isNull(expr) || isNumber(expr) || isString(expr) ? literal(expr) :
-  isSymbol(expr) ? (context.locals.includes(expr) ? escapeIdentifier : buildIdleSymbol)(expr) :
+  isSymbol(expr) ? (context.locals.includes(expr) ? buildIdentifier : buildIdleSymbol)(expr) :
   isArray(expr) ? (
+    expr.length === 0 ? null :
     isForm(expr, 'and') ? flattenLogicalForm(context, expr, 'and') :
     isForm(expr, 'or')  ? flattenLogicalForm(context, expr, 'or') :
     isForm(expr, 'if', 4) ?
@@ -212,7 +213,7 @@ const build = (context, expr) =>
       block([
         assign(
           buildLookup('functions', nameOf(expr[1])),
-          arrow(expr[2].map(escapeIdentifier), build(butLocals(inTail(context), expr[2].map(x => nameOf(x))), expr[3]))),
+          arrow(expr[2].map(buildIdentifier), build(butLocals(inTail(context), expr[2].map(x => nameOf(x))), expr[3]))),
         buildIdleSymbol(expr[1])]) :
     // TODO: value and set can be done as inlines
     // TODO: extract code for value to use in set

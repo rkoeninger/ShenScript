@@ -57,8 +57,8 @@ const isCons     = x => x instanceof Cons;
 const cons = (h, t) => new Cons(h, t);
 const consFromArray = a => a.reduceRight((t, h) => cons(h, t), null);
 const consToArray = c => produce(isCons, c => c.head, c => c.tail, c);
-const valueToArrayTree = x => isCons(head(x)) ? consToArrayTree(head(x)) : head(x);
-const consToArrayTree = c => produce(isCons, valueToArrayTree, c => c.tail, c);
+const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x;
+const consToArrayTree = c => produce(isCons, c => valueToArrayTree(c.head), c => c.tail, c);
 
 const bounce = (f, ...args) => new Trampoline(f, ...args);
 const settle = x => {
@@ -78,9 +78,9 @@ const future = async x => {
   }
 };
 
-const func = (f, arity, identifier) => Object.assign(f, {
+const func = (f, arity, id) => Object.assign(f, {
   arity: arity !== undefined ? arity : f.length,
-  identifier: identifier !== undefined ? identifier : f.name
+  id: id !== undefined ? id : f.name
 });
 
 const app = (f, args) =>

@@ -101,8 +101,8 @@ const arrow = (params, body, expression = true, async = false) => ({ type: 'Arro
 const invoke = (callee, arguments, async = false) => (async ? wait : nop)({ type: 'CallExpression', callee, arguments });
 const conditional = (test, consequent, alternative, statement = false) => ({ type: statement ? 'IfStatement' : 'ConditionalExpression', test, consequent, alternative });
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
-const ifee = expr => invoke(arrow([], block([expr], true)), []);
-const attempt = (block, param, body, statement = false) => (statement ? nop : ifee)({ type: 'TryStatement', block, handler: { type: 'CatchClause', param, body } });
+const iife = expr => invoke(arrow([], block([expr], true)), []);
+const attempt = (block, param, body, statement = false) => (statement ? nop : iife)({ type: 'TryStatement', block, handler: { type: 'CatchClause', param, body } });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
 
 const tag = (x, name, value) => (x[name] = value, x);

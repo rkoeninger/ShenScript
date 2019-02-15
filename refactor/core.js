@@ -46,19 +46,20 @@ const Trampoline = class {
 };
 
 const isNull     = x => x === null;
-const isNumber   = x => isFinite(x);
+const isNumber   = x => typeof x === 'number' && isFinite(x);
 const isString   = x => typeof x === 'string';
 const isSymbol   = x => typeof x === 'symbol';
 const isFunction = x => typeof x === 'function';
-const isArray    = x => typeof x === 'array';
+const isArray    = x => Array.isArray(x);
 const isError    = x => x instanceof Error;
 const isCons     = x => x instanceof Cons;
 
 const cons = (h, t) => new Cons(h, t);
 const consFromArray = a => a.reduceRight((t, h) => cons(h, t), null);
 const consToArray = c => produce(isCons, c => c.head, c => c.tail, c);
-const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x;
 const consToArrayTree = c => produce(isCons, c => valueToArrayTree(c.head), c => c.tail, c);
+const valueToArray = x => isCons(x) ? consToArray(x) : x;
+const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x;
 
 const bounce = (f, ...args) => new Trampoline(f, ...args);
 const settle = x => {

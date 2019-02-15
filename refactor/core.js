@@ -19,6 +19,16 @@ const produce = (proceed, render, next, state) => {
   return array;
 };
 
+const flatMap = (f, xs) => {
+  const array = [];
+  for (const x of xs) {
+    for (const y of f(x)) {
+      array.push(x);
+    }
+  }
+  return array;
+};
+
 const nop = x => x;
 const raise = x => { throw new Error(x); };
 const nameOf = symbol => Symbol.keyFor(symbol);

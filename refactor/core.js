@@ -120,9 +120,8 @@ const inTail = x => ({ ...x, head: false, tail: true });
 const inKind = (kind, x) => ({ ...x, kind });
 
 const isForm = (expr, lead, length) =>
-  (!length || expr.length === length || raise(`${lead} must have ${length - 1} argument forms`))
-  && expr[0] === symbolOf(lead);
-const flattenForm = (expr, lead) => isForm(expr, lead) ? expr.slice(1).flatMap(x => flattenForm(x, lead)) : [expr];
+  expr[0] === symbolOf(lead) && (!length || expr.length === length || raise(`${lead} must have ${length - 1} argument forms`));
+const flattenForm = (expr, lead) => isForm(expr, lead) ? flatMap(x => flattenForm(x, lead), expr.slice(1)) : [expr];
 const flattenLogicalForm = (context, expr, lead) =>
   ensure(
     'ShenBool',

@@ -108,8 +108,8 @@ const access = (object, property) => ({ type: 'MemberExpression', computed: prop
 
 const tag = (x, name, value) => (x[name] = value, x);
 const but = (x, name, value) => ({ ...x, [name]: value });
-const butLocals = (x, locals) => ({ ...x, locals });
-const addLocals = (x, locals) => ({ ...x, locals: [...x.locals, ...locals] });
+const butLocals = (x, locals) => ({ ...x, locals: new Set(locals) });
+const addLocals = (x, locals) => ({ ...x, locals: new Set([...x.locals, locals]) });
 const ensure = (kind, expr) => expr.kind === kind ? expr : invoke(identifier('as' + kind), [expr]);
 
 const inStatement = x => ({ ...x, statement: true, expression: false });

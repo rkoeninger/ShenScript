@@ -223,9 +223,12 @@ const build = (context, expr) =>
     //isForm(expr, 'type', 2) ? expr[1] :
     // TODO: check inlines here
     // TODO: bounce applications in tail position, settle applications in head position
-    context.locals.includes(expr[0]) ? invoke(identifier(nameOf(expr[0])), expr.slice(1).map(x => build(context, x))) :
-    isSymbol(expr[0]) ? invoke(buildLookup('functions', nameOf(expr[0])), expr.slice(1).map(x => build(context, x))) :
-    raise('not a valid form')
+    invoke(
+      isArray(expr[0])            ? build(inExpression(context), expr[0]) :
+      context.locals.has(expr[0]) ? identifier(nameOf(expr[0])) :
+      isSymbol(expr[0])           ? buildLookup('functions', nameOf(expr[0])) :
+      raise('not a valid application form'),
+      expr.slice(1).map(x => build(inExpression(context), x)))
   ) : raise('not a valid form');
 
 const asNumber   = x => isNumber(x) ? x : raise('number expected');

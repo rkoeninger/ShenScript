@@ -168,7 +168,7 @@ const build = (context, expr) =>
   isNull(expr) || isNumber(expr) || isString(expr) ? literal(expr) :
   isSymbol(expr) ? (context.locals.has(expr) ? buildIdentifier : buildIdleSymbol)(expr) :
   isArray(expr) ? (
-    expr.length === 0 ? null :
+    expr.length === 0 ? literal(null) :
     isForm(expr, 'and') ? flattenLogicalForm(context, expr, 'and') :
     isForm(expr, 'or')  ? flattenLogicalForm(context, expr, 'or') :
     isForm(expr, 'if', 4) ?

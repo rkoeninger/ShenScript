@@ -158,6 +158,7 @@ const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '
  * expression   if location in target context must be an expression            *
  * async        transpiler should generate async/await syntax                  *
  * return       location is the last statement which needs to be returned      *
+ * ignore       result of computing expression won't be used                   *
  * assignment   expr is getting assigned to a variable                         *
  * head         if context is in head position                                 *
  * tail         if context is in tail position                                 *
@@ -167,6 +168,9 @@ const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '
 
 // TODO: inlining, type-inferred optimizations
 //       context.kind signals expected, ast.kind signals actual
+// TODO: handle statement contexts, consider child statement contexts to avoid iife's
+// TODO: bound/settle based on head/tail position
+// TOOD: async/await
 
 const buildKlAccess = namespace => access(identifier('$kl'), identifier(namespace));
 const buildIdentifier = s => identifier(nameOf(s).split('').map(escapeCharacter).join(''));
@@ -186,53 +190,42 @@ const build = (context, expr) =>
         build(inTail(context), expr[2]),
         build(inTail(context), expr[3]),
         context.statement) :
+    // TODO: reuse conditional construction for cond
     isForm(expr, 'cond') ?
-      // TODO: if cond is in return/expression position, wrap in ReturnStatement
       expr.slice(1).reduceRight(
         (chain, [test, consequent]) =>
           test === shenTrue ? build(context, consequent) :
           conditional(
-            buildKind('JsBool', inHead(context), test),
-            build(context, consequent),
+            buildKind('JsBool', inHead(inExpression(context)), test),
+            build(inTail(context), consequent),
             chain,
             context.statement),
         invoke(buildKlAccess('raise'), [literal('no condition was true')])) :
+    // TODO: use const variable declaration as statement context
+    // TODO: just make it a (do ...) if variable doesn't get used
     isForm(expr, 'let', 4) ?
-      // TODO: in a statement context, we can just add a declaration, maybe surround in a block
-      // in an expression context, we might have to put it in an ifee, or attempt inlining
-      //nameOf(expr[1]) === '_' || !isReferenced(expr[1], expr[3])
-        //? build(context, [symbolOf('do'), expr[2], expr[3]]) // (let _ X Y) => (do X Y)
-        // TODO: do an actual const declaration
-        //: statement(invoke(
       invoke(
-        arrow([identifier(nameOf(expr[1]))], build(inHead(context), expr[2])),
+        arrow([identifier(nameOf(expr[1]))], build(inHead(inExpression(context)), expr[2])),
         [build(addLocals(context, [expr[1]]), expr[3])]) :
-    //isForm(expr, 'do') ? block(flattenForm(expr, 'do').map(x => build(context, x)), context.statement) :
-    // TODO: return butlast(exprs)
-    // TODO: if do is assigned to a variable, just make last line an assignment to a variable
+    // TODO: turn (do ...) into a series of statments with return if needed
+    // TODO: if do is assigned to a variable, just make last line an assignment to that variable
+    // TODO: bodies of lambda and freeze aren't necessarily expressions or statements
+    // TODO: turn lambda into zero-arg function if argument doesn't get used (but still label as having arity 1)
+    // TODO: group nested lambdas into single 2+ arity function? ex. (lambda X (lambda Y Q)) ==> (lambda (X Y) Q)
     isForm(expr, 'lambda', 3) ? arrow([identifier(nameOf(expr[1]))], build(addLocals(context, [expr[1]]), expr[2])) :
-    // TODO: check body to see if function should be a statement or expression lambda
     isForm(expr, 'freeze', 2) ? arrow([], build(context, expr[1])) :
-    // TODO: wrap in block statement, make it statement context
+    // TODO: simplify code where handler is a lambda
     isForm(expr, 'trap-error', 3) ?
-      //isForm(expr, 'lambda', 2)
-        //? attempt(build(context, expr[1]), identifier(nameOf(expr[2][1])), build(inStatement(context), expr[2][2]))
-        //: 
       attempt(build(context, expr[1]), identifier('$error'), invoke(build(context, expr[2]), [identifier('$error')])) :
+    // TODO: simplify when defun is at top level (don't return anything)
     isForm(expr, 'defun', 4) ?
       block([
         assign(
           buildLookup('functions', nameOf(expr[1])),
           arrow(expr[2].map(buildIdentifier), build(butLocals(inTail(context), expr[2].map(x => nameOf(x))), expr[3]))),
         buildIdleSymbol(expr[1])]) :
-    // TODO: value and set can be done as inlines
-    // TODO: extract code for value to use in set
-    //isForm(expr, 'value', 2) ? buildLookup('symbols', nameOf(expr[1])) :
-    //isForm(expr, 'set', 3) ? assign(buildLookup('symbols', nameOf(expr[1])), build(context, expr[2])) :
-    // TODO: tag returned expr as having type nameof(expr[2])
-    //isForm(expr, 'type', 2) ? expr[1] :
-    // TODO: check inlines here
-    // TODO: bounce applications in tail position, settle applications in head position
+    // TODO: type expression can provide kind/valueType information
+    // TODO: inline and simplify primitive operations based on expression kind/valueType
     invoke(
       isArray(expr[0])            ? build(inExpression(context), expr[0]) :
       context.locals.has(expr[0]) ? identifier(nameOf(expr[0])) :
@@ -262,6 +255,7 @@ const asJsBool    = x =>
   x === shenFalse ? false :
   raise(`value ${x} is not a valid boolean`);
 
+// TODO: are these needed? how to know when to do asShenBool?
 const jsToShen = x =>
   isArray(x)      ? x.map(jsToShen) :
   isCons(x)       ? cons(jsToShen(x.head), jsToShen(x.tail)) :
@@ -277,7 +271,6 @@ const shenToJs = x =>
   x;
 
 // TODO: kl() ... translated code ... shen() ... shen.repl()
-
 exports.kl = (options = {}) => {
   const isInStream  = options.inInStream  || (() => false);
   const isOutStream = options.inOutStream || (() => false);

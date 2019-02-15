@@ -161,12 +161,12 @@ const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '
 
 const buildKlAccess = namespace => access(identifier('$kl'), identifier(namespace));
 const buildIdentifier = s => identifier(nameOf(s).split('').map(escapeCharacter).join(''));
-const buildIdleSymbol = symbol => invoke(buildKlAccess('symbolOf'), [literal(nameof(symbol))]);
+const buildIdleSymbol = symbol => invoke(buildKlAccess('symbolOf'), [literal(nameOf(symbol))]);
 const buildLookup = (namespace, name) => access(buildKlAccess(namespace), (validIdentifier(name) ? identifier : literal)(name));
 const buildKind = (kind, context, expr) => ensure(kind, build(inKind(kind, context), expr));
 const build = (context, expr) =>
   isNull(expr) || isNumber(expr) || isString(expr) ? literal(expr) :
-  isSymbol(expr) ? (context.locals.includes(expr) ? buildIdentifier : buildIdleSymbol)(expr) :
+  isSymbol(expr) ? (context.locals.has(expr) ? buildIdentifier : buildIdleSymbol)(expr) :
   isArray(expr) ? (
     expr.length === 0 ? null :
     isForm(expr, 'and') ? flattenLogicalForm(context, expr, 'and') :
@@ -354,7 +354,7 @@ exports.kl = (options = {}) => {
     'type':            (x, _) => x
   };
   const kl = {
-    cons, consFromArray, consToArray, consToArrayTree,
+    cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree,
     asJsBool, asShenBool, isShenBool, isShenTrue, isShenFalse,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
@@ -368,6 +368,6 @@ exports.kl = (options = {}) => {
     expression: true,
     async: options.async
   });
-  kl.functions['eval-kl'] = expr => Function('$kl', generate(answer(build(context, consToArrayTree(expr)))))(kl);
+  kl.functions['eval-kl'] = expr => Function('$kl', generate(answer(build(context, valueToArrayTree(expr)))))(kl);
   return kl;
 };

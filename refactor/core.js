@@ -228,13 +228,14 @@ const build = (context, expr) =>
     raise('not a valid form')
   ) : raise('not a valid form');
 
-const asNumber = x => isNumber(x) ? x : raise('number expected');
-const asString = x => isString(x) ? x : raise('string expected');
-const asSymbol = x => isSymbol(x) ? x : raise('symbol expected');
-const asArray  = x => isArray(x)  ? x : raise('array expected');
-const asCons   = x => isCons(x)   ? x : raise('cons expected');
-const asError  = x => isError(x)  ? x : raise('error expected');
-const asIndex  = (i, a) =>
+const asNumber   = x => isNumber(x) ? x : raise('number expected');
+const asString   = x => isString(x) ? x : raise('string expected');
+const asSymbol   = x => isSymbol(x) ? x : raise('symbol expected');
+const asFunction = x => isFunction(x) ? x : raise('function expected');
+const asArray    = x => isArray(x)  ? x : raise('array expected');
+const asCons     = x => isCons(x)   ? x : raise('cons expected');
+const asError    = x => isError(x)  ? x : raise('error expected');
+const asIndex    = (i, a) =>
   !Natural.isInteger(i)  ? raise(`index ${i} is not valid`) :
   i < 0 || i >= a.length ? raise(`index ${i} is not with bounds of array length ${a.length}`) :
   i;
@@ -265,6 +266,8 @@ const shenToJs = x =>
 // TODO: kl() ... translated code ... shen() ... shen.repl()
 
 exports.kl = (options = {}) => {
+  const isInStream  = options.inInStream  || (() => false);
+  const isOutStream = options.inOutStream || (() => false);
   const asInStream  = x => options.isInStream  && (options.isInStream(x)  ? x : raise('input stream expected'));
   const asOutStream = x => options.isOutStream && (options.isOutStream(x) ? x : raise('output stream expected'));
   const isStream = x => options.isInStream(x) || options.isOutStream(x);

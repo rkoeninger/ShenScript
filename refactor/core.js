@@ -182,7 +182,7 @@ const build = (context, expr) =>
     isForm(expr, 'or')  ? flattenLogicalForm(context, expr, 'or') :
     isForm(expr, 'if', 4) ?
       conditional(
-        buildKind('JsBool', inHead(context), expr[1]),
+        buildKind('JsBool', inHead(inExpression(context)), expr[1]),
         build(inTail(context), expr[2]),
         build(inTail(context), expr[3]),
         context.statement) :

@@ -1,4 +1,4 @@
-import { generate } from 'astring'
+const { generate } = require('astring');
 
 /* Empty        null     *
  * Number       number   *
@@ -158,9 +158,9 @@ const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '
 // TODO: inlining, type-inferred optimizations
 //       context.kind signals expected, ast.kind signals actual
 
+const buildKlAccess = namespace => access(identifier('$kl'), identifier(namespace));
 const buildIdentifier = s => identifier(nameOf(s).split('').map(escapeCharacter).join(''));
 const buildIdleSymbol = symbol => invoke(buildKlAccess('symbolOf'), [literal(nameof(symbol))]);
-const buildKlAccess = namespace => access(identifier('$kl'), identifier(namespace));
 const buildLookup = (namespace, name) => access(buildKlAccess(namespace), (validIdentifier(name) ? identifier : literal)(name));
 const buildKind = (kind, context, expr) => ensure(kind, build(inKind(kind, context), expr));
 const build = (context, expr) =>
@@ -264,7 +264,7 @@ const shenToJs = x =>
 
 // TODO: kl() ... translated code ... shen() ... shen.repl()
 
-export default (options = {}) => {
+exports.kl = (options = {}) => {
   const asInStream  = x => options.isInStream  && (options.isInStream(x)  ? x : raise('input stream expected'));
   const asOutStream = x => options.isOutStream && (options.isOutStream(x) ? x : raise('output stream expected'));
   const isStream = x => options.isInStream(x) || options.isOutStream(x);

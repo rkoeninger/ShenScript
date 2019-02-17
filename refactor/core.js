@@ -119,7 +119,7 @@ const access = (object, property) => ({ type: 'MemberExpression', computed: prop
 const tag = (x, name, value) => (x[name] = value, x);
 const but = (x, name, value) => ({ ...x, [name]: value });
 const butLocals = (x, locals) => ({ ...x, locals: new Set(locals) });
-const addLocals = (x, locals) => ({ ...x, locals: new Set([...x.locals, locals]) });
+const addLocals = (x, locals) => ({ ...x, locals: new Set([...x.locals, ...locals]) });
 const ensure = (kind, expr) => expr.kind === kind ? expr : invoke(identifier('as' + kind), [expr]);
 
 const inStatement = x => ({ ...x, statement: true, expression: false });
@@ -174,7 +174,7 @@ const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '
 
 const buildKlAccess = namespace => access(identifier('$kl'), identifier(namespace));
 const buildIdentifier = s => identifier(nameOf(s).split('').map(escapeCharacter).join(''));
-const buildIdleSymbol = symbol => invoke(buildKlAccess('symbolOf'), [literal(nameOf(symbol))]);
+const buildIdleSymbol = s => invoke(buildKlAccess('symbolOf'), [literal(nameOf(s))]);
 const buildLookup = (namespace, name) => access(buildKlAccess(namespace), (validIdentifier(name) ? identifier : literal)(name));
 const buildKind = (kind, context, expr) => ensure(kind, build(inKind(kind, context), expr));
 const build = (context, expr) =>

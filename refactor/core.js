@@ -110,7 +110,7 @@ const answer = argument => ({ type: 'ReturnStatement', argument });
 const block = (body, statement = false) => statement ? { type: 'BlockStatement', body } : { type: 'SequenceExpression', expressions: body };
 const arrow = (params, body, expression = true, async = false) => ({ type: 'ArrowFunctionExpression', async, expression, params, body });
 const invoke = (callee, arguments, async = false) => (async ? wait : nop)({ type: 'CallExpression', callee, arguments });
-const conditional = (test, consequent, alternative, statement = false) => ({ type: statement ? 'IfStatement' : 'ConditionalExpression', test, consequent, alternative });
+const conditional = (test, consequent, alternate, statement = false) => ({ type: statement ? 'IfStatement' : 'ConditionalExpression', test, consequent, alternate });
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
 const iife = expr => invoke(arrow([], block([expr], true)), []);
 const attempt = (block, param, body, statement = false) => (statement ? nop : iife)({ type: 'TryStatement', block, handler: { type: 'CatchClause', param, body } });

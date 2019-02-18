@@ -107,13 +107,13 @@ const spread = argument => ({ type: 'SpreadElement', argument });
 const assign = (left, right, operator = '=') => ({ type: 'AssignmentExpression', left, right, operator });
 const statement = expression => ({ type: 'ExpressionStatement', expression });
 const answer = argument => ({ type: 'ReturnStatement', argument });
-const block = (body, statement = false) => statement ? { type: 'BlockStatement', body } : { type: 'SequenceExpression', expressions: body };
+const sequential = (body, statement = false) => statement ? { type: 'BlockStatement', body } : { type: 'SequenceExpression', expressions: body };
 const arrow = (params, body, expression = true, async = false) => ({ type: 'ArrowFunctionExpression', async, expression, params, body });
 const invoke = (callee, arguments, async = false) => (async ? wait : nop)({ type: 'CallExpression', callee, arguments });
 const conditional = (test, consequent, alternate, statement = false) => ({ type: statement ? 'IfStatement' : 'ConditionalExpression', test, consequent, alternate });
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
-const iife = expr => invoke(arrow([], block([expr], true)), []);
-const attempt = (block, param, body, statement = false) => (statement ? nop : iife)({ type: 'TryStatement', block, handler: { type: 'CatchClause', param, body } });
+const iife = expr => invoke(arrow([], sequential([expr], true)), []);
+const attempt = (block, param, body, statement = false, result = true) => (statement ? nop : iife)({ type: 'TryStatement', block: sequential([(result ? answer : nop)(block)], true), handler: { type: 'CatchClause', param, body: sequential([(result ? answer : nop)(body)], true) } });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
 
 const tag = (x, name, value) => (x[name] = value, x);
@@ -219,7 +219,7 @@ const build = (context, expr) =>
       attempt(build(context, expr[1]), identifier('$error'), invoke(build(context, expr[2]), [identifier('$error')])) :
     // TODO: simplify when defun is at top level (don't return anything)
     isForm(expr, 'defun', 4) ?
-      block([
+      sequential([
         assign(
           buildLookup('functions', nameOf(expr[1])),
           arrow(expr[2].map(buildIdentifier), build(butLocals(inTail(context), expr[2].map(x => nameOf(x))), expr[3]))),
@@ -365,7 +365,8 @@ exports.kl = (options = {}) => {
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
     symbolOf, nameOf, show, equal,
     bounce, settle, future, func, app,
-    symbols, functions
+    symbols, functions,
+    build
   };
   const context = Object.freeze({
     locals: new Set(),

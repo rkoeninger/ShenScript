@@ -205,14 +205,14 @@ const build = (context, expr) =>
     // TODO: just make it a (do ...) if variable doesn't get used
     isForm(expr, 'let', 4) ?
       invoke(
-        arrow([identifier(nameOf(expr[1]))], build(inHead(inExpression(context)), expr[2])),
-        [build(addLocals(context, [expr[1]]), expr[3])]) :
+        arrow([buildIdentifier(expr[1])], build(addLocals(context, [expr[1]]), expr[3])),
+        [build(inHead(inExpression(context)), expr[2])]) :
     // TODO: turn (do ...) into a series of statments with return if needed
     // TODO: if do is assigned to a variable, just make last line an assignment to that variable
     // TODO: bodies of lambda and freeze aren't necessarily expressions or statements
     // TODO: turn lambda into zero-arg function if argument doesn't get used (but still label as having arity 1)
     // TODO: group nested lambdas into single 2+ arity function? ex. (lambda X (lambda Y Q)) ==> (lambda (X Y) Q)
-    isForm(expr, 'lambda', 3) ? arrow([identifier(nameOf(expr[1]))], build(addLocals(context, [expr[1]]), expr[2])) :
+    isForm(expr, 'lambda', 3) ? arrow([buildIdentifier(expr[1])], build(addLocals(context, [expr[1]]), expr[2])) :
     isForm(expr, 'freeze', 2) ? arrow([], build(context, expr[1])) :
     // TODO: simplify code where handler is a lambda
     isForm(expr, 'trap-error', 3) ?

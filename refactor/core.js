@@ -227,20 +227,22 @@ const build = (context, expr) =>
     // TODO: type expression can provide kind/valueType information
     // TODO: inline and simplify primitive operations based on expression kind/valueType
     invoke(
-      isArray(expr[0])            ? build(inExpression(context), expr[0]) :
-      context.locals.has(expr[0]) ? identifier(nameOf(expr[0])) :
-      isSymbol(expr[0])           ? buildLookup('functions', nameOf(expr[0])) :
-      raise('not a valid application form'),
-      expr.slice(1).map(x => build(inExpression(context), x)))
+      buildKlAccess('asFunction'),
+      [invoke(
+        isArray(expr[0])            ? build(inExpression(context), expr[0]) :
+        context.locals.has(expr[0]) ? identifier(nameOf(expr[0])) :
+        isSymbol(expr[0])           ? buildLookup('functions', nameOf(expr[0])) :
+        raise('not a valid application form'),
+        expr.slice(1).map(x => build(inExpression(context), x)))])
   ) : raise('not a valid form');
 
-const asNumber   = x => isNumber(x) ? x : raise('number expected');
-const asString   = x => isString(x) ? x : raise('string expected');
-const asSymbol   = x => isSymbol(x) ? x : raise('symbol expected');
+const asNumber   = x => isNumber(x)   ? x : raise('number expected');
+const asString   = x => isString(x)   ? x : raise('string expected');
+const asSymbol   = x => isSymbol(x)   ? x : raise('symbol expected');
 const asFunction = x => isFunction(x) ? x : raise('function expected');
-const asArray    = x => isArray(x)  ? x : raise('array expected');
-const asCons     = x => isCons(x)   ? x : raise('cons expected');
-const asError    = x => isError(x)  ? x : raise('error expected');
+const asArray    = x => isArray(x)    ? x : raise('array expected');
+const asCons     = x => isCons(x)     ? x : raise('cons expected');
+const asError    = x => isError(x)    ? x : raise('error expected');
 const asIndex    = (i, a) =>
   !Natural.isInteger(i)  ? raise(`index ${i} is not valid`) :
   i < 0 || i >= a.length ? raise(`index ${i} is not with bounds of array length ${a.length}`) :

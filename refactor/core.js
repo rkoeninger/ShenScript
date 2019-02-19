@@ -19,15 +19,7 @@ const produce = (proceed, render, next, state) => {
   return array;
 };
 
-const flatMap = (f, xs) => {
-  const array = [];
-  for (const x of xs) {
-    for (const y of f(x)) {
-      array.push(x);
-    }
-  }
-  return array;
-};
+const flatMap = [].flatMap ? ((f, xs) => xs.flatMap(f)) : ((f, xs) => [].concat(...xs.map(f)));
 
 const nop = x => x;
 const raise = x => { throw new Error(x); };
@@ -367,8 +359,7 @@ exports.kl = (options = {}) => {
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
     symbolOf, nameOf, show, equal,
     bounce, settle, future, func, app,
-    symbols, functions,
-    build
+    symbols, functions
   };
   const context = Object.freeze({
     locals: new Set(),

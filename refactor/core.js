@@ -195,14 +195,14 @@ const build = (context, expr) =>
     // TODO: just make it a (do ...) if variable doesn't get used
     isForm(expr, 'let', 4) ?
       invoke(
-        arrow([buildIdentifier(expr[1])], build(addLocals(context, [expr[1]]), expr[3])),
+        arrow([buildIdentifier(expr[1])], build(addLocals(context, [asSymbol(expr[1])]), expr[3])),
         [build(inHead(inExpression(context)), expr[2])]) :
     // TODO: turn (do ...) into a series of statments with return if needed
     // TODO: if do is assigned to a variable, just make last line an assignment to that variable
     // TODO: bodies of lambda and freeze aren't necessarily expressions or statements
     // TODO: turn lambda into zero-arg function if argument doesn't get used (but still label as having arity 1)
     // TODO: group nested lambdas into single 2+ arity function? ex. (lambda X (lambda Y Q)) ==> (lambda (X Y) Q)
-    isForm(expr, 'lambda', 3) ? arrow([buildIdentifier(expr[1])], build(addLocals(context, [expr[1]]), expr[2])) :
+    isForm(expr, 'lambda', 3) ? arrow([buildIdentifier(expr[1])], build(addLocals(context, [asSymbol(expr[1])]), expr[2])) :
     isForm(expr, 'freeze', 2) ? arrow([], build(context, expr[1])) :
     // TODO: simplify code where handler is a lambda
     isForm(expr, 'trap-error', 3) ?
@@ -212,7 +212,7 @@ const build = (context, expr) =>
       sequential([
         assign(
           buildLookup('functions', nameOf(expr[1])),
-          arrow(expr[2].map(buildIdentifier), build(butLocals(inTail(context), expr[2].map(x => nameOf(x))), expr[3]))),
+          arrow(expr[2].map(buildIdentifier), build(butLocals(inTail(context), expr[2].map(x => asSymbol(x))), expr[3]))),
         buildIdleSymbol(expr[1])]) :
     // TODO: type expression can provide kind/valueType information
     // TODO: inline and simplify primitive operations based on expression kind/valueType
@@ -232,7 +232,7 @@ const asArray    = x => isArray(x)    ? x : raise('array expected');
 const asCons     = x => isCons(x)     ? x : raise('cons expected');
 const asError    = x => isError(x)    ? x : raise('error expected');
 const asIndex    = (i, a) =>
-  !Natural.isInteger(i)  ? raise(`index ${i} is not valid`) :
+  !Number.isInteger(i)   ? raise(`index ${i} is not valid`) :
   i < 0 || i >= a.length ? raise(`index ${i} is not with bounds of array length ${a.length}`) :
   i;
 

@@ -112,7 +112,7 @@ const tag = (x, name, value) => (x[name] = value, x);
 const but = (x, name, value) => ({ ...x, [name]: value });
 const butLocals = (x, locals) => ({ ...x, locals: new Set(locals) });
 const addLocals = (x, locals) => ({ ...x, locals: new Set([...x.locals, ...locals]) });
-const ensure = (kind, expr) => expr.kind === kind ? expr : invoke(identifier('as' + kind), [expr]);
+const ensure = (kind, expr) => expr.kind === kind ? expr : invoke(buildKlAccess('as' + kind), [expr]);
 
 const inStatement = x => ({ ...x, statement: true, expression: false });
 const inExpression = x => ({ ...x, statement: false, expression: true });
@@ -219,13 +219,11 @@ const build = (context, expr) =>
     // TODO: type expression can provide kind/valueType information
     // TODO: inline and simplify primitive operations based on expression kind/valueType
     invoke(
-      buildKlAccess('asFunction'),
-      [invoke(
-        isArray(expr[0])            ? build(inExpression(context), expr[0]) :
-        context.locals.has(expr[0]) ? identifier(nameOf(expr[0])) :
-        isSymbol(expr[0])           ? buildLookup('functions', nameOf(expr[0])) :
-        raise('not a valid application form'),
-        expr.slice(1).map(x => build(inExpression(context), x)))])
+      isArray(expr[0])            ? invoke(buildKlAccess('asFunction'), [build(inExpression(context), expr[0])]) :
+      context.locals.has(expr[0]) ? invoke(buildKlAccess('asFunction'), [identifier(nameOf(expr[0]))]) :
+      isSymbol(expr[0])           ? buildLookup('functions', nameOf(expr[0])) :
+      raise('not a valid application form'),
+      expr.slice(1).map(x => build(inExpression(context), x)))
   ) : raise('not a valid form');
 
 const asNumber   = x => isNumber(x)   ? x : raise('number expected');

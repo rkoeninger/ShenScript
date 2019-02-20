@@ -108,8 +108,6 @@ const iife = expr => invoke(arrow([], sequential([expr], true)), []);
 const attempt = (block, param, body, statement = false, result = true) => (statement ? nop : iife)({ type: 'TryStatement', block: sequential([(result ? answer : nop)(block)], true), handler: { type: 'CatchClause', param, body: sequential([(result ? answer : nop)(body)], true) } });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
 
-const tag = (x, name, value) => (x[name] = value, x);
-const but = (x, name, value) => ({ ...x, [name]: value });
 const butLocals = (x, locals) => ({ ...x, locals: new Set(locals) });
 const addLocals = (x, locals) => ({ ...x, locals: new Set([...x.locals, ...locals]) });
 const ensure = (kind, expr) => expr.kind === kind ? expr : invoke(buildKlAccess('as' + kind), [expr]);

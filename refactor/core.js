@@ -43,7 +43,7 @@ const Trampoline = class {
     Object.freeze(this);
   }
   run() {
-    return this.args ? this.f(...this.args) : this.f();
+    return app(this.f, this.args || []);
   }
 };
 
@@ -81,15 +81,15 @@ const future = async x => {
   }
 };
 
-const func = (f, arity, id) => Object.assign(f, {
+const func = (id, f, arity) => Object.assign(f, {
   arity: arity !== undefined ? arity : f.length,
   id: id !== undefined ? id : f.name
 });
 
 const app = (f, args) =>
   f.arity === undefined || f.arity === args.length ? f(...args) :
-  f.arity > args.length ? app(f(...args.slice(0, f.arity)), args.slice(f.arity)) :
-  func((...more) => app(f, [...args, ...more]), args.length - f.arity);
+  f.arity < args.length ? app(f(...args.slice(0, f.arity)), args.slice(f.arity)) :
+  func(f.id, (...more) => app(f, [...args, ...more]), args.length - f.arity);
 
 const literal = value => ({ type: 'Literal', value });
 const array = elements => ({ type: 'ArrayExpression', elements });
@@ -122,12 +122,6 @@ const inKind = (kind, x) => ({ ...x, kind });
 const isForm = (expr, lead, length) =>
   expr[0] === symbolOf(lead) && (!length || expr.length === length || raise(`${lead} must have ${length - 1} argument forms`));
 const flattenForm = (expr, lead) => isForm(expr, lead) ? flatMap(x => flattenForm(x, lead), expr.slice(1)) : [expr];
-const flattenLogicalForm = (context, expr, lead) =>
-  ensure(
-    'ShenBool',
-    flattenForm(expr, lead)
-      .map(x => ensure('JsBool', build(inHead(inKind('JsBool', context)), x)))
-      .reduceRight((right, left) => logical(lead === 'and' ? '&&' : '||', left, right)));
 
 const isReferenced = (symbol, expr) =>
   expr === symbol
@@ -153,8 +147,8 @@ const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '
  * head         if context is in head position                                 *
  * tail         if context is in tail position                                 *
  * locals       Set of local variables and parameters defined at this point    *
- * scopeName    Name of enclosing function/file                                *
- * kind         specific type is expected for expression, undefined if unknown */
+ * scope        Name of enclosing function/file                                *
+ * genus        specific type is expected for expression, undefined if unknown */
 
 // TODO: inlining, type-inferred optimizations
 //       context.kind signals expected, ast.kind signals actual
@@ -162,66 +156,81 @@ const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '
 // TODO: bound/settle based on head/tail position
 // TOOD: async/await
 
-const buildKlAccess = namespace => access(identifier('$kl'), identifier(namespace));
+const buildKlAccess = namespace => access(identifier('$env'), identifier(namespace));
 const buildIdentifier = s => identifier(nameOf(s).split('').map(escapeCharacter).join(''));
 const buildIdleSymbol = s => invoke(buildKlAccess('symbolOf'), [literal(nameOf(s))]);
 const buildLookup = (namespace, name) => access(buildKlAccess(namespace), (validIdentifier(name) ? identifier : literal)(name));
 const buildKind = (kind, context, expr) => ensure(kind, build(inKind(kind, context), expr));
+const buildLogicalForm = (context, expr, lead) =>
+  ensure(
+    'ShenBool',
+    flattenForm(expr, lead)
+      .map(x => ensure('JsBool', build(inHead(inKind('JsBool', context)), x)))
+      .reduceRight((right, left) => logical(lead === 'and' ? '&&' : '||', left, right)));
+const buildIf = (context, [_, test, consequent, alternate]) =>
+  test === shenTrue  ? build(context, consequent) :
+  test === shenFalse ? build(context, alternate) :
+  conditional(
+    buildKind('JsBool', inHead(inExpression(context)), test),
+    build(inTail(context), consequent),
+    build(inTail(context), alternate),
+    context.statement);
+const buildCond = (context, [_, ...clauses]) =>
+  build(context, clauses.reduceRight(
+    (alternate, [test, consequent]) => [symbolOf('if'), test, consequent, alternate],
+    [symbolOf('simple-error'), 'no condition was true']));
+const buildLet = (context, [_, id, value, body]) =>
+  // TODO: use const variable declaration as statement context
+  // TODO: just make it a (do ...) if variable doesn't get used
+  invoke(
+    arrow([buildIdentifier(id)], build(addLocals(context, [asSymbol(id)]), body)),
+    [build(inHead(inExpression(context)), value)]);
+const buildTrap = (context, [_, body, handler]) =>
+  // TODO: simplify code where handler is a lambda
+  attempt(build(context, body), identifier('$error'), invoke(build(context, handler), [identifier('$error')]));
+const buildLambda = (context, paramz, body) =>
+  // TODO: bodies of lambda and freeze aren't necessarily expressions or statements
+  // TODO: turn lambda into zero-arg function if argument doesn't get used (but still label as having arity 1)
+  // TODO: group nested lambdas into single 2+ arity function? ex. (lambda X (lambda Y Q)) ==> (lambda (X Y) Q)
+  arrow(paramz.map(buildIdentifier), build(addLocals(context, paramz.map(asSymbol)), body));
+const buildDefun = (context, [_, id, paramz, body]) =>
+  // TODO: simplify when defun is at top level (don't return anything)
+  sequential([
+    assign(
+      buildLookup('functions', nameOf(id)),
+      invoke(buildKlAccess('func'), [
+        literal(nameOf(id)),
+        arrow(
+          paramz.map(buildIdentifier),
+          build(butLocals(inTail(context), paramz.map(x => asSymbol(x))), body))])),
+    buildIdleSymbol(id)]);
+const buildApp = (context, [f, ...args]) =>
+  // TODO: there needs to be an app in here
+  invoke(buildKlAccess(context.tail ? 'bounce' : context.async ? 'future' : 'settle'), [
+    isArray(f)            ? invoke(buildKlAccess('asFunction'), [build(inExpression(context), f)]) :
+    context.locals.has(f) ? invoke(buildKlAccess('asFunction'), [identifier(nameOf(f))]) :
+    isSymbol(f)           ? buildLookup('functions', nameOf(f)) :
+    raise('not a valid application form'),
+    array(args.map(x => build(inExpression(context), x)))]);
 const build = (context, expr) =>
   isNull(expr) || isNumber(expr) || isString(expr) ? literal(expr) :
   isSymbol(expr) ? (context.locals.has(expr) ? buildIdentifier : buildIdleSymbol)(expr) :
   isArray(expr) ? (
     expr.length === 0 ? literal(null) :
-    isForm(expr, 'and') ? flattenLogicalForm(context, expr, 'and') :
-    isForm(expr, 'or')  ? flattenLogicalForm(context, expr, 'or') :
-    isForm(expr, 'if', 4) ?
-      conditional(
-        buildKind('JsBool', inHead(inExpression(context)), expr[1]),
-        build(inTail(context), expr[2]),
-        build(inTail(context), expr[3]),
-        context.statement) :
-    // TODO: reuse conditional construction for cond
-    isForm(expr, 'cond') ?
-      expr.slice(1).reduceRight(
-        (chain, [test, consequent]) =>
-          test === shenTrue ? build(context, consequent) :
-          conditional(
-            buildKind('JsBool', inHead(inExpression(context)), test),
-            build(inTail(context), consequent),
-            chain,
-            context.statement),
-        invoke(buildKlAccess('raise'), [literal('no condition was true')])) :
-    // TODO: use const variable declaration as statement context
-    // TODO: just make it a (do ...) if variable doesn't get used
-    isForm(expr, 'let', 4) ?
-      invoke(
-        arrow([buildIdentifier(expr[1])], build(addLocals(context, [asSymbol(expr[1])]), expr[3])),
-        [build(inHead(inExpression(context)), expr[2])]) :
+    isForm(expr, 'and') ? buildLogicalForm(context, expr, 'and') :
+    isForm(expr, 'or')  ? buildLogicalForm(context, expr, 'or') :
+    isForm(expr, 'if', 4) ? buildIf(context, expr) :
+    isForm(expr, 'cond') ? buildCond(context, expr) :
+    isForm(expr, 'let', 4) ? buildLet(context, expr) :
+    isForm(expr, 'trap-error', 3) ? buildTrap(context, expr) :
     // TODO: turn (do ...) into a series of statments with return if needed
     // TODO: if do is assigned to a variable, just make last line an assignment to that variable
-    // TODO: bodies of lambda and freeze aren't necessarily expressions or statements
-    // TODO: turn lambda into zero-arg function if argument doesn't get used (but still label as having arity 1)
-    // TODO: group nested lambdas into single 2+ arity function? ex. (lambda X (lambda Y Q)) ==> (lambda (X Y) Q)
-    isForm(expr, 'lambda', 3) ? arrow([buildIdentifier(expr[1])], build(addLocals(context, [asSymbol(expr[1])]), expr[2])) :
-    isForm(expr, 'freeze', 2) ? arrow([], build(context, expr[1])) :
-    // TODO: simplify code where handler is a lambda
-    isForm(expr, 'trap-error', 3) ?
-      attempt(build(context, expr[1]), identifier('$error'), invoke(build(context, expr[2]), [identifier('$error')])) :
-    // TODO: simplify when defun is at top level (don't return anything)
-    isForm(expr, 'defun', 4) ?
-      sequential([
-        assign(
-          buildLookup('functions', nameOf(expr[1])),
-          arrow(expr[2].map(buildIdentifier), build(butLocals(inTail(context), expr[2].map(x => asSymbol(x))), expr[3]))),
-        buildIdleSymbol(expr[1])]) :
-    // TODO: type expression can provide kind/valueType information
-    // TODO: inline and simplify primitive operations based on expression kind/valueType
-    invoke(
-      isArray(expr[0])            ? invoke(buildKlAccess('asFunction'), [build(inExpression(context), expr[0])]) :
-      context.locals.has(expr[0]) ? invoke(buildKlAccess('asFunction'), [identifier(nameOf(expr[0]))]) :
-      isSymbol(expr[0])           ? buildLookup('functions', nameOf(expr[0])) :
-      raise('not a valid application form'),
-      expr.slice(1).map(x => build(inExpression(context), x)))
+    isForm(expr, 'lambda', 3) ? buildLambda(context, [expr[1]], expr[2]) :
+    isForm(expr, 'freeze', 2) ? buildLambda(context, [], expr[1]) :
+    isForm(expr, 'defun', 4) ? buildDefun(context, expr) :
+    // TODO: type expression can provide genus information
+    // TODO: inline and simplify primitive operations based on expression genus
+    buildApp(context, expr)
   ) : raise('not a valid form');
 
 const asNumber   = x => isNumber(x)   ? x : raise('number expected');
@@ -244,21 +253,6 @@ const asJsBool    = x =>
   x === shenTrue  ? true :
   x === shenFalse ? false :
   raise(`value ${x} is not a valid boolean`);
-
-// TODO: are these needed? how to know when to do asShenBool?
-const jsToShen = x =>
-  isArray(x)      ? x.map(jsToShen) :
-  isCons(x)       ? cons(jsToShen(x.head), jsToShen(x.tail)) :
-  x === undefined ? null :
-  x === shenTrue  ? true :
-  x === shenFalse ? false :
-  x;
-const shenToJs = x =>
-  isArray(x)  ? x.map(shenToJs) :
-  isCons(x)   ? cons(shenToJs(x.head), shenToJs(x.tail)) :
-  x === true  ? shenTrue :
-  x === false ? shenFalse :
-  x;
 
 // TODO: kl() ... translated code ... shen() ... shen.repl()
 exports.kl = (options = {}) => {
@@ -306,56 +300,16 @@ exports.kl = (options = {}) => {
     '*sterror*':        options.sterror        || (() => raise('standard error not supported')),
     '*home-directory*': options.homeDirectory  || ''
   };
-  const functions = {
-    'if':              (b, x, y) => asJsBool(b) ? x : y,
-    'and':             (x, y) => asShenBool(asJsBool(x) && asJsBool(y)),
-    'or':              (x, y) => asShenBool(asJsBool(x) || asJsBool(y)),
-    'open':            (m, p) => open(nameOf(asSymbol(m)), asString(p)),
-    'close':           s => asStream(s).close(),
-    'read-byte':       s => asInStream(s).read(),
-    'write-byte':      (s, b) => asOutStream(s).write(b),
-    'number?':         x => asShenBool(isNumber(x)),
-    'string?':         x => asShenBool(isString(x)),
-    'symbol?':         x => asShenBool(isSymbol(x)),
-    'absvector?':      x => asShenBool(isArray(x)),
-    'cons?':           x => asShenBool(isCons(x)),
-    'hd':              c => asCons(c).head,
-    'tl':              c => asCons(c).tail,
-    'cons':            cons,
-    'tlstr':           s => asString(s).substring(1),
-    'cn':              (s, t) => asString(s) + asString(t),
-    'string->n':       s => asString(s).charCodeAt(0),
-    'n->string':       n => String.fromCharCode(asNumber(n)),
-    'pos':             (s, i) => asString(s)[asNumber(i)],
-    'str':             show,
-    'absvector':       n => new Array(asNumber(n)).fill(null),
-    '<-address':       (a, i) => asArray(a)[asIndex(i, a)],
-    'address->':       (a, i, x) => (asArray(a)[asIndex(i, a)] = x, a),
-    '+':               (x, y) => asNumber(x) + asNumber(y),
-    '-':               (x, y) => asNumber(x) - asNumber(y),
-    '*':               (x, y) => asNumber(x) * asNumber(y),
-    '/':               (x, y) => asNumber(x) / asNumber(y),
-    '>':               (x, y) => asShenBool(asNumber(x) >  asNumber(y)),
-    '<':               (x, y) => asShenBool(asNumber(x) <  asNumber(y)),
-    '>=':              (x, y) => asShenBool(asNumber(x) >= asNumber(y)),
-    '<=':              (x, y) => asShenBool(asNumber(x) <= asNumber(y)),
-    '=':               (x, y) => asShenBool(equal(x, y)),
-    'intern':          s => symbolOf(asString(s)),
-    'get-time':        m => getTime(nameOf(asSymbol(m))),
-    'simple-error':    s => raise(asString(s)),
-    'error-to-string': e => asError(e).message,
-    'set':             (s, x) => symbols[nameOf(asSymbol(s))] = x,
-    'value':           s => symbols[nameOf(asSymbol(s))],
-    'type':            (x, _) => x
-  };
-  const kl = {
+  const functions = {};
+  const env = {
     cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree,
     asJsBool, asShenBool, isShenBool, isShenTrue, isShenFalse,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
     symbolOf, nameOf, show, equal,
     bounce, settle, future, func, app,
-    symbols, functions
+    symbols, functions,
+    build
   };
   const context = Object.freeze({
     locals: new Set(),
@@ -363,6 +317,48 @@ exports.kl = (options = {}) => {
     expression: true,
     async: options.async
   });
-  kl.functions['eval-kl'] = expr => Function('$kl', generate(answer(build(context, valueToArrayTree(expr)))))(kl);
-  return kl;
+  [
+    ['if',              (b, x, y) => asJsBool(b) ? x : y],
+    ['and',             (x, y) => asShenBool(asJsBool(x) && asJsBool(y))],
+    ['or',              (x, y) => asShenBool(asJsBool(x) || asJsBool(y))],
+    ['open',            (m, p) => open(nameOf(asSymbol(m)), asString(p))],
+    ['close',           s => asStream(s).close()],
+    ['read-byte',       s => asInStream(s).read()],
+    ['write-byte',      (s, b) => asOutStream(s).write(b)],
+    ['number?',         x => asShenBool(isNumber(x))],
+    ['string?',         x => asShenBool(isString(x))],
+    ['symbol?',         x => asShenBool(isSymbol(x))],
+    ['absvector?',      x => asShenBool(isArray(x))],
+    ['cons?',           x => asShenBool(isCons(x))],
+    ['hd',              c => asCons(c).head],
+    ['tl',              c => asCons(c).tail],
+    ['cons',            cons],
+    ['tlstr',           s => asString(s).substring(1)],
+    ['cn',              (s, t) => asString(s) + asString(t)],
+    ['string->n',       s => asString(s).charCodeAt(0)],
+    ['n->string',       n => String.fromCharCode(asNumber(n))],
+    ['pos',             (s, i) => asString(s)[asNumber(i)]],
+    ['str',             show],
+    ['absvector',       n => new Array(asNumber(n)).fill(null)],
+    ['<-address',       (a, i) => asArray(a)[asIndex(i, a)]],
+    ['address->',       (a, i, x) => (asArray(a)[asIndex(i, a)] = x, a)],
+    ['+',               (x, y) => asNumber(x) + asNumber(y)],
+    ['-',               (x, y) => asNumber(x) - asNumber(y)],
+    ['*',               (x, y) => asNumber(x) * asNumber(y)],
+    ['/',               (x, y) => asNumber(x) / asNumber(y)],
+    ['>',               (x, y) => asShenBool(asNumber(x) >  asNumber(y))],
+    ['<',               (x, y) => asShenBool(asNumber(x) <  asNumber(y))],
+    ['>=',              (x, y) => asShenBool(asNumber(x) >= asNumber(y))],
+    ['<=',              (x, y) => asShenBool(asNumber(x) <= asNumber(y))],
+    ['=',               (x, y) => asShenBool(equal(x, y))],
+    ['intern',          s => symbolOf(asString(s))],
+    ['get-time',        m => getTime(nameOf(asSymbol(m)))],
+    ['simple-error',    s => raise(asString(s))],
+    ['error-to-string', e => asError(e).message],
+    ['set',             (s, x) => symbols[nameOf(asSymbol(s))] = x],
+    ['value',           s => symbols[nameOf(asSymbol(s))]],
+    ['type',            (x, _) => x],
+    ['eval-kl',         expr => Function('$env', generate(answer(build(context, valueToArrayTree(expr)))))(env)]
+  ].forEach(([id, f]) => functions[id] = func(id, f));
+  return env;
 };

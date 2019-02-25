@@ -321,7 +321,7 @@ exports.kl = (options = {}) => {
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
     symbolOf, nameOf, show, equal,
-    bounce, settle, future, func, app,
+    bounce, settle, future, func, app, settleApp, futureApp,
     symbols, functions,
     build, evalKl
   };

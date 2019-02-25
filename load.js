@@ -10,11 +10,12 @@ const files = [
 ];
 
 const env = kl();
-const { cons, symbolOf, valueToArrayTree } = env;
-const evalKl = env.functions['eval-kl'];
+const { cons, symbolOf, valueToArrayTree, evalKl } = env;
+const run = env.functions['eval-kl'];
 const defuns = [];
 const setups = [];
 const debris = [];
+const context = { locals: new Set(), head: true, expression: true };
 
 files.forEach(file =>
   parse(fs.readFileSync(`./kernel/klambda/${file}.kl`, 'utf-8')).forEach(expr =>
@@ -22,11 +23,11 @@ files.forEach(file =>
 
 const load = expr => {
   try {
-    evalKl(expr);
+    evalKl(context, env, expr);
   } catch (e) {
     console.log('--------------------------------------------------------------------------------');
     console.log(expr);
-    const ast = env.build({ locals: new Set(), head: true, expression: true }, expr);
+    const ast = env.build(context, expr);
     console.log(ast);
     console.log(generate(ast));
     console.log(e);

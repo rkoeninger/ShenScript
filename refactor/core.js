@@ -207,7 +207,7 @@ const buildDefun = (context, [_, id, paramz, body]) =>
       invoke(buildEnvAccess('func'), [
         arrow(
           paramz.map(buildIdentifier),
-          build(butLocals(inTail(context), paramz.map(x => asSymbol(x))), body)),
+          build(butLocals(inTail(context), paramz.map(asSymbol)), body)),
         literal(nameOf(id))])),
     buildIdleSymbol(id)]);
 const buildApp = (context, [f, ...args]) =>

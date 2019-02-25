@@ -112,14 +112,15 @@ const access = (object, property) => ({ type: 'MemberExpression', computed: prop
 
 const butLocals = (x, locals) => ({ ...x, locals: new Set(locals) });
 const addLocals = (x, locals) => ({ ...x, locals: new Set([...x.locals, ...locals]) });
-const ensure = (kind, expr) => expr.kind === kind ? expr : invoke(buildEnvAccess('as' + kind), [expr]);
+const ofDataType = (dataType, x) => ({ ...x, dataType });
+const ensure = (dataType, expr) => ofDataType(dataType, expr.dataType === dataType ? expr : invoke(buildEnvAccess('as' + dataType), [expr]));
 
 const inStatement = x => ({ ...x, statement: true, expression: false });
 const inExpression = x => ({ ...x, statement: false, expression: true });
 const inReturn = x => ({ ...x, statement: false, expression: true, return0: true });
 const inHead = x => ({ ...x, head: true, tail: false });
 const inTail = x => ({ ...x, head: false, tail: true });
-const inKind = (kind, x) => ({ ...x, kind });
+const inDataType = (dataType, x) => ({ ...x, dataType });
 
 const isForm = (expr, lead, length) =>
   expr[0] === symbolOf(lead) && (!length || expr.length === length || raise(`${lead} must have ${length - 1} argument forms`));
@@ -144,36 +145,36 @@ const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '
  * expression   if location in target context must be an expression            *
  * async        transpiler should generate async/await syntax                  *
  * return       location is the last statement which needs to be returned      *
- * ignore       result of computing expression won't be used                   *
+ * ignore       result of computing expression is side-effect only             *
  * assignment   expr is getting assigned to a variable                         *
  * head         if context is in head position                                 *
  * tail         if context is in tail position                                 *
  * locals       Set of local variables and parameters defined at this point    *
  * scope        Name of enclosing function/file                                *
- * genus        specific type is expected for expression, undefined if unknown */
+ * dataType     specific type is expected for expression, undefined if unknown */
 
 // TODO: inlining, type-inferred optimizations
-//       context.genus signals expected, ast.genus signals actual
+//       context.dataType signals expected, ast.dataType signals actual
 // TODO: handle statement contexts, consider child statement contexts to avoid iife's
 // TODO: bound/settle based on head/tail position
 // TOOD: async/await
 
 const buildEnvAccess = namespace => access(identifier('$env'), identifier(namespace));
 const buildIdentifier = s => identifier(nameOf(s).split('').map(escapeCharacter).join(''));
-const buildIdleSymbol = s => invoke(buildEnvAccess('symbolOf'), [literal(nameOf(s))]);
+const buildIdleSymbol = s => ofDataType('Symbol', invoke(buildEnvAccess('symbolOf'), [literal(nameOf(s))]));
 const buildLookup = (namespace, name) => access(buildEnvAccess(namespace), (validIdentifier(name) ? identifier : literal)(name));
-const buildKind = (kind, context, expr) => ensure(kind, build(inKind(kind, context), expr));
+const buildInDataType = (dataType, context, expr) => ensure(dataType, build(inDataType(dataType, context), expr));
 const buildLogicalForm = (context, expr, lead) =>
   ensure(
     'ShenBool',
     flattenForm(expr, lead)
-      .map(x => ensure('JsBool', build(inHead(inKind('JsBool', context)), x)))
+      .map(x => ensure('JsBool', build(inHead(inDataType('JsBool', context)), x)))
       .reduceRight((right, left) => logical(lead === 'and' ? '&&' : '||', left, right)));
 const buildIf = (context, [_, test, consequent, alternate]) =>
   test === shenTrue  ? build(context, consequent) :
   test === shenFalse ? build(context, alternate) :
   conditional(
-    buildKind('JsBool', inHead(inExpression(context)), test),
+    buildInDataType('JsBool', inHead(inExpression(context)), test),
     build(inTail(context), consequent),
     build(inTail(context), alternate),
     context.statement);
@@ -189,7 +190,7 @@ const buildLet = (context, [_, id, value, body]) =>
     [build(inHead(inExpression(context)), value)]);
 // TODO: turn (do ...) into a series of statments with return if needed
 // TODO: if do is assigned to a variable, just make last line an assignment to that variable
-const buildDo = (context, [_, ...exprs]) => sequential(exprs);
+const buildDo = (context, [_, ...exprs]) => sequential(exprs.map(x => build(context, x)));
 const buildTrap = (context, [_, body, handler]) =>
   // TODO: simplify code where handler is a lambda
   attempt(build(context, body), identifier('$error'), invoke(build(inTail(context), handler), [identifier('$error')]));
@@ -217,7 +218,8 @@ const buildApp = (context, [f, ...args]) =>
     raise('not a valid application form'),
     array(args.map(x => build(inExpression(context), x)))]);
 const build = (context, expr) =>
-  isNull(expr) || isNumber(expr) || isString(expr) ? literal(expr) :
+  isNumber(expr) ? ofDataType('Number', literal(expr)) :
+  isString(expr) ? ofDataType('String', literal(expr)) :
   isSymbol(expr) ? (context.locals.has(expr) ? buildIdentifier : buildIdleSymbol)(expr) :
   isArray(expr) ? (
     expr.length === 0 ? literal(null) :
@@ -226,23 +228,24 @@ const build = (context, expr) =>
     isForm(expr, 'if', 4) ? buildIf(context, expr) :
     isForm(expr, 'cond') ? buildCond(context, expr) :
     isForm(expr, 'let', 4) ? buildLet(context, expr) :
-    isForm(expr, 'do') ? buildDo(context, expr) :
+    // TODO: isForm(expr, 'do') ? buildDo(context, expr) :
     isForm(expr, 'trap-error', 3) ? buildTrap(context, expr) :
     isForm(expr, 'lambda', 3) ? buildLambda(context, [expr[1]], expr[2]) :
     isForm(expr, 'freeze', 2) ? buildLambda(context, [], expr[1]) :
     isForm(expr, 'defun', 4) ? buildDefun(context, expr) :
-    // TODO: type expression can provide genus information
-    // TODO: inline and simplify primitive operations based on expression genus
+    // TODO: type expression can provide dataType information
+    // TODO: inline and simplify primitive operations based on expression dataType
+    // TODO: handle special case for the (function F) form where F is a non-var symbol
     buildApp(context, expr)
   ) : raise('not a valid form');
 
 const evalKl = (context, env, expr) =>
-  Function(
+  (Function(
     '$env',
     generate(answer(invoke(
       buildEnvAccess(context.async ? 'future' : 'settle'),
       [build(context, valueToArrayTree(expr))])))
-  )(env);
+  )(env));
 
 const asNumber   = x => isNumber(x)   ? x : raise('number expected');
 const asString   = x => isString(x)   ? x : raise('string expected');
@@ -371,5 +374,11 @@ exports.kl = (options = {}) => {
     ['type',            (x, _) => x],
     ['eval-kl',         expr => evalKl(context, env, expr)]
   ].forEach(([id, f]) => functions[id] = func(id, f));
+  // TODO: if primitives are defined as astring ast's,
+  //       we can generate code for them for regular invoke
+  //       and have the ast to do inlines with,
+  //       along with dataType hints and labels
+  //       can also use abstractness of ast to generate
+  //       head/tail and sync/async versions of functions
   return env;
 };

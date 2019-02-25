@@ -63,7 +63,17 @@ const consToArrayTree = c => produce(isCons, c => valueToArrayTree(c.head), c =>
 const valueToArray = x => isCons(x) ? consToArray(x) : x;
 const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x;
 
-const bounce = (f, ...args) => new Trampoline(f, ...args);
+const func = (f, id, arity) => Object.assign(f, {
+  arity: arity !== undefined ? arity : f.length,
+  id: id !== undefined ? id : f.name
+});
+
+const app = (f, args) =>
+  f.arity === undefined || f.arity === args.length ? f(...args) :
+  f.arity < args.length ? app(f(...args.slice(0, f.arity)), args.slice(f.arity)) :
+  func((...more) => app(f, [...args, ...more]), f.id, args.length - f.arity);
+
+const bounce = (f, args) => new Trampoline(f, args);
 const settle = x => {
   while (x instanceof Trampoline) {
     x = x.run();
@@ -80,16 +90,8 @@ const future = async x => {
     }
   }
 };
-
-const func = (id, f, arity) => Object.assign(f, {
-  arity: arity !== undefined ? arity : f.length,
-  id: id !== undefined ? id : f.name
-});
-
-const app = (f, args) =>
-  f.arity === undefined || f.arity === args.length ? f(...args) :
-  f.arity < args.length ? app(f(...args.slice(0, f.arity)), args.slice(f.arity)) :
-  func(f.id, (...more) => app(f, [...args, ...more]), args.length - f.arity);
+const settleApp = (f, args) => settle(app(f, args));
+const futureApp = (f, args) => future(app(f, args));
 
 const literal = value => ({ type: 'Literal', value });
 const array = elements => ({ type: 'ArrayExpression', elements });
@@ -110,7 +112,7 @@ const access = (object, property) => ({ type: 'MemberExpression', computed: prop
 
 const butLocals = (x, locals) => ({ ...x, locals: new Set(locals) });
 const addLocals = (x, locals) => ({ ...x, locals: new Set([...x.locals, ...locals]) });
-const ensure = (kind, expr) => expr.kind === kind ? expr : invoke(buildKlAccess('as' + kind), [expr]);
+const ensure = (kind, expr) => expr.kind === kind ? expr : invoke(buildEnvAccess('as' + kind), [expr]);
 
 const inStatement = x => ({ ...x, statement: true, expression: false });
 const inExpression = x => ({ ...x, statement: false, expression: true });
@@ -151,15 +153,15 @@ const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '
  * genus        specific type is expected for expression, undefined if unknown */
 
 // TODO: inlining, type-inferred optimizations
-//       context.kind signals expected, ast.kind signals actual
+//       context.genus signals expected, ast.genus signals actual
 // TODO: handle statement contexts, consider child statement contexts to avoid iife's
 // TODO: bound/settle based on head/tail position
 // TOOD: async/await
 
-const buildKlAccess = namespace => access(identifier('$env'), identifier(namespace));
+const buildEnvAccess = namespace => access(identifier('$env'), identifier(namespace));
 const buildIdentifier = s => identifier(nameOf(s).split('').map(escapeCharacter).join(''));
-const buildIdleSymbol = s => invoke(buildKlAccess('symbolOf'), [literal(nameOf(s))]);
-const buildLookup = (namespace, name) => access(buildKlAccess(namespace), (validIdentifier(name) ? identifier : literal)(name));
+const buildIdleSymbol = s => invoke(buildEnvAccess('symbolOf'), [literal(nameOf(s))]);
+const buildLookup = (namespace, name) => access(buildEnvAccess(namespace), (validIdentifier(name) ? identifier : literal)(name));
 const buildKind = (kind, context, expr) => ensure(kind, build(inKind(kind, context), expr));
 const buildLogicalForm = (context, expr, lead) =>
   ensure(
@@ -185,9 +187,12 @@ const buildLet = (context, [_, id, value, body]) =>
   invoke(
     arrow([buildIdentifier(id)], build(addLocals(context, [asSymbol(id)]), body)),
     [build(inHead(inExpression(context)), value)]);
+// TODO: turn (do ...) into a series of statments with return if needed
+// TODO: if do is assigned to a variable, just make last line an assignment to that variable
+const buildDo = (context, [_, ...exprs]) => sequential(exprs);
 const buildTrap = (context, [_, body, handler]) =>
   // TODO: simplify code where handler is a lambda
-  attempt(build(context, body), identifier('$error'), invoke(build(context, handler), [identifier('$error')]));
+  attempt(build(context, body), identifier('$error'), invoke(build(inTail(context), handler), [identifier('$error')]));
 const buildLambda = (context, paramz, body) =>
   // TODO: bodies of lambda and freeze aren't necessarily expressions or statements
   // TODO: turn lambda into zero-arg function if argument doesn't get used (but still label as having arity 1)
@@ -198,17 +203,16 @@ const buildDefun = (context, [_, id, paramz, body]) =>
   sequential([
     assign(
       buildLookup('functions', nameOf(id)),
-      invoke(buildKlAccess('func'), [
-        literal(nameOf(id)),
+      invoke(buildEnvAccess('func'), [
         arrow(
           paramz.map(buildIdentifier),
-          build(butLocals(inTail(context), paramz.map(x => asSymbol(x))), body))])),
+          build(butLocals(inTail(context), paramz.map(x => asSymbol(x))), body)),
+        literal(nameOf(id))])),
     buildIdleSymbol(id)]);
 const buildApp = (context, [f, ...args]) =>
-  // TODO: there needs to be an app in here
-  invoke(buildKlAccess(context.tail ? 'bounce' : context.async ? 'future' : 'settle'), [
-    isArray(f)            ? invoke(buildKlAccess('asFunction'), [build(inExpression(context), f)]) :
-    context.locals.has(f) ? invoke(buildKlAccess('asFunction'), [identifier(nameOf(f))]) :
+  invoke(buildEnvAccess(context.tail ? 'bounce' : context.async ? 'futureApp' : 'settleApp'), [
+    isArray(f)            ? invoke(buildEnvAccess('asFunction'), [build(inExpression(context), f)]) :
+    context.locals.has(f) ? invoke(buildEnvAccess('asFunction'), [buildIdentifier(f)]) :
     isSymbol(f)           ? buildLookup('functions', nameOf(f)) :
     raise('not a valid application form'),
     array(args.map(x => build(inExpression(context), x)))]);
@@ -222,9 +226,8 @@ const build = (context, expr) =>
     isForm(expr, 'if', 4) ? buildIf(context, expr) :
     isForm(expr, 'cond') ? buildCond(context, expr) :
     isForm(expr, 'let', 4) ? buildLet(context, expr) :
+    isForm(expr, 'do') ? buildDo(context, expr) :
     isForm(expr, 'trap-error', 3) ? buildTrap(context, expr) :
-    // TODO: turn (do ...) into a series of statments with return if needed
-    // TODO: if do is assigned to a variable, just make last line an assignment to that variable
     isForm(expr, 'lambda', 3) ? buildLambda(context, [expr[1]], expr[2]) :
     isForm(expr, 'freeze', 2) ? buildLambda(context, [], expr[1]) :
     isForm(expr, 'defun', 4) ? buildDefun(context, expr) :
@@ -232,6 +235,14 @@ const build = (context, expr) =>
     // TODO: inline and simplify primitive operations based on expression genus
     buildApp(context, expr)
   ) : raise('not a valid form');
+
+const evalKl = (context, env, expr) =>
+  Function(
+    '$env',
+    generate(answer(invoke(
+      buildEnvAccess(context.async ? 'future' : 'settle'),
+      [build(context, valueToArrayTree(expr))])))
+  )(env);
 
 const asNumber   = x => isNumber(x)   ? x : raise('number expected');
 const asString   = x => isString(x)   ? x : raise('string expected');
@@ -309,7 +320,7 @@ exports.kl = (options = {}) => {
     symbolOf, nameOf, show, equal,
     bounce, settle, future, func, app,
     symbols, functions,
-    build
+    build, evalKl
   };
   const context = Object.freeze({
     locals: new Set(),
@@ -358,7 +369,7 @@ exports.kl = (options = {}) => {
     ['set',             (s, x) => symbols[nameOf(asSymbol(s))] = x],
     ['value',           s => symbols[nameOf(asSymbol(s))]],
     ['type',            (x, _) => x],
-    ['eval-kl',         expr => Function('$env', generate(answer(build(context, valueToArrayTree(expr)))))(env)]
+    ['eval-kl',         expr => evalKl(context, env, expr)]
   ].forEach(([id, f]) => functions[id] = func(id, f));
   return env;
 };

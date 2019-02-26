@@ -225,6 +225,7 @@ const build = (context, expr) =>
     expr.length === 0 ? literal(null) :
     isForm(expr, 'and') ? buildLogicalForm(context, expr, 'and') :
     isForm(expr, 'or')  ? buildLogicalForm(context, expr, 'or') :
+    // TODO: inline `not` function
     isForm(expr, 'if', 4) ? buildIf(context, expr) :
     isForm(expr, 'cond') ? buildCond(context, expr) :
     isForm(expr, 'let', 4) ? buildLet(context, expr) :
@@ -238,6 +239,30 @@ const build = (context, expr) =>
     // TODO: handle special case for the (function F) form where F is a non-var symbol
     buildApp(context, expr)
   ) : raise('not a valid form');
+
+const eliminateCond = ([_, ...clauses]) =>
+  clauses.reduceRight(
+    (alternate, [test, consequent]) => [symbolOf('if'), test, consequent, alternate],
+    [symbolOf('simple-error'), 'no clause was true']);
+const eliminateLet = ([_, __, value, body]) => [symbolOf('do'), value, body];
+const eliminate = expr =>
+  isArray(expr) && isForm(expr, 'cond') ? eliminateCond(expr) :
+  isArray(expr) && isForm(expr, 'let', 4) && !isReferenced(expr[1], expr[3]) ? eliminateLet(expr) :
+  expr;
+// TODO: do a first pass in build, removing (cond, let with ignored var)
+//       and labelling syntax nodes as having children that prefer to be in statement form (let, trap-error)
+// TODO: combine nested let's, and's, or's, do's?
+// TODO: instead of converting let with ignored var to do, convert all do's to let's with ignored vars
+//       so there's only 1 representation
+
+// Multi-pass approach:
+// 1. eliminate - remove redundant forms
+// 2. group     - group nested operations
+// 3. annotate  - label forms that are or have childen that are preferred to be built in statement form
+//              - identify duplicate uses of variables
+// 4. build     - render js ast
+
+// Can be done with just 2 passes? Use as few passes as possible
 
 const evalKl = (context, env, expr) =>
   (Function(

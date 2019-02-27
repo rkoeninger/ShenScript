@@ -1,15 +1,5 @@
 const { generate } = require('astring');
 
-/* Empty        null     *
- * Number       number   *
- * String       string   *
- * Symbol       symbol   *
- * Function     function *
- * AbsVector    array    *
- * Error        Error    *
- * Cons         Cons     *
- * Stream       ________ */
-
 const Cons = class {
   constructor(head, tail) {
     this.head = head;
@@ -24,9 +14,19 @@ const Trampoline = class {
     this.args = args;
     Object.freeze(this);
   }
-  run() {
-    return app(this.f, this.args || []);
+  run() { return app(this.f, this.args || []); }
+};
+
+const Context = class {
+  constructor(options) {
+    Object.assign(this, options);
+    Object.freeze(this);
   }
+  now()       { return new Context({ ...this, head: true }); }
+  later()     { return new Context({ ...this, head: false }); }
+  add(locals) { return new Context({ ...this, locals: new Set([...this.locals, ...locals]) }); }
+  set(locals) { return new Context({ ...this, locals: new Set(locals) }); }
+  has(local)  { return this.locals.has(local); }
 };
 
 const flatMap = [].flatMap ? ((f, xs) => xs.flatMap(f)) : ((f, xs) => [].concat(...xs.map(f)));
@@ -89,15 +89,11 @@ const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x;
 
 // TODO: build calling `app` into each function so it can be called naturally
 
-const func = (f, id, arity) => Object.assign(f, {
-  arity: arity !== undefined ? arity : f.length,
-  id: id !== undefined ? id : f.name
-});
-
+const fun = (f, id, arity) => Object.assign(f, { id: f.name, arity: f.length }, { id, arity });
 const app = (f, args) =>
   f.arity === undefined || f.arity === args.length ? f(...args) :
   f.arity < args.length ? app(f(...args.slice(0, f.arity)), args.slice(f.arity)) :
-  func((...more) => app(f, [...args, ...more]), f.id, args.length - f.arity);
+  fun((...more) => app(f, [...args, ...more]), f.id, args.length - f.arity);
 
 const bounce = (f, args) => new Trampoline(f, args);
 const settle = x => {
@@ -119,6 +115,8 @@ const future = async x => {
 const settleApp = (f, args) => settle(app(f, args));
 const futureApp = (f, args) => future(app(f, args));
 
+// TOOD: build async/await
+
 const literal = value => ({ type: 'Literal', value });
 const array = elements => ({ type: 'ArrayExpression', elements });
 const identifier = name => ({ type: 'Identifier', name });
@@ -133,116 +131,73 @@ const conditional = (test, consequent, alternate) => ({ type: 'ConditionalExpres
 const unary = (operator, argument, prefix = true) => ({ type: 'UnaryExpression', prefix, operator, argument });
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
-
-const butLocals = (x, locals) => ({ ...x, locals: new Set(locals) });
-const addLocals = (x, locals) => ({ ...x, locals: new Set([...x.locals, ...locals]) });
-const ofDataType = (dataType, x) => ({ ...x, dataType });
-const ensure = (dataType, expr) =>
-  ofDataType(dataType, expr.dataType === dataType ? expr : invoke(buildEnvAccess('as' + dataType), [expr]));
-
-const inHead = x => ({ ...x, position: 'head' });
-const inTail = x => ({ ...x, position: 'tail' });
-const inDataType = (dataType, x) => ({ ...x, dataType });
-
+const cast = (dataType, value) => invoke(buildEnvAccess('as' + dataType), [value]);
 const isForm = (expr, lead, length) =>
-  expr[0] === symbolOf(lead) && (!length || expr.length === length || raise(`${lead} must have ${length - 1} argument forms`));
-const flattenForm = (expr, lead) => isForm(expr, lead) ? flatMap(x => flattenForm(x, lead), expr.slice(1)) : [expr];
-
-const isReferenced = (symbol, expr) =>
-  expr === symbol
-  || isArray(expr)
-    && expr.length > 0
-    && !isForm(expr, 'defun', 4)
-    && (isForm(expr, 'let', 4) && (isReferenced(symbol, expr[2]) || expr[1] !== symbol && isReferenced(symbol, expr[3]))
-     || isForm(expr, 'lambda', 3) && expr[1] !== symbol && isReferenced(symbol, expr[2])
-     || expr.some(x => isReferenced(symbol, x)));
+  expr[0] === symbolOf(lead)
+  && (!length || expr.length === length || raise(`${lead} must have ${length - 1} argument forms`));
 
 const hex = ch => ('0' + ch.charCodeAt(0).toString(16)).slice(-2);
 const validCharacterRegex = /^[_A-Za-z0-9]$/;
 const validCharactersRegex = /^[_A-Za-z][_A-Za-z0-9]*$/;
-const validIdentifier = s => validCharactersRegex.test(s);
+const validIdentifier = id => validCharactersRegex.test(nameOf(id));
 const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '_' : `$${hex(ch)}`;
-
-/* async        transpiler should generate async/await syntax                  *
- * position     'head' or 'tail'                                               *
- * locals       Set of local variables and parameters defined at this point    *
- * scope        Name of enclosing function/file                                *
- * dataType     specific type is expected for expression, undefined if unknown */
-
-// TODO: inlining, type-inferred optimizations
-//       context.dataType signals expected, ast.dataType signals actual
-// TODO: bound/settle based on head/tail position
-// TOOD: async/await
-
-const buildEnvAccess = namespace => access(identifier('$env'), identifier(namespace));
-const buildIdentifier = s => identifier(nameOf(s).split('').map(escapeCharacter).join(''));
-const buildIdleSymbol = s => ofDataType('Symbol', invoke(buildEnvAccess('symbolOf'), [literal(nameOf(s))]));
-const buildLookup = (namespace, name) => access(buildEnvAccess(namespace), (validIdentifier(name) ? identifier : literal)(name));
-const buildInDataType = (dataType, context, expr) => ensure(dataType, build(inDataType(dataType, context), expr));
-const buildLogicalForm = (context, expr, lead) =>
-  ensure(
-    'ShenBool',
-    flattenForm(expr, lead)
-      .map(x => ensure('JsBool', build(inHead(inDataType('JsBool', context)), x)))
-      .reduceRight((right, left) => logical(lead === 'and' ? '&&' : '||', left, right)));
+const buildEnvAccess = name => access(identifier('$env'), identifier(name));
+const buildIdentifier = id => identifier(nameOf(id).split('').map(escapeCharacter).join(''));
+const buildIdleSymbol = id => invoke(buildEnvAccess('symbolOf'), [literal(nameOf(id))]);
+const buildLookup = id => access(buildEnvAccess('functions'), (validIdentifier(id) ? identifier : literal)(nameOf(id)));
+const buildAndOr = (operator, context, [_, left, right]) =>
+  cast('ShenBool',
+    logical(operator,
+      cast('JsBool', build(context.now(), left)),
+      cast('JsBool', build(context.now(), right))));
 const buildIf = (context, [_, test, consequent, alternate]) =>
-  test === shenTrue  ? build(context, consequent) :
-  test === shenFalse ? build(context, alternate) :
   conditional(
-    buildInDataType('JsBool', inHead(context), test),
-    build(inTail(context), consequent),
-    build(inTail(context), alternate));
+    cast('JsBool', build(context.now(), test)),
+    build(context, consequent),
+    build(context, alternate));
 const buildCond = (context, [_, ...clauses]) =>
   build(context, clauses.reduceRight(
     (alternate, [test, consequent]) => [symbolOf('if'), test, consequent, alternate],
     [symbolOf('simple-error'), 'no condition was true']));
 const buildLet = (context, [_, id, value, body]) =>
-  id === symbolOf('_') || !isReferenced(id, body) ? buildDo([value, body]) :
   invoke(
-    arrow([buildIdentifier(id)], build(addLocals(context, [asSymbol(id)]), body)),
-    [build(inHead(context), value)]);
-const buildDo = (context, [_, ...exprs]) => sequential(exprs.map(x => build(context, x)));
+    arrow([buildIdentifier(id)], build(context.now().add([asSymbol(id)]), body), context.async),
+    [build(context, value)]);
 const buildTrap = (context, [_, body, handler]) =>
-  invoke(buildEnvAccess('trap'), [arrow([], build(context, body)), build(context, handler)]);
-const buildLambda = (context, paramz, body) =>
+  invoke(buildEnvAccess('trap'), [arrow([], build(context.now(), body)), build(context.now(), handler)]);
+const buildLambda = (context, params, body) =>
   // TODO: group nested lambdas into single 2+ arity function? ex. (lambda X (lambda Y Q)) ==> (lambda (X Y) Q)
-  ofDataType('Function', arrow(paramz.map(buildIdentifier), build(addLocals(context, paramz.map(asSymbol)), body)));
-const buildDefun = (context, [_, id, paramz, body]) =>
+  arrow(params.map(buildIdentifier), build(context.later().add(params.map(asSymbol)), body), context.async);
+const buildDefun = (context, [_, id, params, body]) =>
   sequential([
     assign(
-      buildLookup('functions', nameOf(id)),
-      invoke(buildEnvAccess('func'), [
-        arrow(paramz.map(buildIdentifier), build(butLocals(inTail(context), paramz.map(asSymbol)), body)),
+      buildLookup(id),
+      invoke(buildEnvAccess('fun'), [
+        arrow(params.map(buildIdentifier), build(context.later().set(params.map(asSymbol)), body), context.async),
         literal(nameOf(id))])),
     buildIdleSymbol(id)]);
 const buildApp = (context, [f, ...args]) =>
-  invoke(buildEnvAccess(context.tail ? 'bounce' : context.async ? 'futureApp' : 'settleApp'), [
-    isArray(f)            ? invoke(buildEnvAccess('asFunction'), [build(context, f)]) :
-    context.locals.has(f) ? invoke(buildEnvAccess('asFunction'), [buildIdentifier(f)]) :
-    isSymbol(f)           ? buildLookup('functions', nameOf(f)) :
+  invoke(buildEnvAccess(!context.head ? 'bounce' : context.async ? 'futureApp' : 'settleApp'), [
+    context.has(f) ? cast('Function', buildIdentifier(f)) :
+    isArray(f)            ? cast('Function', build(context.now(), f)) :
+    isSymbol(f)           ? buildLookup(f) :
     raise('not a valid application form'),
-    array(args.map(x => build(context, x)))]);
+    array(args.map(x => build(context.now(), x)))]);
 const build = (context, expr) =>
-  isNumber(expr) ? ofDataType('Number', literal(expr)) :
-  isString(expr) ? ofDataType('String', literal(expr)) :
-  isSymbol(expr) ? (context.locals.has(expr) ? buildIdentifier : buildIdleSymbol)(expr) :
+  expr === null || isNumber(expr) || isString(expr) ? literal(expr) :
+  isSymbol(expr) ? (context.has(expr) ? buildIdentifier : buildIdleSymbol)(expr) :
   isArray(expr) ? (
     expr.length === 0 ? literal(null) :
-    // TODO: type expression can provide dataType information
-    // TODO: inline and simplify primitive operations based on expression dataType
-    isForm(expr, 'and') ? buildLogicalForm(context, expr, 'and') :
-    isForm(expr, 'or')  ? buildLogicalForm(context, expr, 'or') :
-    // TODO: isForm(expr, 'not', 2) ? ensure('ShenBool', unary('!', ensure('JsBool', expr[1]))) :
+    isForm(expr, 'and', 3) ? buildAndOr('&&', context, expr) :
+    isForm(expr, 'or',  3) ? buildAndOr('||', context, expr) :
     isForm(expr, 'if', 4) ? buildIf(context, expr) :
     isForm(expr, 'cond') ? buildCond(context, expr) :
     isForm(expr, 'let', 4) ? buildLet(context, expr) :
-    // TODO: isForm(expr, 'do') ? buildDo(context, expr) :
     isForm(expr, 'trap-error', 3) ? buildTrap(context, expr) :
     isForm(expr, 'lambda', 3) ? buildLambda(context, [expr[1]], expr[2]) :
     isForm(expr, 'freeze', 2) ? buildLambda(context, [], expr[1]) :
     isForm(expr, 'defun', 4) ? buildDefun(context, expr) :
-    // TODO: isForm(expr, 'function', 2) && !context.locals.has(expr[1]) ?
-    //         ensure('Function', buildLookup('functions', nameOf(ensure('ShenBool', expr[1])))) :
+    // TODO: isForm(expr, 'function', 2) && !context.has(expr[1]) ? buildLookup(expr[1]) :
     buildApp(context, expr)
   ) : raise('not a valid form');
 
@@ -304,21 +259,17 @@ exports.kl = (options = {}) => {
     '*home-directory*': options.homeDirectory  || ''
   };
   const functions = {};
+  const context = new Context({ async: options.async, locals: new Set() });
   const env = {
     cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree,
     asJsBool, asShenBool, isShenBool, isShenTrue, isShenFalse,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
     symbolOf, nameOf, show, equal,
-    raise, trap, bounce, settle, future, func, app, settleApp, futureApp,
+    raise, trap, bounce, settle, future, fun, app, settleApp, futureApp,
     symbols, functions,
-    build, evalKl
+    build, evalKl, context
   };
-  const context = Object.freeze({
-    locals: new Set(),
-    head:   true,
-    async:  options.async
-  });
   [
     ['if',              (b, x, y) => asJsBool(b) ? x : y],
     ['and',             (x, y) => asShenBool(asJsBool(x) && asJsBool(y))],
@@ -361,12 +312,6 @@ exports.kl = (options = {}) => {
     ['value',           s => symbols[nameOf(asSymbol(s))]],
     ['type',            (x, _) => x],
     ['eval-kl',         expr => evalKl(context, env, expr)]
-  ].forEach(([id, f]) => functions[id] = func(id, f));
-  // TODO: if primitives are defined as astring ast's,
-  //       we can generate code for them for regular invoke
-  //       and have the ast to do inlines with,
-  //       along with dataType hints and labels
-  //       can also use abstractness of ast to generate
-  //       head/tail and sync/async versions of functions
+  ].forEach(([id, f]) => functions[id] = fun(f, id));
   return env;
 };

@@ -10,24 +10,6 @@ const { generate } = require('astring');
  * Cons         Cons     *
  * Stream       ________ */
 
-const produce = (proceed, render, next, state) => {
-  const array = [];
-  while (proceed(state)) {
-    array.push(render(state));
-    state = next(state);
-  }
-  return array;
-};
-
-const flatMap = [].flatMap ? ((f, xs) => xs.flatMap(f)) : ((f, xs) => [].concat(...xs.map(f)));
-
-const nop = x => x;
-const raise = x => { throw new Error(x); };
-const nameOf = symbol => Symbol.keyFor(symbol);
-const symbolOf = name => Symbol.for(name);
-const shenTrue = symbolOf('true');
-const shenFalse = symbolOf('false');
-
 const Cons = class {
   constructor(head, tail) {
     this.head = head;
@@ -47,7 +29,29 @@ const Trampoline = class {
   }
 };
 
-const isNull     = x => x === null;
+const flatMap = [].flatMap ? ((f, xs) => xs.flatMap(f)) : ((f, xs) => [].concat(...xs.map(f)));
+const produce = (proceed, render, next, state) => {
+  const array = [];
+  while (proceed(state)) {
+    array.push(render(state));
+    state = next(state);
+  }
+  return array;
+};
+
+const raise = x => { throw new Error(x); };
+const trap = (f, g) => {
+  try {
+    return f();
+  } catch (e) {
+    return g(e);
+  }
+};
+
+const nameOf     = Symbol.keyFor;
+const symbolOf   = Symbol.for;
+const shenTrue   = symbolOf('true');
+const shenFalse  = symbolOf('false');
 const isNumber   = x => typeof x === 'number' && isFinite(x);
 const isString   = x => typeof x === 'string';
 const isSymbol   = x => typeof x === 'symbol';
@@ -55,13 +59,35 @@ const isFunction = x => typeof x === 'function';
 const isArray    = x => Array.isArray(x);
 const isError    = x => x instanceof Error;
 const isCons     = x => x instanceof Cons;
+const asNumber   = x => isNumber(x)   ? x : raise('number expected');
+const asString   = x => isString(x)   ? x : raise('string expected');
+const asSymbol   = x => isSymbol(x)   ? x : raise('symbol expected');
+const asFunction = x => isFunction(x) ? x : raise('function expected');
+const asArray    = x => isArray(x)    ? x : raise('array expected');
+const asCons     = x => isCons(x)     ? x : raise('cons expected');
+const asError    = x => isError(x)    ? x : raise('error expected');
+const asIndex    = (i, a) =>
+  !Number.isInteger(i)   ? raise(`index ${i} is not valid`) :
+  i < 0 || i >= a.length ? raise(`index ${i} is not with array bounds of [0, ${a.length})`) :
+  i;
 
-const cons = (h, t) => new Cons(h, t);
-const consFromArray = a => a.reduceRight((t, h) => cons(h, t), null);
-const consToArray = c => produce(isCons, c => c.head, c => c.tail, c);
-const consToArrayTree = c => produce(isCons, c => valueToArrayTree(c.head), c => c.tail, c);
-const valueToArray = x => isCons(x) ? consToArray(x) : x;
+const isShenTrue  = x => x === shenTrue;
+const isShenFalse = x => x === shenFalse;
+const isShenBool  = x => x === shenTrue || x === shenFalse;
+const asShenBool  = x => x ? shenTrue : shenFalse;
+const asJsBool    = x =>
+  x === shenTrue  ? true :
+  x === shenFalse ? false :
+  raise(`value ${x} is not a valid boolean`);
+
+const cons             = (h, t) => new Cons(h, t);
+const consFromArray    = a => a.reduceRight((t, h) => cons(h, t), null);
+const consToArray      = c => produce(isCons, c => c.head, c => c.tail, c);
+const consToArrayTree  = c => produce(isCons, c => valueToArrayTree(c.head), c => c.tail, c);
+const valueToArray     = x => isCons(x) ? consToArray(x) : x;
 const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x;
+
+// TODO: build calling `app` into each function so it can be called naturally
 
 const func = (f, id, arity) => Object.assign(f, {
   arity: arity !== undefined ? arity : f.length,
@@ -99,27 +125,23 @@ const identifier = name => ({ type: 'Identifier', name });
 const wait = argument => ({ type: 'AwaitExpression', argument });
 const spread = argument => ({ type: 'SpreadElement', argument });
 const assign = (left, right, operator = '=') => ({ type: 'AssignmentExpression', left, right, operator });
-const statement = expression => ({ type: 'ExpressionStatement', expression });
 const answer = argument => ({ type: 'ReturnStatement', argument });
-const sequential = (body, statement = false) => statement ? { type: 'BlockStatement', body } : { type: 'SequenceExpression', expressions: body };
-const arrow = (params, body, expression = true, async = false) => ({ type: 'ArrowFunctionExpression', async, expression, params, body });
-const invoke = (callee, arguments, async = false) => (async ? wait : nop)({ type: 'CallExpression', callee, arguments });
-const conditional = (test, consequent, alternate, statement = false) => ({ type: statement ? 'IfStatement' : 'ConditionalExpression', test, consequent, alternate });
+const sequential = expressions => ({ type: 'SequenceExpression', expressions });
+const arrow = (params, body, async = false) => ({ type: 'ArrowFunctionExpression', async, params, body });
+const invoke = (callee, arguments, async = false) => (async ? wait : (x => x))({ type: 'CallExpression', callee, arguments });
+const conditional = (test, consequent, alternate) => ({ type: 'ConditionalExpression', test, consequent, alternate });
+const unary = (operator, argument, prefix = true) => ({ type: 'UnaryExpression', prefix, operator, argument });
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
-const iife = expr => invoke(arrow([], sequential([expr], true)), []);
-const attempt = (block, param, body, statement = false, result = true) => (statement ? nop : iife)({ type: 'TryStatement', block: sequential([(result ? answer : nop)(block)], true), handler: { type: 'CatchClause', param, body: sequential([(result ? answer : nop)(body)], true) } });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
 
 const butLocals = (x, locals) => ({ ...x, locals: new Set(locals) });
 const addLocals = (x, locals) => ({ ...x, locals: new Set([...x.locals, ...locals]) });
 const ofDataType = (dataType, x) => ({ ...x, dataType });
-const ensure = (dataType, expr) => ofDataType(dataType, expr.dataType === dataType ? expr : invoke(buildEnvAccess('as' + dataType), [expr]));
+const ensure = (dataType, expr) =>
+  ofDataType(dataType, expr.dataType === dataType ? expr : invoke(buildEnvAccess('as' + dataType), [expr]));
 
-const inStatement = x => ({ ...x, statement: true, expression: false });
-const inExpression = x => ({ ...x, statement: false, expression: true });
-const inReturn = x => ({ ...x, statement: false, expression: true, return0: true });
-const inHead = x => ({ ...x, head: true, tail: false });
-const inTail = x => ({ ...x, head: false, tail: true });
+const inHead = x => ({ ...x, position: 'head' });
+const inTail = x => ({ ...x, position: 'tail' });
 const inDataType = (dataType, x) => ({ ...x, dataType });
 
 const isForm = (expr, lead, length) =>
@@ -141,21 +163,14 @@ const validCharactersRegex = /^[_A-Za-z][_A-Za-z0-9]*$/;
 const validIdentifier = s => validCharactersRegex.test(s);
 const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '_' : `$${hex(ch)}`;
 
-/* statement    if location in target context can be a statement               *
- * expression   if location in target context must be an expression            *
- * async        transpiler should generate async/await syntax                  *
- * return       location is the last statement which needs to be returned      *
- * ignore       result of computing expression is side-effect only             *
- * assignment   expr is getting assigned to a variable                         *
- * head         if context is in head position                                 *
- * tail         if context is in tail position                                 *
+/* async        transpiler should generate async/await syntax                  *
+ * position     'head' or 'tail'                                               *
  * locals       Set of local variables and parameters defined at this point    *
  * scope        Name of enclosing function/file                                *
  * dataType     specific type is expected for expression, undefined if unknown */
 
 // TODO: inlining, type-inferred optimizations
 //       context.dataType signals expected, ast.dataType signals actual
-// TODO: handle statement contexts, consider child statement contexts to avoid iife's
 // TODO: bound/settle based on head/tail position
 // TOOD: async/await
 
@@ -174,58 +189,50 @@ const buildIf = (context, [_, test, consequent, alternate]) =>
   test === shenTrue  ? build(context, consequent) :
   test === shenFalse ? build(context, alternate) :
   conditional(
-    buildInDataType('JsBool', inHead(inExpression(context)), test),
+    buildInDataType('JsBool', inHead(context), test),
     build(inTail(context), consequent),
-    build(inTail(context), alternate),
-    context.statement);
+    build(inTail(context), alternate));
 const buildCond = (context, [_, ...clauses]) =>
   build(context, clauses.reduceRight(
     (alternate, [test, consequent]) => [symbolOf('if'), test, consequent, alternate],
     [symbolOf('simple-error'), 'no condition was true']));
 const buildLet = (context, [_, id, value, body]) =>
-  // TODO: use const variable declaration as statement context
-  // TODO: just make it a (do ...) if variable doesn't get used
+  id === symbolOf('_') || !isReferenced(id, body) ? buildDo([value, body]) :
   invoke(
     arrow([buildIdentifier(id)], build(addLocals(context, [asSymbol(id)]), body)),
-    [build(inHead(inExpression(context)), value)]);
-// TODO: turn (do ...) into a series of statments with return if needed
-// TODO: if do is assigned to a variable, just make last line an assignment to that variable
+    [build(inHead(context), value)]);
 const buildDo = (context, [_, ...exprs]) => sequential(exprs.map(x => build(context, x)));
 const buildTrap = (context, [_, body, handler]) =>
-  // TODO: simplify code where handler is a lambda
-  attempt(build(context, body), identifier('$error'), invoke(build(inTail(context), handler), [identifier('$error')]));
+  invoke(buildEnvAccess('trap'), [arrow([], build(context, body)), build(context, handler)]);
 const buildLambda = (context, paramz, body) =>
-  // TODO: bodies of lambda and freeze aren't necessarily expressions or statements
-  // TODO: turn lambda into zero-arg function if argument doesn't get used (but still label as having arity 1)
   // TODO: group nested lambdas into single 2+ arity function? ex. (lambda X (lambda Y Q)) ==> (lambda (X Y) Q)
-  arrow(paramz.map(buildIdentifier), build(addLocals(context, paramz.map(asSymbol)), body));
+  ofDataType('Function', arrow(paramz.map(buildIdentifier), build(addLocals(context, paramz.map(asSymbol)), body)));
 const buildDefun = (context, [_, id, paramz, body]) =>
-  // TODO: simplify when defun is at top level (don't return anything)
   sequential([
     assign(
       buildLookup('functions', nameOf(id)),
       invoke(buildEnvAccess('func'), [
-        arrow(
-          paramz.map(buildIdentifier),
-          build(butLocals(inTail(context), paramz.map(asSymbol)), body)),
+        arrow(paramz.map(buildIdentifier), build(butLocals(inTail(context), paramz.map(asSymbol)), body)),
         literal(nameOf(id))])),
     buildIdleSymbol(id)]);
 const buildApp = (context, [f, ...args]) =>
   invoke(buildEnvAccess(context.tail ? 'bounce' : context.async ? 'futureApp' : 'settleApp'), [
-    isArray(f)            ? invoke(buildEnvAccess('asFunction'), [build(inExpression(context), f)]) :
+    isArray(f)            ? invoke(buildEnvAccess('asFunction'), [build(context, f)]) :
     context.locals.has(f) ? invoke(buildEnvAccess('asFunction'), [buildIdentifier(f)]) :
     isSymbol(f)           ? buildLookup('functions', nameOf(f)) :
     raise('not a valid application form'),
-    array(args.map(x => build(inExpression(context), x)))]);
+    array(args.map(x => build(context, x)))]);
 const build = (context, expr) =>
   isNumber(expr) ? ofDataType('Number', literal(expr)) :
   isString(expr) ? ofDataType('String', literal(expr)) :
   isSymbol(expr) ? (context.locals.has(expr) ? buildIdentifier : buildIdleSymbol)(expr) :
   isArray(expr) ? (
     expr.length === 0 ? literal(null) :
+    // TODO: type expression can provide dataType information
+    // TODO: inline and simplify primitive operations based on expression dataType
     isForm(expr, 'and') ? buildLogicalForm(context, expr, 'and') :
     isForm(expr, 'or')  ? buildLogicalForm(context, expr, 'or') :
-    // TODO: inline `not` function
+    // TODO: isForm(expr, 'not', 2) ? ensure('ShenBool', unary('!', ensure('JsBool', expr[1]))) :
     isForm(expr, 'if', 4) ? buildIf(context, expr) :
     isForm(expr, 'cond') ? buildCond(context, expr) :
     isForm(expr, 'let', 4) ? buildLet(context, expr) :
@@ -234,71 +241,28 @@ const build = (context, expr) =>
     isForm(expr, 'lambda', 3) ? buildLambda(context, [expr[1]], expr[2]) :
     isForm(expr, 'freeze', 2) ? buildLambda(context, [], expr[1]) :
     isForm(expr, 'defun', 4) ? buildDefun(context, expr) :
-    // TODO: type expression can provide dataType information
-    // TODO: inline and simplify primitive operations based on expression dataType
-    // TODO: handle special case for the (function F) form where F is a non-var symbol
+    // TODO: isForm(expr, 'function', 2) && !context.locals.has(expr[1]) ?
+    //         ensure('Function', buildLookup('functions', nameOf(ensure('ShenBool', expr[1])))) :
     buildApp(context, expr)
   ) : raise('not a valid form');
 
-const eliminateCond = ([_, ...clauses]) =>
-  clauses.reduceRight(
-    (alternate, [test, consequent]) => [symbolOf('if'), test, consequent, alternate],
-    [symbolOf('simple-error'), 'no clause was true']);
-const eliminateLet = ([_, __, value, body]) => [symbolOf('do'), value, body];
-const eliminate = expr =>
-  isArray(expr) && isForm(expr, 'cond') ? eliminateCond(expr) :
-  isArray(expr) && isForm(expr, 'let', 4) && !isReferenced(expr[1], expr[3]) ? eliminateLet(expr) :
-  expr;
-// TODO: do a first pass in build, removing (cond, let with ignored var)
-//       and labelling syntax nodes as having children that prefer to be in statement form (let, trap-error)
-// TODO: combine nested let's, and's, or's, do's?
-// TODO: instead of converting let with ignored var to do, convert all do's to let's with ignored vars
-//       so there's only 1 representation
-
-// Multi-pass approach:
-// 1. eliminate - remove redundant forms
-// 2. group     - group nested operations
-// 3. annotate  - label forms that are or have childen that are preferred to be built in statement form
-//              - identify duplicate uses of variables
-// 4. build     - render js ast
-
-// Can be done with just 2 passes? Use as few passes as possible
-
 const evalKl = (context, env, expr) =>
-  (Function(
+  Function(
     '$env',
     generate(answer(invoke(
       buildEnvAccess(context.async ? 'future' : 'settle'),
       [build(context, valueToArrayTree(expr))])))
-  )(env));
+  )(env);
 
-const asNumber   = x => isNumber(x)   ? x : raise('number expected');
-const asString   = x => isString(x)   ? x : raise('string expected');
-const asSymbol   = x => isSymbol(x)   ? x : raise('symbol expected');
-const asFunction = x => isFunction(x) ? x : raise('function expected');
-const asArray    = x => isArray(x)    ? x : raise('array expected');
-const asCons     = x => isCons(x)     ? x : raise('cons expected');
-const asError    = x => isError(x)    ? x : raise('error expected');
-const asIndex    = (i, a) =>
-  !Number.isInteger(i)   ? raise(`index ${i} is not valid`) :
-  i < 0 || i >= a.length ? raise(`index ${i} is not with bounds of array length ${a.length}`) :
-  i;
-
-const isShenTrue  = x => x === shenTrue;
-const isShenFalse = x => x === shenFalse;
-const isShenBool  = x => x === shenTrue || x === shenFalse;
-const asShenBool  = x => x ? shenTrue : shenFalse;
-const asJsBool    = x =>
-  x === shenTrue  ? true :
-  x === shenFalse ? false :
-  raise(`value ${x} is not a valid boolean`);
-
-// TODO: kl() ... translated code ... shen() ... shen.repl()
 exports.kl = (options = {}) => {
-  const isInStream  = options.inInStream  || (() => false);
-  const isOutStream = options.inOutStream || (() => false);
-  const asInStream  = x => options.isInStream  && (options.isInStream(x)  ? x : raise('input stream expected'));
-  const asOutStream = x => options.isOutStream && (options.isOutStream(x) ? x : raise('output stream expected'));
+  // TODO: raise or return false when stream not supported?
+  // TODO: have shen-script.*instream-supported*, shen-script.*outstream-supported* flags?
+  const noInStream  = () => raise('input stream not supported');
+  const noOutStream = () => raise('output stream not supported');
+  const isInStream  = options.inInStream  || noInStream;
+  const isOutStream = options.inOutStream || noOutStream;
+  const asInStream  = options.isInStream  ? (x => options.isInStream(x)  ? x : raise('input stream expected'))  : noInStream;
+  const asOutStream = options.isOutStream ? (x => options.isOutStream(x) ? x : raise('output stream expected')) : noOutStream;
   const isStream = x => options.isInStream(x) || options.isOutStream(x);
   const asStream = x => isStream(x) ? x : raise('stream expected');
   const clock = options.clock || (() => new Date().getTime());
@@ -314,7 +278,7 @@ exports.kl = (options = {}) => {
     mode === 'out' ? openWrite(path) :
     raise(`open only accepts symbols in or out, not ${mode}`);
   const show = x =>
-    isNull(x)     ? '[]' :
+    x === null    ? '[]' :
     isString(x)   ? `"${x}"` :
     isSymbol(x)   ? nameOf(x) :
     isCons(x)     ? `[${consToArray(x).map(show).join(' ')}]` :
@@ -346,15 +310,14 @@ exports.kl = (options = {}) => {
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
     symbolOf, nameOf, show, equal,
-    bounce, settle, future, func, app, settleApp, futureApp,
+    raise, trap, bounce, settle, future, func, app, settleApp, futureApp,
     symbols, functions,
     build, evalKl
   };
   const context = Object.freeze({
     locals: new Set(),
-    head: true,
-    expression: true,
-    async: options.async
+    head:   true,
+    async:  options.async
   });
   [
     ['if',              (b, x, y) => asJsBool(b) ? x : y],

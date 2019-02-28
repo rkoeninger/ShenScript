@@ -26,7 +26,7 @@ const Context = class {
   later()     { return new Context({ ...this, head: false }); }
   add(locals) { return new Context({ ...this, locals: new Set([...this.locals, ...locals]) }); }
   set(locals) { return new Context({ ...this, locals: new Set(locals) }); }
-  has(local)  { return this.locals.has(local); }
+  has(local)  { return this.locals && this.locals.has(local); }
 };
 
 const flatMap = [].flatMap ? ((f, xs) => xs.flatMap(f)) : ((f, xs) => [].concat(...xs.map(f)));
@@ -128,7 +128,6 @@ const sequential = expressions => ({ type: 'SequenceExpression', expressions });
 const arrow = (params, body, async = false) => ({ type: 'ArrowFunctionExpression', async, params, body });
 const invoke = (callee, arguments, async = false) => (async ? wait : (x => x))({ type: 'CallExpression', callee, arguments });
 const conditional = (test, consequent, alternate) => ({ type: 'ConditionalExpression', test, consequent, alternate });
-const unary = (operator, argument, prefix = true) => ({ type: 'UnaryExpression', prefix, operator, argument });
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
 const ofEnv = name => access(identifier('$env'), identifier(name));
@@ -145,7 +144,6 @@ const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '
 const escapeIdentifier = id => identifier(nameOf(id).split('').map(escapeCharacter).join(''));
 const idle = id => invoke(ofEnv('symbolOf'), [literal(nameOf(id))]);
 const ofEnvFunctions = id => access(ofEnv('functions'), (validIdentifier(id) ? identifier : literal)(nameOf(id)));
-
 const buildAndOr = (operator, context, [_, left, right]) =>
   cast('ShenBool',
     logical(operator,
@@ -166,21 +164,15 @@ const buildLet = (context, [_, id, value, body]) =>
     [build(context, value)]);
 const buildTrap = (context, [_, body, handler]) =>
   invoke(ofEnv('trap'), [arrow([], build(context.now(), body)), build(context.now(), handler)]);
-const buildLambda = (context, params, body) =>
+const buildLambda = (context, name, params, body) =>
   // TODO: group nested lambdas into single 2+ arity function? ex. (lambda X (lambda Y Q)) ==> (lambda (X Y) Q)
   invoke(ofEnv('fun'), [
-    arrow(params.map(escapeIdentifier), build(context.later().add(params.map(asSymbol)), body), context.async),
-    literal('lambda')]);
+    arrow(params.map(escapeIdentifier), build(context.later().set(params.map(asSymbol)), body), context.async),
+    literal(name)]);
 const buildDefun = (context, [_, id, params, body]) =>
-  sequential([
-    assign(
-      ofEnvFunctions(id),
-      invoke(ofEnv('fun'), [
-        arrow(params.map(escapeIdentifier), build(context.later().set(params.map(asSymbol)), body), context.async),
-        literal(nameOf(id))])),
-    idle(id)]);
+  sequential([assign(ofEnvFunctions(id), buildLambda(context, nameOf(id), params, body)), idle(id)]);
 const buildApp = (context, [f, ...args]) =>
-  invoke(ofEnv(!context.head ? 'bounce' : context.async ? 'futureApp' : 'settleApp'), [
+  invoke(ofEnv(context.head ? (context.async ? 'futureApp' : 'settleApp') : 'bounce'), [
     context.has(f) ? cast('Function', escapeIdentifier(f)) :
     isArray(f)     ? cast('Function', build(context.now(), f)) :
     isSymbol(f)    ? ofEnvFunctions(f) :
@@ -197,8 +189,8 @@ const build = (context, expr) =>
     isForm(expr, 'cond')          ? buildCond(context, expr) :
     isForm(expr, 'let', 4)        ? buildLet(context, expr) :
     isForm(expr, 'trap-error', 3) ? buildTrap(context, expr) :
-    isForm(expr, 'lambda', 3)     ? buildLambda(context, [expr[1]], expr[2]) :
-    isForm(expr, 'freeze', 2)     ? buildLambda(context, [], expr[1]) :
+    isForm(expr, 'lambda', 3)     ? buildLambda(context, 'lambda', [expr[1]], expr[2]) :
+    isForm(expr, 'freeze', 2)     ? buildLambda(context, 'freeze', [], expr[1]) :
     isForm(expr, 'defun', 4)      ? buildDefun(context, expr) :
     // TODO: isForm(expr, 'function', 2) && !context.has(expr[1]) ? ofEnvFunctions(expr[1]) :
     buildApp(context, expr)
@@ -262,7 +254,7 @@ exports.kl = (options = {}) => {
     '*home-directory*': options.homeDirectory  || ''
   };
   const functions = {};
-  const context = new Context({ async: options.async, locals: new Set() });
+  const context = new Context({ async: options.async });
   const env = {
     cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree,
     asJsBool, asShenBool, isShenBool, isShenTrue, isShenFalse,

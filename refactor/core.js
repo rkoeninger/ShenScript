@@ -131,7 +131,8 @@ const conditional = (test, consequent, alternate) => ({ type: 'ConditionalExpres
 const unary = (operator, argument, prefix = true) => ({ type: 'UnaryExpression', prefix, operator, argument });
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
-const cast = (dataType, value) => invoke(buildEnvAccess('as' + dataType), [value]);
+const ofEnv = name => access(identifier('$env'), identifier(name));
+const cast = (dataType, value) => invoke(ofEnv('as' + dataType), [value]);
 const isForm = (expr, lead, length) =>
   expr[0] === symbolOf(lead)
   && (!length || expr.length === length || raise(`${lead} must have ${length - 1} argument forms`));
@@ -141,10 +142,10 @@ const validCharacterRegex = /^[_A-Za-z0-9]$/;
 const validCharactersRegex = /^[_A-Za-z][_A-Za-z0-9]*$/;
 const validIdentifier = id => validCharactersRegex.test(nameOf(id));
 const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '_' : `$${hex(ch)}`;
-const buildEnvAccess = name => access(identifier('$env'), identifier(name));
-const buildIdentifier = id => identifier(nameOf(id).split('').map(escapeCharacter).join(''));
-const buildIdleSymbol = id => invoke(buildEnvAccess('symbolOf'), [literal(nameOf(id))]);
-const buildLookup = id => access(buildEnvAccess('functions'), (validIdentifier(id) ? identifier : literal)(nameOf(id)));
+const escapeIdentifier = id => identifier(nameOf(id).split('').map(escapeCharacter).join(''));
+const idle = id => invoke(ofEnv('symbolOf'), [literal(nameOf(id))]);
+const ofEnvFunctions = id => access(ofEnv('functions'), (validIdentifier(id) ? identifier : literal)(nameOf(id)));
+
 const buildAndOr = (operator, context, [_, left, right]) =>
   cast('ShenBool',
     logical(operator,
@@ -161,43 +162,45 @@ const buildCond = (context, [_, ...clauses]) =>
     [symbolOf('simple-error'), 'no condition was true']));
 const buildLet = (context, [_, id, value, body]) =>
   invoke(
-    arrow([buildIdentifier(id)], build(context.now().add([asSymbol(id)]), body), context.async),
+    arrow([escapeIdentifier(id)], build(context.now().add([asSymbol(id)]), body), context.async),
     [build(context, value)]);
 const buildTrap = (context, [_, body, handler]) =>
-  invoke(buildEnvAccess('trap'), [arrow([], build(context.now(), body)), build(context.now(), handler)]);
+  invoke(ofEnv('trap'), [arrow([], build(context.now(), body)), build(context.now(), handler)]);
 const buildLambda = (context, params, body) =>
   // TODO: group nested lambdas into single 2+ arity function? ex. (lambda X (lambda Y Q)) ==> (lambda (X Y) Q)
-  arrow(params.map(buildIdentifier), build(context.later().add(params.map(asSymbol)), body), context.async);
+  invoke(ofEnv('fun'), [
+    arrow(params.map(escapeIdentifier), build(context.later().add(params.map(asSymbol)), body), context.async),
+    literal('lambda')]);
 const buildDefun = (context, [_, id, params, body]) =>
   sequential([
     assign(
-      buildLookup(id),
-      invoke(buildEnvAccess('fun'), [
-        arrow(params.map(buildIdentifier), build(context.later().set(params.map(asSymbol)), body), context.async),
+      ofEnvFunctions(id),
+      invoke(ofEnv('fun'), [
+        arrow(params.map(escapeIdentifier), build(context.later().set(params.map(asSymbol)), body), context.async),
         literal(nameOf(id))])),
-    buildIdleSymbol(id)]);
+    idle(id)]);
 const buildApp = (context, [f, ...args]) =>
-  invoke(buildEnvAccess(!context.head ? 'bounce' : context.async ? 'futureApp' : 'settleApp'), [
-    context.has(f) ? cast('Function', buildIdentifier(f)) :
-    isArray(f)            ? cast('Function', build(context.now(), f)) :
-    isSymbol(f)           ? buildLookup(f) :
+  invoke(ofEnv(!context.head ? 'bounce' : context.async ? 'futureApp' : 'settleApp'), [
+    context.has(f) ? cast('Function', escapeIdentifier(f)) :
+    isArray(f)     ? cast('Function', build(context.now(), f)) :
+    isSymbol(f)    ? ofEnvFunctions(f) :
     raise('not a valid application form'),
     array(args.map(x => build(context.now(), x)))]);
 const build = (context, expr) =>
   expr === null || isNumber(expr) || isString(expr) ? literal(expr) :
-  isSymbol(expr) ? (context.has(expr) ? buildIdentifier : buildIdleSymbol)(expr) :
+  isSymbol(expr) ? (context.has(expr) ? escapeIdentifier : idle)(expr) :
   isArray(expr) ? (
     expr.length === 0 ? literal(null) :
-    isForm(expr, 'and', 3) ? buildAndOr('&&', context, expr) :
-    isForm(expr, 'or',  3) ? buildAndOr('||', context, expr) :
-    isForm(expr, 'if', 4) ? buildIf(context, expr) :
-    isForm(expr, 'cond') ? buildCond(context, expr) :
-    isForm(expr, 'let', 4) ? buildLet(context, expr) :
+    isForm(expr, 'and', 3)        ? buildAndOr('&&', context, expr) :
+    isForm(expr, 'or',  3)        ? buildAndOr('||', context, expr) :
+    isForm(expr, 'if', 4)         ? buildIf(context, expr) :
+    isForm(expr, 'cond')          ? buildCond(context, expr) :
+    isForm(expr, 'let', 4)        ? buildLet(context, expr) :
     isForm(expr, 'trap-error', 3) ? buildTrap(context, expr) :
-    isForm(expr, 'lambda', 3) ? buildLambda(context, [expr[1]], expr[2]) :
-    isForm(expr, 'freeze', 2) ? buildLambda(context, [], expr[1]) :
-    isForm(expr, 'defun', 4) ? buildDefun(context, expr) :
-    // TODO: isForm(expr, 'function', 2) && !context.has(expr[1]) ? buildLookup(expr[1]) :
+    isForm(expr, 'lambda', 3)     ? buildLambda(context, [expr[1]], expr[2]) :
+    isForm(expr, 'freeze', 2)     ? buildLambda(context, [], expr[1]) :
+    isForm(expr, 'defun', 4)      ? buildDefun(context, expr) :
+    // TODO: isForm(expr, 'function', 2) && !context.has(expr[1]) ? ofEnvFunctions(expr[1]) :
     buildApp(context, expr)
   ) : raise('not a valid form');
 
@@ -205,7 +208,7 @@ const evalKl = (context, env, expr) =>
   Function(
     '$env',
     generate(answer(invoke(
-      buildEnvAccess(context.async ? 'future' : 'settle'),
+      ofEnv(context.async ? 'future' : 'settle'),
       [build(context, valueToArrayTree(expr))])))
   )(env);
 
@@ -237,7 +240,7 @@ exports.kl = (options = {}) => {
     isString(x)   ? `"${x}"` :
     isSymbol(x)   ? nameOf(x) :
     isCons(x)     ? `[${consToArray(x).map(show).join(' ')}]` :
-    isFunction(x) ? `<Function ${x.name}>` :
+    isFunction(x) ? `<Function ${x.id}>` :
     isArray(x)    ? `<Vector ${x.length}>` :
     isError(x)    ? `<Error "${x.message}">` :
     isStream(x)   ? `<Stream ${x.name}>` :

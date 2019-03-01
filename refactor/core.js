@@ -71,9 +71,6 @@ const asIndex    = (i, a) =>
   i < 0 || i >= a.length ? raise(`index ${i} is not with array bounds of [0, ${a.length})`) :
   i;
 
-const isShenTrue  = x => x === shenTrue;
-const isShenFalse = x => x === shenFalse;
-const isShenBool  = x => x === shenTrue || x === shenFalse;
 const asShenBool  = x => x ? shenTrue : shenFalse;
 const asJsBool    = x =>
   x === shenTrue  ? true :
@@ -182,7 +179,7 @@ const build = (context, expr) =>
   expr === null || isNumber(expr) || isString(expr) ? literal(expr) :
   isSymbol(expr) ? (context.has(expr) ? escapeIdentifier : idle)(expr) :
   isArray(expr) ? (
-    expr.length === 0 ? literal(null) :
+    expr.length === 0             ? literal(null) :
     isForm(expr, 'and', 3)        ? buildAndOr('&&', context, expr) :
     isForm(expr, 'or',  3)        ? buildAndOr('||', context, expr) :
     isForm(expr, 'if', 4)         ? buildIf(context, expr) :
@@ -239,7 +236,8 @@ exports.kl = (options = {}) => {
     `${x}`;
   const equal = (x, y) =>
     x === y
-    || isCons(x) && isCons(y) && equal(x.head, y.head) && equal(x.tail, y.tail)
+    || isNaN(x)   && isNaN(y)
+    || isCons(x)  && isCons(y)  && equal(x.head, y.head) && equal(x.tail, y.tail)
     || isArray(x) && isArray(y) && x.length === y.length && x.every((v, i) => equal(v, y[i]));
   const symbols = {
     '*language*':       'JavaScript',
@@ -256,14 +254,11 @@ exports.kl = (options = {}) => {
   const functions = {};
   const context = new Context({ async: options.async });
   const env = {
-    cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree,
-    asJsBool, asShenBool, isShenBool, isShenTrue, isShenFalse,
+    cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree, asJsBool, asShenBool,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
-    symbolOf, nameOf, show, equal,
-    raise, trap, bounce, settle, future, fun, app, settleApp, futureApp,
-    symbols, functions,
-    build, evalKl, context
+    symbolOf, nameOf, show, equal, raise, trap, bounce, settle, future, fun, app, settleApp, futureApp,
+    symbols, functions, build, evalKl, context
   };
   [
     ['if',              (b, x, y) => asJsBool(b) ? x : y],

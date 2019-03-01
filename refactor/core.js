@@ -48,6 +48,8 @@ const trap = (f, g) => {
   }
 };
 
+// TODO: what about async trap?
+
 const nameOf     = Symbol.keyFor;
 const symbolOf   = Symbol.for;
 const shenTrue   = symbolOf('true');
@@ -157,8 +159,8 @@ const buildCond = (context, [_, ...clauses]) =>
     [symbolOf('simple-error'), 'no condition was true']));
 const buildLet = (context, [_, id, value, body]) =>
   invoke(
-    arrow([escapeIdentifier(id)], build(context.now().add([asSymbol(id)]), body), context.async),
-    [build(context, value)]);
+    arrow([escapeIdentifier(id)], build(context.add([asSymbol(id)]), body), context.async),
+    [build(context.now(), value)]);
 const buildTrap = (context, [_, body, handler]) =>
   invoke(ofEnv('trap'), [arrow([], build(context.now(), body)), build(context.now(), handler)]);
 const buildLambda = (context, name, params, body) =>

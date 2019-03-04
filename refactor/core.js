@@ -92,7 +92,7 @@ const fun = (f, id, arity) => Object.assign(f, { id: f.name, arity: f.length }, 
 const app = (f, args) =>
   f.arity === undefined || f.arity === args.length ? f(...args) :
   f.arity < args.length ? app(f(...args.slice(0, f.arity)), args.slice(f.arity)) :
-  fun((...more) => app(f, [...args, ...more]), f.id, args.length - f.arity);
+  fun((...more) => app(f, [...args, ...more]), f.id, f.arity - args.length);
 
 const bounce = (f, args) => new Trampoline(f, args);
 const settle = x => {

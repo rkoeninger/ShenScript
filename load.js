@@ -9,16 +9,18 @@ const debris = [];
 
 const load = expr => {
   try {
-    console.log(env.show(expr[0]) + ' ' + env.show(expr[1]));
-    // if (expr[0] !== env.symbolOf('declare')) {
-      env.evalKl(env.context, env, expr);
-    // }
+    env.evalKl(env.context, env, expr);
+    if (expr[1] === env.symbolOf('shen.walk')) {
+      console.log(expr);
+      console.log(env.build(env.context, expr));
+      console.log(generate(env.build(env.context, expr)));
+    }
   } catch (e) {
     // console.log('--------------------------------------------------------------------------------');
     // const ast = env.build(env.context, expr);
     // console.log(ast);
     // console.log(generate(ast));
-    console.log(e);
+    // console.log(e);
   }
 };
 

@@ -62,7 +62,7 @@ const isCons     = x => x instanceof Cons;
 const asNumber   = x => isNumber(x)   ? x : raise('number expected');
 const asString   = x => isString(x)   ? x : raise('string expected');
 const asSymbol   = x => isSymbol(x)   ? x : raise('symbol expected');
-const asFunction = x => isFunction(x) ? x : raise('function expected');
+const asFunction = x => isFunction(x) ? x : raise('function expected, not: ' + (isSymbol(x) ? nameOf(x) : x));
 const asArray    = x => isArray(x)    ? x : raise('array expected');
 const asCons     = x => isCons(x)     ? x : raise('cons expected');
 const asError    = x => isError(x)    ? x : raise('error expected');
@@ -94,14 +94,14 @@ const fun = (f, id = f.name, arity = f.length) =>
 
 const bounce = (f, args) => new Trampoline(f, args);
 const settle = (f, args) => {
-  let x = f(...args);
+  let x = isFunction(f) ? f(...args) : f;
   while (x instanceof Trampoline) {
     x = x.run();
   }
   return x;
 };
 const future = async (f, args) => {
-  let x = f(...args);
+  let x = isFunction(f) ? f(...args) : f;
   while (true) {
     const y = await x;
     if (y instanceof Trampoline) {
@@ -235,7 +235,7 @@ exports.kl = (options = {}) => {
     `${x}`;
   const equal = (x, y) =>
     x === y
-    || isNaN(x)   && isNaN(y)
+    // || isNaN(x)   && isNaN(y)
     || isCons(x)  && isCons(y)  && equal(x.head, y.head) && equal(x.tail, y.tail)
     || isArray(x) && isArray(y) && x.length === y.length && x.every((v, i) => equal(v, y[i]));
   const symbols = {

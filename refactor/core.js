@@ -10,11 +10,9 @@ const Cons = class {
 
 const Trampoline = class {
   constructor(f, args) {
-    this.f = f;
-    this.args = args;
+    this.run = () => f(...args);
     Object.freeze(this);
   }
-  run() { return app(this.f, this.args || []); }
 };
 
 const Context = class {
@@ -86,22 +84,26 @@ const consToArrayTree  = c => produce(isCons, c => valueToArrayTree(c.head), c =
 const valueToArray     = x => isCons(x) ? consToArray(x) : x;
 const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x;
 
-// TODO: build calling `app` into each function so it can be called naturally
-
-const fun = (f, id, arity) => Object.assign(f, { id: f.name, arity: f.length }, { id, arity });
-const app = (f, args) =>
-  f.arity === undefined || f.arity === args.length ? f(...args) :
-  f.arity < args.length ? app(f(...args.slice(0, f.arity)), args.slice(f.arity)) :
-  fun((...more) => app(f, [...args, ...more]), f.id, args.length - f.arity);
+const fun = (f, id = f.name, arity = f.length) => {
+  const g = (...args) =>
+    args.length === arity ? f(...args) :
+    args.length > arity ? f(...args.slice(0, arity))(args.slice(f.arity)) :
+    fun((...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length);
+  g.id = id;
+  g.arity = arity;
+  return g;
+};
 
 const bounce = (f, args) => new Trampoline(f, args);
-const settle = x => {
+const settle = (f, args) => {
+  let x = f(...args);
   while (x instanceof Trampoline) {
     x = x.run();
   }
   return x;
 };
-const future = async x => {
+const future = async (f, args) => {
+  let x = f(...args);
   while (true) {
     const y = await x;
     if (y instanceof Trampoline) {
@@ -111,8 +113,6 @@ const future = async x => {
     }
   }
 };
-const settleApp = (f, args) => settle(app(f, args));
-const futureApp = (f, args) => future(app(f, args));
 
 // TOOD: build async/await
 
@@ -132,8 +132,7 @@ const access = (object, property) => ({ type: 'MemberExpression', computed: prop
 const ofEnv = name => access(identifier('$env'), identifier(name));
 const cast = (dataType, value) => invoke(ofEnv('as' + dataType), [value]);
 const isForm = (expr, lead, length) =>
-  expr[0] === symbolOf(lead)
-  && (!length || expr.length === length || raise(`${lead} must have ${length - 1} argument forms`));
+  expr[0] === symbolOf(lead) && (!length || expr.length === length || raise(`${lead} must have ${length - 1} argument forms`));
 
 const hex = ch => ('0' + ch.charCodeAt(0).toString(16)).slice(-2);
 const validCharacterRegex = /^[_A-Za-z0-9]$/;
@@ -171,7 +170,7 @@ const buildLambda = (context, name, params, body) =>
 const buildDefun = (context, [_, id, params, body]) =>
   sequential([assign(ofEnvFunctions(id), buildLambda(context, nameOf(id), params, body)), idle(id)]);
 const buildApp = (context, [f, ...args]) =>
-  invoke(ofEnv(context.head ? (context.async ? 'futureApp' : 'settleApp') : 'bounce'), [
+  invoke(ofEnv(context.head ? (context.async ? 'future' : 'settle') : 'bounce'), [
     context.has(f) ? cast('Function', escapeIdentifier(f)) :
     isArray(f)     ? cast('Function', build(context.now(), f)) :
     isSymbol(f)    ? ofEnvFunctions(f) :
@@ -259,8 +258,7 @@ exports.kl = (options = {}) => {
     cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree, asJsBool, asShenBool,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
-    symbolOf, nameOf, show, equal, raise, trap, bounce, settle, future, fun, app, settleApp, futureApp,
-    symbols, functions, build, evalKl, context
+    symbolOf, nameOf, show, equal, raise, trap, fun, bounce, settle, future, symbols, functions, build, context, evalKl
   };
   [
     ['if',              (b, x, y) => asJsBool(b) ? x : y],

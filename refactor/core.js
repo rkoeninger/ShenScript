@@ -84,15 +84,13 @@ const consToArrayTree  = c => produce(isCons, c => valueToArrayTree(c.head), c =
 const valueToArray     = x => isCons(x) ? consToArray(x) : x;
 const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x;
 
-const fun = (f, id = f.name, arity = f.length) => {
-  const g = (...args) =>
-    args.length === arity ? f(...args) :
-    args.length > arity ? f(...args.slice(0, arity))(args.slice(f.arity)) :
-    fun((...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length);
-  g.id = id;
-  g.arity = arity;
-  return g;
-};
+const fun = (f, id = f.name, arity = f.length) =>
+  Object.assign(
+    (...args) =>
+      args.length === arity ? f(...args) :
+      args.length > arity ? f(...args.slice(0, arity))(args.slice(f.arity)) :
+      fun((...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length),
+    { id, arity });
 
 const bounce = (f, args) => new Trampoline(f, args);
 const settle = (f, args) => {

@@ -1,12 +1,10 @@
-const fun = (f, id = f.name, arity = f.length) => {
-  const g = (...args) =>
-    args.length === arity ? f(...args) :
-    args.length > arity ? f(...args.slice(0, arity))(args.slice(f.arity)) :
-    fun((...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length);
-  g.id = id;
-  g.arity = arity;
-  return g;
-};
+const fun = (f, id = f.name, arity = f.length) =>
+  Object.assign(
+    (...args) =>
+      args.length === arity ? f(...args) :
+      args.length > arity ? f(...args.slice(0, arity))(args.slice(f.arity)) :
+      fun((...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length),
+    { id, arity });
 
 const plus = fun((x, y) => x + y, 'plus', 2);
 const plus1 = plus(1);

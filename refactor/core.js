@@ -1,5 +1,8 @@
 const { generate } = require('astring');
 
+// TODO: alternate cons representation as (array, offset, length)
+//       to optimize literal cons chains?
+
 const Cons = class {
   constructor(head, tail) {
     this.head = head;

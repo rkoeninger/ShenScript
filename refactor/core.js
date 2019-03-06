@@ -201,15 +201,12 @@ const evalKl = (context, env, expr) =>
   )(env);
 
 exports.kl = (options = {}) => {
-  // TODO: raise or return false when stream not supported?
   // TODO: have shen-script.*instream-supported*, shen-script.*outstream-supported* flags?
-  const noInStream  = () => raise('input stream not supported');
-  const noOutStream = () => raise('output stream not supported');
-  const isInStream  = options.inInStream  || noInStream;
-  const isOutStream = options.inOutStream || noOutStream;
-  const asInStream  = options.isInStream  ? (x => options.isInStream(x)  ? x : raise('input stream expected'))  : noInStream;
-  const asOutStream = options.isOutStream ? (x => options.isOutStream(x) ? x : raise('output stream expected')) : noOutStream;
-  const isStream = x => options.isInStream(x) || options.isOutStream(x);
+  const isInStream  = options.isInStream  || (() => false);
+  const isOutStream = options.isOutStream || (() => false);
+  const asInStream  = x => isInStream(x)  ? x : raise('input stream expected');
+  const asOutStream = x => isOutStream(x) ? x : raise('output stream expected');
+  const isStream = x => isInStream(x) || isOutStream(x);
   const asStream = x => isStream(x) ? x : raise('stream expected');
   const clock = options.clock || (() => new Date().getTime());
   const startTime = clock();

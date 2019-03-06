@@ -94,14 +94,14 @@ const fun = (f, id = f.name, arity = f.length) =>
 
 const bounce = (f, args) => new Trampoline(f, args);
 const settle = (f, args) => {
-  let x = isFunction(f) ? f(...args) : f;
+  let x = isFunction(f) ? f(...(args || [])) : f;
   while (x instanceof Trampoline) {
     x = x.run();
   }
   return x;
 };
 const future = async (f, args) => {
-  let x = isFunction(f) ? f(...args) : f;
+  let x = isFunction(f) ? f(...(args || [])) : f;
   while (true) {
     const y = await x;
     if (y instanceof Trampoline) {

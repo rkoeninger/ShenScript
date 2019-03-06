@@ -22,8 +22,8 @@ const Context = class {
   }
   now()       { return new Context({ ...this, head: true }); }
   later()     { return new Context({ ...this, head: false }); }
+  clear()     { return new Context({ ...this, locals: new Set([]) }); }
   add(locals) { return new Context({ ...this, locals: new Set([...this.locals, ...locals]) }); }
-  set(locals) { return new Context({ ...this, locals: new Set(locals) }); }
   has(local)  { return this.locals && this.locals.has(local); }
 };
 
@@ -163,10 +163,10 @@ const buildTrap = (context, [_, body, handler]) =>
 const buildLambda = (context, name, params, body) =>
   // TODO: group nested lambdas into single 2+ arity function? ex. (lambda X (lambda Y Q)) ==> (lambda (X Y) Q)
   invoke(ofEnv('fun'), [
-    arrow(params.map(escapeIdentifier), build(context.later().set(params.map(asSymbol)), body), context.async),
+    arrow(params.map(escapeIdentifier), build(context.later().add(params.map(asSymbol)), body), context.async),
     literal(name)]);
 const buildDefun = (context, [_, id, params, body]) =>
-  sequential([assign(ofEnvFunctions(id), buildLambda(context, nameOf(id), params, body)), idle(id)]);
+  sequential([assign(ofEnvFunctions(id), buildLambda(context.clear(), nameOf(id), params, body)), idle(id)]);
 const buildApp = (context, [f, ...args]) =>
   invoke(ofEnv(context.head ? (context.async ? 'future' : 'settle') : 'bounce'), [
     context.has(f) ? cast('Function', escapeIdentifier(f)) :

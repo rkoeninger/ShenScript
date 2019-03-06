@@ -3,7 +3,6 @@ const { generate } = require('astring');
 const { kl } = require('./refactor/core.js');
 const { parse } = require('./parser.js');
 const env = kl();
-
 const load = expr => env.trap(() => env.evalKl(env.context, env, expr), x => console.log(x));
 
 const files = [
@@ -13,3 +12,5 @@ const files = [
 ];
 
 files.forEach(file => parse(fs.readFileSync(`./kernel/klambda/${file}.kl`, 'utf-8')).forEach(load));
+
+module.exports = env;

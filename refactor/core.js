@@ -26,7 +26,7 @@ const Context = class {
   now()       { return new Context({ ...this, head: true }); }
   later()     { return new Context({ ...this, head: false }); }
   clear()     { return new Context({ ...this, locals: new Set() }); }
-  add(locals) { return new Context({ ...this, locals: new Set(this.locals ? [...this.locals, ...locals] : locals) }); }
+  add(locals) { return new Context({ ...this, locals: new Set([...(this.locals || []), ...locals]) }); }
   has(local)  { return this.locals && this.locals.has(local); }
 };
 

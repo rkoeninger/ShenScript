@@ -3,7 +3,13 @@ const { generate } = require('astring');
 const { kl } = require('./refactor/core.js');
 const { parse } = require('./parser.js');
 const env = kl();
-const load = expr => env.trap(() => env.evalKl(env.context, env, expr), x => console.log(x));
+const load = expr =>
+  env.trap(
+    () => env.evalKl(env.context, env, expr),
+    x => {
+      console.log(expr[0] === env.symbolOf('defun') || expr[0] === env.symbolOf('declare') ? expr[0] + ' ' + expr[1] : expr);
+      console.log(x);
+    });
 
 const files = [
   'toplevel', 'core',   'sys',          'dict',  'sequent',

@@ -146,6 +146,7 @@ const buildAndOr = (operator, context, [_, left, right]) =>
       cast('JsBool', build(context.now(), left)),
       cast('JsBool', build(context.now(), right))));
 const buildIf = (context, [_, test, consequent, alternate]) =>
+  test === shenTrue ? build(context, consequent) :
   conditional(
     cast('JsBool', build(context.now(), test)),
     build(context, consequent),

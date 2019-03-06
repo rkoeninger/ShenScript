@@ -128,10 +128,12 @@ const conditional = (test, consequent, alternate) => ({ type: 'ConditionalExpres
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
 const ofEnv = name => access(identifier('$env'), identifier(name));
-const cast = (dataType, value) => invoke(ofEnv('as' + dataType), [value]);
+const cast = (dataType, value) =>
+  dataType === 'JsBool' && value === shenTrue
+    ? literal(true)
+    : invoke(ofEnv('as' + dataType), [value]);
 const isForm = (expr, lead, length) =>
   expr[0] === symbolOf(lead) && (!length || expr.length === length || raise(`${lead} must have ${length - 1} argument forms`));
-
 const hex = ch => ('0' + ch.charCodeAt(0).toString(16)).slice(-2);
 const validCharacterRegex = /^[_A-Za-z0-9]$/;
 const validCharactersRegex = /^[_A-Za-z][_A-Za-z0-9]*$/;
@@ -146,7 +148,6 @@ const buildAndOr = (operator, context, [_, left, right]) =>
       cast('JsBool', build(context.now(), left)),
       cast('JsBool', build(context.now(), right))));
 const buildIf = (context, [_, test, consequent, alternate]) =>
-  test === shenTrue ? build(context, consequent) :
   conditional(
     cast('JsBool', build(context.now(), test)),
     build(context, consequent),

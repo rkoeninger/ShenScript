@@ -1,7 +1,7 @@
 const fs = require('fs');
 const { generate } = require('astring');
-const { kl } = require('./refactor/core.js');
-const { parse } = require('./parser.js');
+const { kl } = require('./refactor/core');
+const { parse } = require('./parser');
 const env = kl();
 
 const files = [

@@ -6,22 +6,22 @@ const env = kl();
 const load = expr =>
   env.trap(
     () => {
-      if (Array.isArray(expr) && expr[0] === env.symbolOf('shen.initialise_arity_table')) {
-        // TODO: stack overflow caused just by building cons chain
-        console.log('intercepting shen.initialise_arity_table');
-        const aritySymbol = env.symbolOf('arity');
-        let x = expr[1];
-        while (Array.isArray(x) && x.length > 0) {
-          env.settle(env.functions.put(x[1], aritySymbol, x[2][1]));
-          x = x[2][2];
-        }
-      } else {
+      // if (Array.isArray(expr) && expr[0] === env.symbolOf('shen.initialise_arity_table')) {
+      //   // TODO: stack overflow caused just by building cons chain
+      //   console.log('intercepting shen.initialise_arity_table');
+      //   const aritySymbol = env.symbolOf('arity');
+      //   let x = expr[1];
+      //   while (Array.isArray(x) && x.length > 0) {
+      //     env.settle(env.functions.put(x[1], aritySymbol, x[2][1]));
+      //     x = x[2][2];
+      //   }
+      // } else {
         env.evalKl(env.context, env, expr);
-      }
+      // }
     },
     e => {
-      console.log(expr);
-      console.log(e);
+      //console.log(expr);
+      console.log(e.message);
     });
 
 const files = [

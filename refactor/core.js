@@ -140,8 +140,7 @@ const cast = (dataType, value) =>
   dataType === 'JsBool' && value === shenTrue
     ? literal(true)
     : invoke(ofEnv('as' + dataType), [value]);
-const isForm = (expr, lead, length) =>
-  expr[0] === symbolOf(lead) && (!length || expr.length === length || raise(`${lead} must have ${length - 1} argument forms`));
+const isForm = (expr, lead, length) => expr[0] === symbolOf(lead) && (!length || expr.length === length);
 const isFunctionForm = (context, expr) => expr.length === 2 && expr[0] === symbolOf('function') && context.has(expr[1]);
 const hex = ch => ('0' + ch.charCodeAt(0).toString(16)).slice(-2);
 const validCharacterRegex = /^[_A-Za-z0-9]$/;
@@ -151,6 +150,10 @@ const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '
 const escapeIdentifier = id => identifier(nameOf(id).split('').map(escapeCharacter).join(''));
 const idle = id => invoke(ofEnv('symbolOf'), [literal(nameOf(id))]);
 const ofEnvFunctions = id => access(ofEnv('functions'), (validIdentifier(id) ? identifier : literal)(nameOf(id)));
+const buildCons = (context, expr) =>
+  invoke(
+    ofEnv('consFromArray'),
+    [array(produce(x => isForm(x, 'cons', 3), x => build(context.now(), x[1]), x => x[2], expr))]);
 const buildAndOr = (operator, context, [_, left, right]) =>
   cast('ShenBool',
     logical(operator,
@@ -192,6 +195,7 @@ const build = (context, expr) =>
   isSymbol(expr) ? (context.has(expr) ? escapeIdentifier : idle)(expr) :
   isArray(expr) ? (
     expr.length === 0             ? literal(null) :
+    isForm(expr, 'cons', 3)       ? buildCons(context, expr) : // FIXME: somehow causing 'input stream expected' in declare
     isForm(expr, 'and', 3)        ? buildAndOr('&&', context, expr) :
     isForm(expr, 'or',  3)        ? buildAndOr('||', context, expr) :
     isForm(expr, 'if', 4)         ? buildIf(context, expr) :

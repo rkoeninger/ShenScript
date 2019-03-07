@@ -56,8 +56,6 @@ const trapAsync = async (f, g) => {
   }
 };
 
-// TODO: what about async trap?
-
 const nameOf     = Symbol.keyFor;
 const symbolOf   = Symbol.for;
 const shenTrue   = symbolOf('true');

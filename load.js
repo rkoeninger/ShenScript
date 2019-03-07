@@ -20,7 +20,7 @@ const load = expr =>
       }
     },
     e => {
-      console.log(expr[0] === env.symbolOf('defun') || expr[0] === env.symbolOf('declare') ? `${expr[0]} ${expr[1]}` : expr);
+      console.log(expr);
       console.log(e);
     });
 

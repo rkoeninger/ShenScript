@@ -48,6 +48,13 @@ const trap = (f, g) => {
     return g(e);
   }
 };
+const trapAsync = async (f, g) => {
+  try {
+    return f();
+  } catch (e) {
+    return g(e);
+  }
+};
 
 // TODO: what about async trap?
 
@@ -65,7 +72,7 @@ const isCons     = x => x instanceof Cons;
 const asNumber   = x => isNumber(x)   ? x : raise('number expected');
 const asString   = x => isString(x)   ? x : raise('string expected');
 const asSymbol   = x => isSymbol(x)   ? x : raise('symbol expected');
-const asFunction = x => isFunction(x) ? x : raise('function expected, not: ' + (isSymbol(x) ? nameOf(x) : x));
+const asFunction = x => isFunction(x) ? x : raise('function expected');
 const asArray    = x => isArray(x)    ? x : raise('array expected');
 const asCons     = x => isCons(x)     ? x : raise('cons expected');
 const asError    = x => isError(x)    ? x : raise('error expected');
@@ -137,6 +144,7 @@ const cast = (dataType, value) =>
     : invoke(ofEnv('as' + dataType), [value]);
 const isForm = (expr, lead, length) =>
   expr[0] === symbolOf(lead) && (!length || expr.length === length || raise(`${lead} must have ${length - 1} argument forms`));
+const isFunctionForm = (context, expr) => expr.length === 2 && expr[0] === symbolOf('function') && context.has(expr[1]);
 const hex = ch => ('0' + ch.charCodeAt(0).toString(16)).slice(-2);
 const validCharacterRegex = /^[_A-Za-z0-9]$/;
 const validCharactersRegex = /^[_A-Za-z][_A-Za-z0-9]*$/;
@@ -164,7 +172,9 @@ const buildLet = (context, [_, id, value, body]) =>
     arrow([escapeIdentifier(id)], build(context.add([asSymbol(id)]), body), context.async),
     [build(context.now(), value)]);
 const buildTrap = (context, [_, body, handler]) =>
-  invoke(ofEnv('trap'), [arrow([], build(context.now(), body)), build(context.now(), handler)]);
+  invoke(
+    ofEnv(context.async ? 'trapAsync' : 'trap'),
+    [arrow([], build(context.now(), body)), build(context.now(), handler)]);
 const buildLambda = (context, name, params, body) =>
   // TODO: group nested lambdas into single 2+ arity function? ex. (lambda X (lambda Y Q)) ==> (lambda (X Y) Q)
   invoke(ofEnv('fun'), [
@@ -193,7 +203,7 @@ const build = (context, expr) =>
     isForm(expr, 'lambda', 3)     ? buildLambda(context, 'lambda', [expr[1]], expr[2]) :
     isForm(expr, 'freeze', 2)     ? buildLambda(context, 'freeze', [], expr[1]) :
     isForm(expr, 'defun', 4)      ? buildDefun(context, expr) :
-    // TODO: isForm(expr, 'function', 2) && !context.has(expr[1]) ? ofEnvFunctions(expr[1]) :
+    isFunctionForm(context, expr) ? ofEnvFunctions(expr[1]) :
     buildApp(context, expr)
   ) : raise('not a valid form');
 
@@ -258,7 +268,7 @@ exports.kl = (options = {}) => {
     cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree, asJsBool, asShenBool,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
-    symbolOf, nameOf, show, equal, raise, trap, fun, bounce, settle, future, symbols, functions, build, context, evalKl
+    symbolOf, nameOf, show, equal, raise, trap, trapAsync, fun, bounce, settle, future, symbols, functions, build, context, evalKl
   };
   [
     ['if',              (b, x, y) => asJsBool(b) ? x : y],
@@ -305,3 +315,5 @@ exports.kl = (options = {}) => {
   ].forEach(([id, f]) => functions[id] = fun(f, id));
   return env;
 };
+
+// TODO: need override for (function F) : symbol -> function, can remove special function form

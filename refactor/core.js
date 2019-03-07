@@ -135,12 +135,13 @@ const invoke = (callee, arguments, async = false) => (async ? wait : (x => x))({
 const conditional = (test, consequent, alternate) => ({ type: 'ConditionalExpression', test, consequent, alternate });
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
-const ofEnv = name => access(identifier('$env'), identifier(name));
+const ofEnv = name => access(identifier('$'), identifier(name));
 const cast = (dataType, value) =>
   dataType === 'JsBool' && value === shenTrue
     ? literal(true)
     : invoke(ofEnv('as' + dataType), [value]);
-const isForm = (expr, lead, length) => expr[0] === symbolOf(lead) && (!length || expr.length === length);
+const isForm = (expr, lead, length) => isArray(expr) && expr.length > 0 && expr[0] === symbolOf(lead) && (!length || expr.length === length);
+const isConsForm = (expr, depth) => depth === 0 || isForm(expr, 'cons', 3) && isConsForm(expr[2], depth - 1);
 const isFunctionForm = (context, expr) => expr.length === 2 && expr[0] === symbolOf('function') && context.has(expr[1]);
 const hex = ch => ('0' + ch.charCodeAt(0).toString(16)).slice(-2);
 const validCharacterRegex = /^[_A-Za-z0-9]$/;
@@ -148,8 +149,8 @@ const validCharactersRegex = /^[_A-Za-z][_A-Za-z0-9]*$/;
 const validIdentifier = id => validCharactersRegex.test(nameOf(id));
 const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '_' : `$${hex(ch)}`;
 const escapeIdentifier = id => identifier(nameOf(id).split('').map(escapeCharacter).join(''));
-const idle = id => invoke(ofEnv('symbolOf'), [literal(nameOf(id))]);
-const ofEnvFunctions = id => access(ofEnv('functions'), (validIdentifier(id) ? identifier : literal)(nameOf(id)));
+const idle = id => invoke(ofEnv('s'), [literal(nameOf(id))]);
+const ofEnvFunctions = id => access(ofEnv('f'), (validIdentifier(id) ? identifier : literal)(nameOf(id)));
 const buildCons = (context, expr) =>
   invoke(
     ofEnv('consFromArray'),
@@ -195,7 +196,6 @@ const build = (context, expr) =>
   isSymbol(expr) ? (context.has(expr) ? escapeIdentifier : idle)(expr) :
   isArray(expr) ? (
     expr.length === 0             ? literal(null) :
-    isForm(expr, 'cons', 3)       ? buildCons(context, expr) : // FIXME: somehow causing 'input stream expected' in declare
     isForm(expr, 'and', 3)        ? buildAndOr('&&', context, expr) :
     isForm(expr, 'or',  3)        ? buildAndOr('||', context, expr) :
     isForm(expr, 'if', 4)         ? buildIf(context, expr) :
@@ -205,17 +205,10 @@ const build = (context, expr) =>
     isForm(expr, 'lambda', 3)     ? buildLambda(context, 'lambda', [expr[1]], expr[2]) :
     isForm(expr, 'freeze', 2)     ? buildLambda(context, 'freeze', [], expr[1]) :
     isForm(expr, 'defun', 4)      ? buildDefun(context, expr) :
+    isConsForm(expr, 8)           ? buildCons(context, expr) :
     isFunctionForm(context, expr) ? ofEnvFunctions(expr[1]) :
     buildApp(context, expr)
   ) : raise('not a valid form');
-
-const evalKl = (context, env, expr) =>
-  Function(
-    '$env',
-    generate(answer(invoke(
-      ofEnv(context.async ? 'future' : 'settle'),
-      [build(context, valueToArrayTree(expr))])))
-  )(env);
 
 exports.kl = (options = {}) => {
   // TODO: have shen-script.*instream-supported*, shen-script.*outstream-supported* flags?
@@ -233,7 +226,7 @@ exports.kl = (options = {}) => {
     raise(`get-time only accepts symbols unix or run, not ${mode}`);
   const openRead  = options.openRead  || (() => raise('open(in) not supported'));
   const openWrite = options.openWrite || (() => raise('open(out) not supported'));
-  const open = (mode, path) =>
+  const open = (path, mode) =>
     mode === 'in'  ? openRead(path) :
     mode === 'out' ? openWrite(path) :
     raise(`open only accepts symbols in or out, not ${mode}`);
@@ -249,7 +242,6 @@ exports.kl = (options = {}) => {
     `${x}`;
   const equal = (x, y) =>
     x === y
-    // || isNaN(x)   && isNaN(y)
     || isCons(x)  && isCons(y)  && equal(x.head, y.head) && equal(x.tail, y.tail)
     || isArray(x) && isArray(y) && x.length === y.length && x.every((v, i) => equal(v, y[i]));
   const symbols = {
@@ -265,18 +257,20 @@ exports.kl = (options = {}) => {
     '*home-directory*': options.homeDirectory  || ''
   };
   const functions = {};
-  const context = new Context({ async: options.async });
+  const context = new Context({ async: options.async, head: true });
   const env = {
     cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree, asJsBool, asShenBool,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
-    symbolOf, nameOf, show, equal, raise, trap, trapAsync, fun, bounce, settle, future, symbols, functions, build, context, evalKl
+    symbolOf, nameOf, show, equal, raise, trap, trapAsync, fun, bounce, settle, future, symbols, functions,
+    build: x => build(context, x), f: functions, s: symbolOf
   };
+  env.evalKl = expr => Function('$', generate(answer(build(context, valueToArrayTree(expr)))))(env);
   [
     ['if',              (b, x, y) => asJsBool(b) ? x : y],
     ['and',             (x, y) => asShenBool(asJsBool(x) && asJsBool(y))],
     ['or',              (x, y) => asShenBool(asJsBool(x) || asJsBool(y))],
-    ['open',            (m, p) => open(nameOf(asSymbol(m)), asString(p))],
+    ['open',            (p, m) => open(asString(p), nameOf(asSymbol(m)))],
     ['close',           s => asStream(s).close()],
     ['read-byte',       s => asInStream(s).read()],
     ['write-byte',      (s, b) => asOutStream(s).write(b)],

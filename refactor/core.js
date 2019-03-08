@@ -70,7 +70,7 @@ const isCons     = x => x instanceof Cons;
 const asNumber   = x => isNumber(x)   ? x : raise('number expected');
 const asString   = x => isString(x)   ? x : raise('string expected');
 const asSymbol   = x => isSymbol(x)   ? x : raise('symbol expected');
-const asFunction = x => isFunction(x) ? x : raise('function expected');
+const asFunction = x => isFunction(x) ? x : raise('function expected, not: ' + (isSymbol(x) ? nameOf(x) : x));
 const asArray    = x => isArray(x)    ? x : raise('array expected');
 const asCons     = x => isCons(x)     ? x : raise('cons expected');
 const asError    = x => isError(x)    ? x : raise('error expected');
@@ -89,8 +89,8 @@ const cons             = (h, t) => new Cons(h, t);
 const consFromArray    = a => a.reduceRight((t, h) => cons(h, t), null);
 const consToArray      = c => produce(isCons, c => c.head, c => c.tail, c);
 const consToArrayTree  = c => produce(isCons, c => valueToArrayTree(c.head), c => c.tail, c);
-const valueToArray     = x => isCons(x) ? consToArray(x) : x;
-const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x;
+const valueToArray     = x => isCons(x) ? consToArray(x) : x === null ? [] : x;
+const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x === null ? [] : x;
 
 const fun = (f, id = f.name, arity = f.length) =>
   Object.assign(

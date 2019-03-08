@@ -7,22 +7,20 @@ const BufferStream = class {
     this.buf = buf;
     this.pos = 0;
   }
-  read() {
-    if (this.pos >= this.buf.length) {
-      return -1;
-    }
-    const b = this.buf[this.pos];
-    this.pos = this.pos + 1;
-    return b;
-  }
+  read() { return this.pos >= this.buf.length ? -1 : this.buf[this.pos++]; }
   close() {}
 };
 
 let home = () => '';
 const $ = kl({
+  implementation: 'node',
+  release: process.version.slice(1),
+  os: process.platform,
+  port: 'shen-script',
+  porters: 'Robert Koeninger',
   openRead: path => new BufferStream(fs.readFileSync(home() + path)),
   isInStream: x => x instanceof BufferStream,
-  stoutput: { write: x => process.stdout.write(x) }
+  stoutput: { write: x => process.stdout.write(String.fromCharCode(asNumber(x))) }
 });
 home = () => $.symbols['*home-directory*'];
 const load = expr => $.trap(() => $.evalKl(expr), console.log);
@@ -56,8 +54,10 @@ const loadGroup = (name, exprs) => {
 loadGroup('defuns', defuns);
 loadGroup('statements', statements);
 
-console.log($.evalKl([$.s('cd'), './kernel/tests']));
-console.log($.evalKl([$.s('load'), 'README.shen']));
-console.log($.evalKl([$.s('load'), 'tests.shen']));
+// console.log($.evalKl([$.s('cd'), './kernel/tests']));
+// console.log($.evalKl([$.s('load'), 'README.shen']));
+// console.log($.evalKl([$.s('load'), 'tests.shen']));
+
+$.evalKl(parse('(print "hi")')[0]);
 
 module.exports = $;

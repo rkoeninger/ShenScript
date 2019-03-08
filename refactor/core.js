@@ -307,7 +307,7 @@ exports.kl = (options = {}) => {
     ['set',             (s, x) => symbols[nameOf(asSymbol(s))] = x],
     ['value',           s => symbols[nameOf(asSymbol(s))]],
     ['type',            (x, _) => x],
-    ['eval-kl',         expr => evalKl(context, env, expr)]
+    ['eval-kl',         env.evalKl]
   ].forEach(([id, f]) => functions[id] = fun(f, id));
   return env;
 };

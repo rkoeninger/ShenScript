@@ -11,6 +11,14 @@ const BufferStream = class {
   close() {}
 };
 
+const OutStream = class {
+  write(b) {
+    return process.stdout.write(String.fromCharCode(b));
+  }
+};
+
+const stoutput = new OutStream();
+
 let home = () => '';
 const $ = kl({
   implementation: 'node',
@@ -20,7 +28,8 @@ const $ = kl({
   porters: 'Robert Koeninger',
   openRead: path => new BufferStream(fs.readFileSync(home() + path)),
   isInStream: x => x instanceof BufferStream,
-  stoutput: { write: x => process.stdout.write(String.fromCharCode(asNumber(x))) }
+  isOutStream: x => x instanceof OutStream,
+  stoutput
 });
 home = () => $.symbols['*home-directory*'];
 const load = expr => $.trap(() => $.evalKl(expr), console.log);
@@ -54,10 +63,8 @@ const loadGroup = (name, exprs) => {
 loadGroup('defuns', defuns);
 loadGroup('statements', statements);
 
-// console.log($.evalKl([$.s('cd'), './kernel/tests']));
-// console.log($.evalKl([$.s('load'), 'README.shen']));
-// console.log($.evalKl([$.s('load'), 'tests.shen']));
-
-$.evalKl(parse('(print "hi")')[0]);
+console.log($.evalKl([$.s('cd'), './kernel/tests']));
+console.log($.evalKl([$.s('load'), 'README.shen']));
+console.log($.evalKl([$.s('load'), 'tests.shen']));
 
 module.exports = $;

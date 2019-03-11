@@ -70,7 +70,7 @@ const isCons     = x => x instanceof Cons;
 const asNumber   = x => isNumber(x)   ? x : raise('number expected');
 const asString   = x => isString(x)   ? x : raise('string expected');
 const asSymbol   = x => isSymbol(x)   ? x : raise('symbol expected');
-const asFunction = x => isFunction(x) ? x : raise('function expected, not: ' + (isSymbol(x) ? nameOf(x) : x));
+const asFunction = (x, y) => isFunction(x) ? x : raise('function expected: ' + (isSymbol(y) ? nameOf(y) : y));
 const asArray    = x => isArray(x)    ? x : raise('array expected');
 const asCons     = x => isCons(x)     ? x : raise('cons expected');
 const asError    = x => isError(x)    ? x : raise('error expected');
@@ -187,8 +187,14 @@ const buildDefun = (context, [_, id, params, body]) =>
 const buildApp = (context, [f, ...args]) =>
   invoke(ofEnv(context.head ? (context.async ? 'future' : 'settle') : 'bounce'), [
     context.has(f) ? cast('Function', escapeIdentifier(f)) :
-    isArray(f)     ? cast('Function', build(context.now(), f)) :
+    // isArray(f)     ? cast('Function', build(context.now(), f)) :
+    isArray(f)     ? invoke(ofEnv('asFunction'), [build(context.now(), f), f]) :
     isSymbol(f)    ? ofEnvFunctions(f) :
+    // isSymbol(f)    ?
+    //   conditional(
+    //     invoke(ofEnv('isFunction'), [ofEnvFunctions(f)]),
+    //     ofEnvFunctions(f),
+    //     invoke(ofEnv('raise'), [literal('not a func: ' + nameOf(f))])) :
     raise('not a valid application form'),
     array(args.map(x => build(context.now(), x)))]);
 const build = (context, expr) =>

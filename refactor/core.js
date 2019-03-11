@@ -184,11 +184,17 @@ const buildLambda = (context, name, params, body) =>
     literal(name)]);
 const buildDefun = (context, [_, id, params, body]) =>
   sequential([assign(ofEnvFunctions(id), buildLambda(context.clear(), nameOf(id), params, body)), idle(id)]);
+
+const showArray = x =>
+  isArray(x) ? `[${x.map(showArray).join(', ')}]` :
+  isSymbol(x) ? x.toString() :
+  ('' + x);
+
 const buildApp = (context, [f, ...args]) =>
   invoke(ofEnv(context.head ? (context.async ? 'future' : 'settle') : 'bounce'), [
     context.has(f) ? cast('Function', escapeIdentifier(f)) :
     // isArray(f)     ? cast('Function', build(context.now(), f)) :
-    isArray(f)     ? invoke(ofEnv('asFunction'), [build(context.now(), f), f]) :
+    isArray(f)     ? invoke(ofEnv('asFunction'), [build(context.now(), f), literal(showArray(f))]) :
     isSymbol(f)    ? ofEnvFunctions(f) :
     // isSymbol(f)    ?
     //   conditional(

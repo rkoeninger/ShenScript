@@ -32,7 +32,8 @@ const $ = kl({
   stoutput
 });
 home = () => $.symbols['*home-directory*'];
-const load = expr => $.trap(() => $.evalKl(expr), console.log);
+const load = expr => $.trap(() => $.evalKl(expr), e => (console.log(expr), console.log(e)));
+const s = parts => $.s(parts[0]);
 
 const files = [
   'toplevel', 'core',   'sys',          'dict',  'sequent',
@@ -45,7 +46,7 @@ const statements = [];
 
 files.forEach(file => parse(fs.readFileSync(`./kernel/klambda/${file}.kl`, 'utf-8')).forEach(expr => {
   if (Array.isArray(expr) && expr.length > 0) {
-    (expr[0] === $.symbolOf('defun') ? defuns : statements).push(expr);
+    (expr[0] === s`defun` ? defuns : statements).push(expr);
   }
 }));
 
@@ -63,8 +64,10 @@ const loadGroup = (name, exprs) => {
 loadGroup('defuns', defuns);
 loadGroup('statements', statements);
 
-console.log($.evalKl([$.s('cd'), './kernel/tests']));
-console.log($.evalKl([$.s('load'), 'README.shen']));
-console.log($.evalKl([$.s('load'), 'tests.shen']));
+console.log($.evalKl([s`eval`, [s`read-from-string`, '(defmacro plus-macro [X + Y] -> [+ X Y])']]));
+
+// console.log($.evalKl([s`cd`, './kernel/tests']));
+// console.log($.evalKl([s`load`, 'README.shen']));
+// console.log($.evalKl([s`load`, 'tests.shen']));
 
 module.exports = $;

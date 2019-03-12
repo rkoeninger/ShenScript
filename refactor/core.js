@@ -1,8 +1,5 @@
 const { generate } = require('astring');
 
-// TODO: alternate cons representation as (array, offset, length)
-//       to optimize literal cons chains?
-
 const Cons = class {
   constructor(head, tail) {
     this.head = head;
@@ -11,10 +8,30 @@ const Cons = class {
   }
 };
 
+const ArrayCons = class {
+  constructor(values, offset = 0) {
+    this.values = values.slice();
+    this.offset = offset;
+    Object.freeze(this);
+  }
+  get head() {
+    return this.values[this.offset];
+  }
+  get tail() {
+    return this.offset < this.values.length - 1
+      ? new ArrayCons(this.values, this.offset + 1)
+      : null;
+  }
+};
+
 const Trampoline = class {
   constructor(f, args) {
-    this.run = () => f(...args);
+    this.f = f;
+    this.args = args;
     Object.freeze(this);
+  }
+  run() {
+    return this.f(...this.args);
   }
 };
 
@@ -66,11 +83,14 @@ const isSymbol   = x => typeof x === 'symbol';
 const isFunction = x => typeof x === 'function';
 const isArray    = x => Array.isArray(x);
 const isError    = x => x instanceof Error;
-const isCons     = x => x instanceof Cons;
+const isCons     = x => x instanceof Cons || x instanceof ArrayCons;
 const asNumber   = x => isNumber(x)   ? x : raise('number expected');
 const asString   = x => isString(x)   ? x : raise('string expected');
 const asSymbol   = x => isSymbol(x)   ? x : raise('symbol expected');
+
+// TODO: remove debug stuff here
 const asFunction = (x, y) => isFunction(x) ? x : raise('function expected: ' + (isSymbol(y) ? nameOf(y) : y));
+
 const asArray    = x => isArray(x)    ? x : raise('array expected');
 const asCons     = x => isCons(x)     ? x : raise('cons expected');
 const asError    = x => isError(x)    ? x : raise('error expected');
@@ -79,15 +99,15 @@ const asIndex    = (i, a) =>
   i < 0 || i >= a.length ? raise(`index ${i} is not with array bounds of [0, ${a.length})`) :
   i;
 
-const asShenBool  = x => x ? shenTrue : shenFalse;
-const asJsBool    = x =>
+const asShenBool = x => x ? shenTrue : shenFalse;
+const asJsBool   = x =>
   x === shenTrue  ? true :
   x === shenFalse ? false :
   raise(`value ${x} is not a valid boolean`);
 
 const cons             = (h, t) => new Cons(h, t);
-const consFromArray    = a => a.reduceRight((t, h) => cons(h, t), null);
-const consToArray      = c => produce(isCons, c => c.head, c => c.tail, c);
+const consFromArray    = a => a.length === 0 ? null : new ArrayCons(a);
+const consToArray      = c => c instanceof ArrayCons ? c.values.slice() : produce(isCons, c => c.head, c => c.tail, c);
 const consToArrayTree  = c => produce(isCons, c => valueToArrayTree(c.head), c => c.tail, c);
 const valueToArray     = x => isCons(x) ? consToArray(x) : x === null ? [] : x;
 const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x === null ? [] : x;
@@ -185,6 +205,7 @@ const buildLambda = (context, name, params, body) =>
 const buildDefun = (context, [_, id, params, body]) =>
   sequential([assign(ofEnvFunctions(id), buildLambda(context.clear(), nameOf(id), params, body)), idle(id)]);
 
+// TODO: remove this debug stuff and from buildApp
 const showArray = x =>
   isArray(x) ? `[${x.map(showArray).join(', ')}]` :
   isSymbol(x) ? x.toString() :
@@ -196,11 +217,6 @@ const buildApp = (context, [f, ...args]) =>
     // isArray(f)     ? cast('Function', build(context.now(), f)) :
     isArray(f)     ? invoke(ofEnv('asFunction'), [build(context.now(), f), literal(showArray(f))]) :
     isSymbol(f)    ? ofEnvFunctions(f) :
-    // isSymbol(f)    ?
-    //   conditional(
-    //     invoke(ofEnv('isFunction'), [ofEnvFunctions(f)]),
-    //     ofEnvFunctions(f),
-    //     invoke(ofEnv('raise'), [literal('not a func: ' + nameOf(f))])) :
     raise('not a valid application form'),
     array(args.map(x => build(context.now(), x)))]);
 const build = (context, expr) =>

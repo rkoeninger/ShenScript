@@ -112,6 +112,11 @@ const consToArrayTree  = c => produce(isCons, c => valueToArrayTree(c.head), c =
 const valueToArray     = x => isCons(x) ? consToArray(x) : x === null ? [] : x;
 const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x === null ? [] : x;
 
+const equal = (x, y) =>
+  x === y
+  || isCons(x)  && isCons(y)  && equal(x.head, y.head) && equal(x.tail, y.tail)
+  || isArray(x) && isArray(y) && x.length === y.length && x.every((v, i) => equal(v, y[i]));
+
 const fun = (f, id = f.name, arity = f.length) =>
   Object.assign(
     (...args) =>
@@ -268,10 +273,6 @@ exports.kl = (options = {}) => {
     isError(x)    ? `<Error "${x.message}">` :
     isStream(x)   ? `<Stream ${x.name}>` :
     `${x}`;
-  const equal = (x, y) =>
-    x === y
-    || isCons(x)  && isCons(y)  && equal(x.head, y.head) && equal(x.tail, y.tail)
-    || isArray(x) && isArray(y) && x.length === y.length && x.every((v, i) => equal(v, y[i]));
   const symbols = {
     '*language*':       'JavaScript',
     '*implementation*': options.implementation || 'Unknown',

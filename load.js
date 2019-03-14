@@ -64,28 +64,12 @@ const loadGroup = (name, exprs) => {
 loadGroup('defuns', defuns);
 loadGroup('statements', statements);
 
-console.log('macro count: ' + $.consToArray($.symbols['*macros*']).length);
 try {
   console.log($.evalKl([s`load`, 'examplemacro.shen']));
+//   console.log($.evalKl([s`eval`, [s`hd`, [s`read-from-string`, '(defmacro plus-macro [X + Y] -> [+ X Y])']]]));
 } catch (e) {
   console.error(e);
 }
-console.log('macro count: ' + $.consToArray($.symbols['*macros*']).length);
-console.log($.consToArray($.symbols['*macros*']).some(s => s === undefined) ? 'undefined macro' : 'good');
-
-// console.log($.evalKl([s`function`, s`thaw`]));
-
-// TODO: macros aren't getting added to macroreg, instead undefined is
-// console.log($.settle($.f.eval($.settle($.f['read-from-string']('(define inc X -> (+ 1 X))')).head)));
-// console.log($.evalKl([s`function`, s`inc`]));
-
-// console.log($.consToArray($.symbols['*macros*']));
-// try {
-//   console.log($.evalKl([s`eval`, [s`hd`, [s`read-from-string`, '(defmacro plus-macro [X + Y] -> [+ X Y])']]]));
-// } catch (e) {
-//   console.log(e);
-// }
-// console.log($.consToArray($.symbols['*macros*']));
 
 // console.log($.evalKl([s`cd`, './kernel/tests']));
 // console.log($.evalKl([s`load`, 'README.shen']));

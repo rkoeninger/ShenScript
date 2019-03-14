@@ -65,8 +65,9 @@ loadGroup('defuns', defuns);
 loadGroup('statements', statements);
 
 try {
-  console.log($.evalKl([s`load`, 'examplemacro.shen']));
-//   console.log($.evalKl([s`eval`, [s`hd`, [s`read-from-string`, '(defmacro plus-macro [X + Y] -> [+ X Y])']]]));
+//  console.log($.evalKl([s`load`, 'examplemacro.shen']));
+  console.log($.evalKl([s`eval`, [s`hd`, [s`read-from-string`, '(defmacro plus-macro [X + Y] -> [+ X Y])']]]));
+  console.log($.evalKl([s`eval`, [s`X`, s`+`, s`Y`]]));
 } catch (e) {
   console.error(e);
 }

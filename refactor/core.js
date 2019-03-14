@@ -219,7 +219,10 @@ const buildApp = (context, [f, ...args]) =>
   invoke(ofEnv(context.head ? (context.async ? 'future' : 'settle') : 'bounce'), [
     context.has(f) ? cast('Function', escapeIdentifier(f)) :
     // isArray(f)     ? cast('Function', build(context.now(), f)) :
+
+    // TODO: remove debug code here
     isArray(f)     ? invoke(ofEnv('asFunction'), [build(context.now(), f), literal(showArray(f))]) :
+
     isSymbol(f)    ? ofEnvFunctions(f) :
     raise('not a valid application form'),
     array(args.map(x => build(context.now(), x)))]);

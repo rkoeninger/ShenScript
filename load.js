@@ -1,8 +1,10 @@
+Error.stackTraceLimit = Infinity;
+
 const fs = require('fs');
 const { kl } = require('./refactor/core');
 const { parse } = require('./parser');
 
-const BufferStream = class {
+const InStream = class {
   constructor(buf) {
     this.buf = buf;
     this.pos = 0;
@@ -24,8 +26,8 @@ const $ = kl({
   os: process.platform,
   port: 'shen-script',
   porters: 'Robert Koeninger',
-  openRead: path => new BufferStream(fs.readFileSync(home() + path)),
-  isInStream: x => x instanceof BufferStream,
+  openRead: path => new InStream(fs.readFileSync(home() + path)),
+  isInStream: x => x instanceof InStream,
   isOutStream: x => x instanceof OutStream,
   stoutput
 });
@@ -62,8 +64,14 @@ const loadGroup = (name, exprs) => {
 loadGroup('defuns', defuns);
 loadGroup('statements', statements);
 
-console.log($.evalKl([s`load`, 'examplemacro.shen']));
-console.log($.consToArray($.symbols['*macros*']));
+console.log('macro count: ' + $.consToArray($.symbols['*macros*']).length);
+try {
+  console.log($.evalKl([s`load`, 'examplemacro.shen']));
+} catch (e) {
+  console.error(e);
+}
+console.log('macro count: ' + $.consToArray($.symbols['*macros*']).length);
+console.log($.consToArray($.symbols['*macros*']).some(s => s === undefined) ? 'undefined macro' : 'good');
 
 // console.log($.evalKl([s`function`, s`thaw`]));
 

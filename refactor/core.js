@@ -167,7 +167,6 @@ const cast = (dataType, value) =>
     : invoke(ofEnv('as' + dataType), [value]);
 const isForm = (expr, lead, length) => isArray(expr) && expr.length > 0 && expr[0] === symbolOf(lead) && (!length || expr.length === length);
 const isConsForm = (expr, depth) => depth === 0 || isForm(expr, 'cons', 3) && isConsForm(expr[2], depth - 1);
-const isFunctionForm = (context, expr) => expr.length === 2 && expr[0] === symbolOf('function') && context.has(expr[1]);
 const hex = ch => ('0' + ch.charCodeAt(0).toString(16)).slice(-2);
 const validCharacterRegex = /^[_A-Za-z0-9]$/;
 const validCharactersRegex = /^[_A-Za-z][_A-Za-z0-9]*$/;
@@ -239,7 +238,6 @@ const build = (context, expr) =>
     isForm(expr, 'freeze', 2)     ? buildLambda(context, 'freeze', [], expr[1]) :
     isForm(expr, 'defun', 4)      ? buildDefun(context, expr) :
     isConsForm(expr, 8)           ? buildCons(context, expr) :
-    isFunctionForm(context, expr) ? ofEnvFunctions(expr[1]) :
     buildApp(context, expr)
   ) : raise('not a valid form');
 

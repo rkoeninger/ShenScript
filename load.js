@@ -67,7 +67,7 @@ loadGroup('statements', statements);
 try {
 //  console.log($.evalKl([s`load`, 'examplemacro.shen']));
   console.log($.evalKl([s`eval`, [s`hd`, [s`read-from-string`, '(defmacro plus-macro [X + Y] -> [+ X Y])']]]));
-  console.log($.evalKl([s`eval`, [s`X`, s`+`, s`Y`]]));
+  console.log($.evalKl([s`macroexpand`, [s`X`, s`+`, s`Y`]])); // TODO: returns undefined, check if shen.compose works
 } catch (e) {
   console.error(e);
 }

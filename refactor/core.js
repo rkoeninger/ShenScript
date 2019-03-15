@@ -295,7 +295,8 @@ exports.kl = (options = {}) => {
     symbolOf, nameOf, show, equal, raise, trap, trapAsync, fun, bounce, settle, future, symbols, functions,
     build: x => build(context, x), f: functions, s: symbolOf
   };
-  env.evalKl = expr => Function('$', generate(answer(build(context, valueToArrayTree(expr)))))(env);
+  // TODO: remove this undefined check
+  env.evalKl = expr => expr === undefined ? raise('undefined expr') : Function('$', generate(answer(build(context, valueToArrayTree(expr)))))(env);
   [
     ['if',              (b, x, y) => asJsBool(b) ? x : y],
     ['and',             (x, y) => asShenBool(asJsBool(x) && asJsBool(y))],

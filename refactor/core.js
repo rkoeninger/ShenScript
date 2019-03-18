@@ -89,7 +89,7 @@ const asString   = x => isString(x)   ? x : raise('string expected');
 const asSymbol   = x => isSymbol(x)   ? x : raise('symbol expected');
 
 // TODO: remove debug stuff here
-const asFunction = (x, y) => isFunction(x) ? x : raise('function expected: ' + (isSymbol(y) ? nameOf(y) : y));
+const asFunction = (x, y) => isFunction(x) ? x : raise('function expected: ' + (isSymbol(y) ? nameOf(y) : typeof y === 'object' ? y.constructor : y));
 
 const asArray    = x => isArray(x)    ? x : raise('array expected');
 const asCons     = x => isCons(x)     ? x : raise('cons expected');
@@ -121,7 +121,7 @@ const fun = (f, id = f.name, arity = f.length) =>
   Object.assign(
     (...args) =>
       args.length === arity ? f(...args) :
-      args.length > arity ? f(...args.slice(0, arity))(args.slice(f.arity)) :
+      args.length > arity ? asFunction(settle(f(...args.slice(0, arity))), 'in ' + id)(args.slice(f.arity)) :
       fun((...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length),
     { id, arity });
 

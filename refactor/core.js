@@ -281,6 +281,7 @@ exports.kl = (options = {}) => {
     isError(x)    ? `<Error "${x.message}">` :
     isStream(x)   ? `<Stream ${x.name}>` :
     `${x}`;
+  const out = options.stoutput || options.sterror;
   const symbols = {
     '*language*':       'JavaScript',
     '*implementation*': options.implementation || 'Unknown',
@@ -289,8 +290,8 @@ exports.kl = (options = {}) => {
     '*port*':           options.port           || 'Unknown',
     '*porters*':        options.porters        || 'Unknown',
     '*stinput*':        options.stinput        || (() => raise('standard input not supported')),
-    '*stoutput*':       options.stoutput       || (() => raise('standard output not supported')),
-    '*sterror*':        options.sterror        || (() => raise('standard error not supported')),
+    '*stoutput*':       out                    || (() => raise('standard output not supported')),
+    '*sterror*':        options.sterror || out || (() => raise('standard output not supported')),
     '*home-directory*': options.homeDirectory  || ''
   };
   const functions = {};

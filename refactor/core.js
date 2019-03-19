@@ -343,7 +343,7 @@ exports.kl = (options = {}) => {
     ['simple-error',    s => raise(asString(s))],
     ['error-to-string', e => asError(e).message],
     ['set',             (s, x) => symbols[nameOf(asSymbol(s))] = x],
-    ['value',           s => symbols[nameOf(asSymbol(s))]],
+    ['value',           s => asDefined(symbols[nameOf(asSymbol(s))])],
     ['type',            (x, _) => x],
     ['eval-kl',         env.evalKl]
   ].forEach(([id, f]) => functions[id] = fun(f, id));

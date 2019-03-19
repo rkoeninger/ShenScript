@@ -332,7 +332,7 @@ exports.kl = (options = {}) => {
     ['+',               (x, y) => asNumber(x) + asNumber(y)],
     ['-',               (x, y) => asNumber(x) - asNumber(y)],
     ['*',               (x, y) => asNumber(x) * asNumber(y)],
-    ['/',               (x, y) => asNumber(x) / asNumber(y)],
+    ['/',               (x, y) => y === 0 ? raise('div by zero') : asNumber(x) / asNumber(y)],
     ['>',               (x, y) => asShenBool(asNumber(x) >  asNumber(y))],
     ['<',               (x, y) => asShenBool(asNumber(x) <  asNumber(y))],
     ['>=',              (x, y) => asShenBool(asNumber(x) >= asNumber(y))],

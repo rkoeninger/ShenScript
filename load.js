@@ -29,7 +29,8 @@ const $ = kl({
   openRead: path => new InStream(fs.readFileSync(home() + path)),
   isInStream: x => x instanceof InStream,
   isOutStream: x => x instanceof OutStream,
-  stoutput
+  stoutput,
+  sterror: stoutput
 });
 home = () => $.symbols['*home-directory*'];
 const load = expr => $.trap(() => $.evalKl(expr), e => (console.log(expr), console.log(e)));

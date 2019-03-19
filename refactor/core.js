@@ -129,6 +129,7 @@ const fun = (f, id = f.name, arity = f.length) =>
   Object.assign(
     (...args) =>
       args.length === arity ? f(...args) :
+      // TODO: clean up some debugging
       args.length > arity ? asFunction(settle(f(...args.slice(0, arity))), 'in ' + id)(args.slice(f.arity)) :
       fun((...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length),
     { id, arity });
@@ -205,10 +206,12 @@ const buildLet = (context, [_, id, value, body]) =>
   invoke(
     arrow([escapeIdentifier(id)], build(context.add([asSymbol(id)]), body), context.async),
     [build(context.now(), value)]);
-const buildTrap = (context, [_, body, handler]) =>
-  invoke(
-    ofEnv(context.async ? 'trapAsync' : 'trap'),
-    [arrow([], build(context.now(), body)), build(context.now(), handler)]);
+const buildTrap = (context, [_, body, handler]) => {
+  const t = invoke(
+              ofEnv(context.async ? 'trapAsync' : 'trap'),
+              [arrow([], build(context.now(), body)), build(context.now(), handler)]);
+  return context.head ? invoke(ofEnv('settle'), [t]) : t;
+};
 const buildLambda = (context, name, params, body) =>
   // TODO: group nested lambdas into single 2+ arity function? ex. (lambda X (lambda Y Q)) ==> (lambda (X Y) Q)
   invoke(ofEnv('fun'), [

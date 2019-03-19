@@ -1,4 +1,4 @@
-Error.stackTraceLimit = Infinity;
+Error.stackTraceLimit = 32;
 
 const fs = require('fs');
 const { kl } = require('./refactor/core');

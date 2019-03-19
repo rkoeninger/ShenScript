@@ -281,7 +281,7 @@ exports.kl = (options = {}) => {
     isCons(x)     ? `[${consToArray(x).map(show).join(' ')}]` :
     isFunction(x) ? `<Function ${x.id}>` :
     isArray(x)    ? `<Vector ${x.length}>` :
-    isError(x)    ? `<Error "${x.message}">` :
+    isError(x)    ? `<Error "${x.toString() + x.stack}">` :
     isStream(x)   ? `<Stream ${x.name}>` :
     `${x}`;
   const out = options.stoutput || options.sterror;
@@ -344,7 +344,7 @@ exports.kl = (options = {}) => {
     ['intern',          s => symbolOf(asString(s))],
     ['get-time',        m => getTime(nameOf(asSymbol(m)))],
     ['simple-error',    s => raise(asString(s))],
-    ['error-to-string', e => asError(e).message],
+    ['error-to-string', e => asError(e).toString() + e.stack],
     ['set',             (s, x) => symbols[nameOf(asSymbol(s))] = x],
     ['value',           s => asDefined(symbols[nameOf(asSymbol(s))])],
     ['type',            (x, _) => x],

@@ -84,26 +84,34 @@ const isFunction = x => typeof x === 'function';
 const isArray    = x => Array.isArray(x);
 const isError    = x => x instanceof Error;
 const isCons     = x => x instanceof Cons || x instanceof ArrayCons;
-const asNumber   = x => isNumber(x)   ? x : raise('number expected');
-const asString   = x => isString(x)   ? x : raise('string expected');
-const asSymbol   = x => isSymbol(x)   ? x : raise('symbol expected');
 
 // TODO: remove debug stuff here
-const asFunction = (x, y) => isFunction(x) ? x : raise('function expected: ' + (isSymbol(y) ? nameOf(y) : typeof y === 'object' ? y.constructor : y));
-
-const asArray    = x => isArray(x)    ? x : raise('array expected');
-const asCons     = x => isCons(x)     ? x : raise('cons expected');
-const asError    = x => isError(x)    ? x : raise('error expected');
+const asNumber   = x => isNumber(x)   ? x : raise('number expected, but: ' + showDebug(x));
+const asString   = x => isString(x)   ? x : raise('string expected, but: ' + showDebug(x));
+const asSymbol   = x => isSymbol(x)   ? x : raise('symbol expected, but: ' + showDebug(x));
+const asFunction = (x, y) => isFunction(x) ? x : raise('function expected: ' + showDebug(y));
+const asArray    = x => isArray(x)    ? x : raise('array expected, but: ' + showDebug(x));
+const asCons     = x => isCons(x)     ? x : raise('cons expected, but: ' + showDebug(x));
+const asError    = x => isError(x)    ? x : raise('error expected, but: ' + showDebug(x));
 const asIndex    = (i, a) =>
   !Number.isInteger(i)   ? raise(`index ${i} is not valid`) :
   i < 0 || i >= a.length ? raise(`index ${i} is not with array bounds of [0, ${a.length})`) :
   i;
 
+// TODO: remove this
+const showDebug = x =>
+  x === undefined ? '<-undefined->' :
+  x === null ? '<-null->' :
+  isSymbol(x) ? nameOf(x) :
+  typeof x === 'object' ? x.constructor :
+  x;
+const asDefined = x => x === undefined ? raise('defined value expected, but: ' + showDebug(x)) : x;
+
 const asShenBool = x => x ? shenTrue : shenFalse;
 const asJsBool   = x =>
   x === shenTrue  ? true :
   x === shenFalse ? false :
-  raise(`value ${x} is not a valid boolean`);
+  raise(`value ${showDebug(x)} is not a valid boolean`);
 
 const cons             = (h, t) => new Cons(h, t);
 const consFromArray    = a => a.length === 0 ? null : new ArrayCons(a);
@@ -222,10 +230,9 @@ const buildApp = (context, [f, ...args]) =>
 
     // TODO: remove debug code here
     isArray(f)     ? invoke(ofEnv('asFunction'), [build(context.now(), f), literal(showArray(f))]) :
-
-    isSymbol(f)    ? ofEnvFunctions(f) :
+    isSymbol(f)    ? cast('Function', ofEnvFunctions(f)) : // TODO: raise error if global function is undefined
     raise('not a valid application form'),
-    array(args.map(x => build(context.now(), x)))]);
+    array(args.map(arg => build(context.now(), arg)))]);
 const build = (context, expr) =>
   expr === null || isNumber(expr) || isString(expr) ? literal(expr) :
   isSymbol(expr) ? (context.has(expr) ? escapeIdentifier : idle)(expr) :
@@ -295,8 +302,7 @@ exports.kl = (options = {}) => {
     symbolOf, nameOf, show, equal, raise, trap, trapAsync, fun, bounce, settle, future, symbols, functions,
     build: x => build(context, x), f: functions, s: symbolOf
   };
-  // TODO: remove this undefined check
-  env.evalKl = expr => expr === undefined ? raise('undefined expr') : Function('$', generate(answer(build(context, valueToArrayTree(expr)))))(env);
+  env.evalKl = expr => asDefined(Function('$', generate(answer(asDefined(build(context, valueToArrayTree(asDefined(expr)))))))(env));
   [
     ['if',              (b, x, y) => asJsBool(b) ? x : y],
     ['and',             (x, y) => asShenBool(asJsBool(x) && asJsBool(y))],

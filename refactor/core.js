@@ -344,7 +344,7 @@ exports.kl = (options = {}) => {
     ['intern',          s => symbolOf(asString(s))],
     ['get-time',        m => getTime(nameOf(asSymbol(m)))],
     ['simple-error',    s => raise(asString(s))],
-    ['error-to-string', e => asError(e).toString() + e.stack],
+    ['error-to-string', e => asError(e).message],
     ['set',             (s, x) => symbols[nameOf(asSymbol(s))] = x],
     ['value',           s => asDefined(symbols[nameOf(asSymbol(s))])],
     ['type',            (x, _) => x],

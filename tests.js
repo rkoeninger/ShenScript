@@ -219,7 +219,7 @@ describe('variable bindings', () => {
 
 describe('error handling', () => {
   describe('trap-error', () => {
-    it('trap-error should provide error to handler', () => {
+    it('should provide error to handler', () => {
       equal('hi', exec('(trap-error (simple-error "hi") (lambda X (error-to-string X)))'));
     });
   });

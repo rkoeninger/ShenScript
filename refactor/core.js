@@ -130,8 +130,7 @@ const fun = (f, id = f.id || f.name, arity = f.arity || f.length) =>
   Object.assign(
     (...args) =>
       args.length === arity ? f(...args) :
-      // TODO: clean up some debugging
-      args.length > arity ? asFunction(settle(f(...args.slice(0, arity))), 'in ' + id)(...args.slice(f.arity)) :
+      args.length > arity ? asFunction(settle(f(...args.slice(0, arity))))(...args.slice(arity)) :
       fun((...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length),
     { id, arity });
 

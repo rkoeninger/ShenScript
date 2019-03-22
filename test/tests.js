@@ -248,13 +248,7 @@ describe('applications', () => {
     equal(13, exec('((+ 6) 7)'));
   });
   it('curried application', () => {
-    equal(2, $.f['+'].arity);
-    equal(1, $.f['+'](6).arity);
-    equal(13, $.f['+'](6, 7));
-    equal(13, $.f['+'](6)(7));
-    console.log($.fun(X => $.fun(Y => $.asNumber(X) + $.asNumber(Y), 'g', 1), 'f', 1)(6, 7));
-    // equal(13, $.fun(X => $.fun(Y => $.asNumber(X) + $.asNumber(Y), 'lambda', 1), 'lambda', 1)(6, 7));
-    // equal(13, exec('((lambda X (lambda Y (+ X Y))) 6 7)')); // TODO: why is Y the Array constructor?
+    equal(13, exec('((lambda X (lambda Y (+ X Y))) 6 7)'));
   });
 });
 

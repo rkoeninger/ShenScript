@@ -74,7 +74,7 @@ const trapAsync = async (f, g) => {
 };
 
 const nameOf     = Symbol.keyFor;
-const symbolOf   = Symbol.for;
+const symbolOf   = Symbol.for; // TODO: verify it's a valid symbol /[^\s\(\)]+/ ?
 const shenTrue   = symbolOf('true');
 const shenFalse  = symbolOf('false');
 const isNumber   = x => typeof x === 'number' && isFinite(x);
@@ -124,13 +124,14 @@ const equal = (x, y) =>
   x === y
   || isCons(x)  && isCons(y)  && equal(x.head, y.head) && equal(x.tail, y.tail)
   || isArray(x) && isArray(y) && x.length === y.length && x.every((v, i) => equal(v, y[i]));
+//|| x.constructor === y.constructor && equal(Object.keys(x), Object.keys(y)) && Object.keys(x).every(k => equal(x[k], y[k]))
 
-const fun = (f, id = f.name, arity = f.length) =>
+const fun = (f, id = f.id || f.name, arity = f.arity || f.length) =>
   Object.assign(
     (...args) =>
       args.length === arity ? f(...args) :
       // TODO: clean up some debugging
-      args.length > arity ? asFunction(settle(f(...args.slice(0, arity))), 'in ' + id)(args.slice(f.arity)) :
+      args.length > arity ? asFunction(settle(f(...args.slice(0, arity))), 'in ' + id)(...args.slice(f.arity)) :
       fun((...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length),
     { id, arity });
 
@@ -346,7 +347,7 @@ exports.kl = (options = {}) => {
     ['simple-error',    s => raise(asString(s))],
     ['error-to-string', e => asError(e).message],
     ['set',             (s, x) => symbols[nameOf(asSymbol(s))] = x],
-    ['value',           s => asDefined(symbols[nameOf(asSymbol(s))])],
+    ['value',           s => asDefined(symbols[nameOf(asSymbol(s))])], // this asDefined is required
     ['type',            (x, _) => x],
     ['eval-kl',         env.evalKl]
   ].forEach(([id, f]) => functions[id] = fun(f, id));

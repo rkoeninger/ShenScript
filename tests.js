@@ -10,9 +10,7 @@ const exec = s => $.settle($.evalKl(parse1(s)));
 describe('parsing', () => {
   describe('symbolic literals', () => {
     it('should parse any non-whitespace, non-paren', () => {
-      equal(s`abc`,   parse1('abc'));
-      equal(s`x\'{`,  parse1('x\'{'));
-      equal(s`.<?/^`, parse1('.<?/^'));
+      ['abc', 'x\'{', '.<?/^'].forEach(x => equal($.s(x), parse1(x)));
     });
   });
   describe('string literals', () => {
@@ -20,13 +18,10 @@ describe('parsing', () => {
       equal('', parse1('""'));
     });
     it('should capture any whitespace', () => {
-      equal('button\tswitch',       parse1('"button\tswitch"'));
-      equal('keyboard \n table',    parse1('"keyboard \n table"'));
-      equal('chair   watch',        parse1('"chair   watch"'));
-      equal('laptop \r\n\v screen', parse1('"laptop \r\n\v screen"'));
+      ['a\tb', 'a \n b', 'a   b', 'a\r\n\vb'].forEach(x => equal(x, parse1(`"${x}"`)));
     });
     it('should capture all ascii characters', () => {
-      equal('~!@#$%^&*()_+`\'<>,./?;:', parse1('"~!@#$%^&*()_+`\'<>,./?;:"'));
+      ['~!@#$%', '^&*()_+`\'<', '>,./?;:'].forEach(x => equal(x, parse1(`"${x}"`)));
     });
   });
   describe('numberic literals', () => {
@@ -101,9 +96,7 @@ describe('primitives', () => {
         throws(() => mul(-4, 'qwerty'));
       });
       it('should return zero when multiplying by zero', () => {
-        equal(0, mul(0, 34));
-        equal(0, mul(0, -7));
-        equal(0, mul(0, 449384736738485434.45945));
+        [34, -7, 449384736738485434.45945].forEach(x => equal(0, mul(0, x)));
       });
     });
     describe('/', () => {
@@ -117,9 +110,7 @@ describe('primitives', () => {
         throws(() => div(-4, 'qwerty'));
       });
       it('should raise error when divisor is zero', () => {
-        throws(() => div(1, 0));
-        throws(() => div(0, 0));
-        throws(() => div(-3, 0));
+        [1, 0, -3].forEach(x => throws(() => div(x, 0)));
       });
     })
   });
@@ -151,6 +142,10 @@ describe('primitives', () => {
   describe('evaluation', () => {
     it('eval-kl', () => {
       equal(5, exec('(eval-kl (cons + (cons 2 (cons 3 ()))))'));
+      equal(5, $.f['eval-kl']($.cons(s`+`, $.cons(2, $.cons(3, null)))));
+      equal(5, $.f['eval-kl']([s`+`, 2, 3]));
+      equal(5, $.evalKl($.cons(s`+`, $.cons(2, $.cons(3, null)))));
+      equal(5, $.evalKl([s`+`, 2, 3]));
     });
   });
 });
@@ -166,8 +161,8 @@ describe('conditionals', () => {
   });
   describe('if', () => {
     it('should not evaluate both branches', () => {
-      exec('(if (= 0 0) (set *x* 1) (set *x* 2))');
-      equal(1, $.symbols['*x*']);
+      equal(1, exec('(tl (cons (if (= 0 0) (set *x* 1) (set *x* 2)) (value *x*)))'));
+      equal(2, exec('(tl (cons (if (= 0 1) (set *x* 1) (set *x* 2)) (value *x*)))'));
     });
   });
   describe('and', () => {
@@ -257,7 +252,9 @@ describe('applications', () => {
     equal(1, $.f['+'](6).arity);
     equal(13, $.f['+'](6, 7));
     equal(13, $.f['+'](6)(7));
-    equal(13, exec('((lambda X (lambda Y (+ X Y))) 6 7)')); // TODO: why is Y the Array constructor?
+    console.log($.fun(X => $.fun(Y => $.asNumber(X) + $.asNumber(Y), 'g', 1), 'f', 1)(6, 7));
+    // equal(13, $.fun(X => $.fun(Y => $.asNumber(X) + $.asNumber(Y), 'lambda', 1), 'lambda', 1)(6, 7));
+    // equal(13, exec('((lambda X (lambda Y (+ X Y))) 6 7)')); // TODO: why is Y the Array constructor?
   });
 });
 
@@ -277,6 +274,10 @@ describe('globals', () => {
   describe('set', () => {
     it('should return the assigned value', () => {
       equal(1, exec('(set *x* 1)'));
+    });
+    it('should allow value to be retrieved later', () => {
+      exec('(set *x* "abc")');
+      equal("abc", exec('(value *x*)'));
     });
   });
 });

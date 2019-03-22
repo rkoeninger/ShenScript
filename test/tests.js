@@ -1,6 +1,6 @@
 const { equal, ok, throws } = require('assert');
-const { parse } = require('./parser');
-const { kl } = require('./refactor/core');
+const { parse } = require('../parser');
+const { kl } = require('../refactor/core');
 const $ = kl();
 
 const s = parts => $.s(parts[0]);

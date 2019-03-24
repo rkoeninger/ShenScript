@@ -323,7 +323,7 @@ exports.kl = (options = {}) => {
     ['hd',              c => asCons(c).head],
     ['tl',              c => asCons(c).tail],
     ['cons',            cons],
-    ['tlstr',           s => asString(s).substring(1)],
+    ['tlstr',           s => s === '' ? raise('non-empty string expected') : asString(s).substring(1)],
     ['cn',              (s, t) => asString(s) + asString(t)],
     ['string->n',       s => asString(s).charCodeAt(0)],
     ['n->string',       n => String.fromCharCode(asNumber(n))],

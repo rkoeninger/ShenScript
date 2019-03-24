@@ -64,89 +64,159 @@ describe('parsing', () => {
   });
 });
 
-describe('primitives', () => {
-  describe('math', () => {
-    describe('+', () => {
-      const add = $.f['+'];
-      it('should add numbers', () => {
-        equal(3,             add(1,           2));
-        equal(2150,          add(3400,        -1250));
-        equal(4024423313307, add(75848374834, 3948574938473));
-      });
-      it('should raise error for non-numbers', () => {
-        throws(() => add(undefined, 55));
-        throws(() => add(125, NaN));
-        throws(() => add(-4, 'qwerty'));
-      });
+describe('math', () => {
+  describe('+', () => {
+    const add = $.f['+'];
+    it('should add numbers', () => {
+      equal(3,             add(1,           2));
+      equal(2150,          add(3400,        -1250));
+      equal(4024423313307, add(75848374834, 3948574938473));
     });
-    describe('-', () => {
-      const sub = $.f['-'];
-      it('should subtract numbers', () => {
-        equal(69, sub(142, 73));
-      });
+    it('should raise error for non-numbers', () => {
+      throws(() => add(undefined, 55));
+      throws(() => add(125, NaN));
+      throws(() => add(-4, 'qwerty'));
     });
-    describe('*', () => {
-      const mul = $.f['*'];
-      it('should multiply numbers', () => {
-        equal(24, mul(4, 6));
-      });
-      it('should raise error for non-numbers', () => {
-        throws(() => mul(undefined, 55));
-        throws(() => mul(125, NaN));
-        throws(() => mul(-4, 'qwerty'));
-      });
-      it('should return zero when multiplying by zero', () => {
-        [34, -7, 449384736738485434.45945].forEach(x => equal(0, mul(0, x)));
-      });
-    });
-    describe('/', () => {
-      const div = $.f['/'];
-      it('should divide numbers', () => {
-        equal(4, div(24, 6));
-      });
-      it('should raise error for non-numbers', () => {
-        throws(() => div(undefined, 55));
-        throws(() => div(125, NaN));
-        throws(() => div(-4, 'qwerty'));
-      });
-      it('should raise error when divisor is zero', () => {
-        [1, 0, -3].forEach(x => throws(() => div(x, 0)));
-      });
-    })
   });
-  describe('recognisors', () => {
-    describe('cons?', () => {
-      const consp = $.f['cons?'];
-      it('should return a Shen boolean', () => {
-        equal(s`true`,  consp($.cons(1, 2)));
-        equal(s`true`,  consp($.cons(1, $.cons(2, null))));
-        equal(s`false`, consp(12));
-        equal(s`false`, consp(null));
-      });
+  describe('-', () => {
+    const sub = $.f['-'];
+    it('should subtract numbers', () => {
+      equal(69, sub(142, 73));
     });
-    describe('number?', () => {
-      const numberp = $.f['number?'];
-      it('should return a Shen boolean', () => {
-        equal(s`true`,  numberp(4));
-        equal(s`false`, numberp(''));
-      });
+  });
+  describe('*', () => {
+    const mul = $.f['*'];
+    it('should multiply numbers', () => {
+      equal(24, mul(4, 6));
     });
-    describe('string?', () => {
-      const stringp = $.f['string?'];
-      it('should return a Shen boolean', () => {
-        equal(s`true`,  stringp(''));
-        equal(s`false`, stringp(s`qwerty`));
+    it('should raise error for non-numbers', () => {
+      throws(() => mul(undefined, 55));
+      throws(() => mul(125, NaN));
+      throws(() => mul(-4, 'qwerty'));
+    });
+    it('should return zero when multiplying by zero', () => {
+      [34, -7, 449384736738485434.45945].forEach(x => equal(0, mul(0, x)));
+    });
+  });
+  describe('/', () => {
+    const div = $.f['/'];
+    it('should divide numbers', () => {
+      equal(4, div(24, 6));
+    });
+    it('should raise error for non-numbers', () => {
+      throws(() => div(undefined, 55));
+      throws(() => div(125, NaN));
+      throws(() => div(-4, 'qwerty'));
+    });
+    it('should raise error when divisor is zero', () => {
+      [1, 0, -3].forEach(x => throws(() => div(x, 0)));
+    });
+  });
+  describe('<, >, <=, >=, =', () => {
+    const isShenBool = x => x === s`true` || x === s`false`;
+    const ops = ['<', '>', '<=', '>=', '='].map(x => $.f[x]);
+    it('should return a Shen boolean', () => {
+      ops.forEach(op => {
+        [[3, 5], [0.0002, -123213], [-34, 234234]].forEach(([x, y]) => {
+          ok(isShenBool(op(x, y)));
+        });
       });
     });
   });
-  describe('evaluation', () => {
-    it('eval-kl', () => {
-      equal(5, exec('(eval-kl (cons + (cons 2 (cons 3 ()))))'));
-      equal(5, $.f['eval-kl']($.cons(s`+`, $.cons(2, $.cons(3, null)))));
-      equal(5, $.f['eval-kl']([s`+`, 2, 3]));
-      equal(5, $.evalKl($.cons(s`+`, $.cons(2, $.cons(3, null)))));
-      equal(5, $.evalKl([s`+`, 2, 3]));
+});
+
+describe('strings', () => {
+  describe('pos', () => {
+    it('should raise an error if index is out of range or not an integer', () => {
+      throws(() => $.f.pos('abc', -1));
+      throws(() => $.f.pos('abc', 3));
+      throws(() => $.f.pos('abc', 1.5));
     });
+  });
+  describe('tlstr', () => {
+    it('should return ', () => {
+      [['a', ''], ['12', '2'], ['#*%', '*%']].forEach(([s, t]) => equal(t, $.f.tlstr(s)));
+    });
+    it('should raise an error when given empty string', () => {
+      throws(() => $.f.tlstr(''));
+    });
+  });
+  describe('cn', () => {
+    it('should return non-empty argument when other is empty', () => {
+      ['lorem ipsum', '&`#%^@*'].forEach(s => {
+        equal(s, $.f.cn('', s));
+        equal(s, $.f.cn(s, ''));
+      });
+    });
+  });
+});
+
+describe('symbols', () => {
+  describe('intern', () => {
+    const intern = $.f.intern;
+    it('should return the same symbol for the same name', () => {
+      equal(intern('qwerty'), intern('qwerty'));
+    });
+  });
+  describe('value', () => {
+    it('should accept idle symbols', () => {
+      equal('JavaScript', exec('(value *language*)'));
+    });
+    it('should raise error for symbol with no value', () => {
+      throws(() => exec('(value *qwerty*)'));
+    });
+    it('should raise error for non-symbol argument', () => {
+      throws(() => exec('(value 5)'));
+      throws(() => exec('(value (cons 1 2))'));
+    });
+  });
+  describe('set', () => {
+    it('should return the assigned value', () => {
+      equal(1, exec('(set x 1)'));
+    });
+    it('should allow value to be retrieved later', () => {
+      exec('(set x "abc")');
+      equal("abc", exec('(value x)'));
+    });
+  });
+});
+
+describe('recognisors', () => {
+  it('should return Shen booleans', () => {
+    const ops = ['cons?', 'number?', 'string?'].map(x => $.f[x]);
+  });
+  describe('cons?', () => {
+    const consp = $.f['cons?'];
+    it('should return a Shen boolean', () => {
+      equal(s`true`,  consp($.cons(1, 2)));
+      equal(s`true`,  consp($.cons(1, $.cons(2, null))));
+      equal(s`false`, consp(12));
+      equal(s`false`, consp(null));
+    });
+  });
+  describe('number?', () => {
+    const numberp = $.f['number?'];
+    it('should return a Shen boolean', () => {
+      equal(s`true`,  numberp(4));
+      equal(s`false`, numberp(''));
+    });
+  });
+  describe('string?', () => {
+    const stringp = $.f['string?'];
+    it('should return a Shen boolean', () => {
+      equal(s`true`,  stringp(''));
+      equal(s`false`, stringp(s`qwerty`));
+    });
+  });
+});
+
+describe('evaluation', () => {
+  it('eval-kl', () => {
+    equal(5, exec('(eval-kl (cons + (cons 2 (cons 3 ()))))'));
+    equal(5, $.f['eval-kl']($.cons(s`+`, $.cons(2, $.cons(3, null)))));
+    equal(5, $.f['eval-kl']([s`+`, 2, 3]));
+    equal(5, $.evalKl($.cons(s`+`, $.cons(2, $.cons(3, null)))));
+    equal(5, $.evalKl([s`+`, 2, 3]));
   });
 });
 
@@ -161,8 +231,8 @@ describe('conditionals', () => {
   });
   describe('if', () => {
     it('should not evaluate both branches', () => {
-      equal(1, exec('(tl (cons (if (= 0 0) (set *x* 1) (set *x* 2)) (value *x*)))'));
-      equal(2, exec('(tl (cons (if (= 0 1) (set *x* 1) (set *x* 2)) (value *x*)))'));
+      equal(1, exec('(tl (cons (if (= 0 0) (set x 1) (set x 2)) (value x)))'));
+      equal(2, exec('(tl (cons (if (= 0 1) (set x 1) (set x 2)) (value x)))'));
     });
   });
   describe('and', () => {
@@ -203,11 +273,28 @@ describe('variable bindings', () => {
     it('should not bind local variables outside body expression', () => {
       equal(s`X`, exec('(tl (cons (let X 2 (+ 1 X)) X))'));
     });
-    it('should mask outer bindings', () => {
+    it('should shadow outer bindings when nested', () => {
       equal(3, exec('(let X 1 (let X 2 (let X 3 X)))'));
-    });
-    it('should handle nested bindings translated to iifes', () => {
       equal(3, exec('(let X 1 (if (> X 0) (let X 2 (+ X 1)) 5))'));
+    });
+    it('should shadow outer lambda binding when nested', () => {
+      equal(8, exec('((lambda X (let X 4 (+ X X))) 3)'));
+    });
+    it('should shadow defun parameters in outer scope', () => {
+      exec('(defun triple (X) (let X 4 (* 3 X)))');
+      equal(12, exec('(triple 0)'));
+    });
+  });
+  describe('lambda', () => {
+    it('should shadow outer bindings when nested', () => {
+      equal(8, exec('(((lambda X (lambda X (+ X X))) 3) 4)'));
+    });
+    it('should shadow outer let binding when nested', () => {
+      equal(8, exec('(let X 3 ((lambda X (+ X X)) 4))'));
+    });
+    it('should shadow defun parameters in outer scope', () => {
+      exec('(defun triple (X) (lambda X (* 3 X)))');
+      equal(12, exec('((triple 2) 4)'));
     });
   });
 });
@@ -223,8 +310,7 @@ describe('error handling', () => {
 describe('recursion', () => {
   it('functions should be able to call themselves', () => {
     exec('(defun fac (N) (if (= 0 N) 1 (* N (fac (- N 1)))))');
-    equal(120, exec('(fac 5)'));
-    equal(5040, exec('(fac 7)'));
+    [[0, 1], [5, 120], [7, 5040]].forEach(([n, r]) => equal(r, $.settle($.f.fac(n))));
   });
   describe('tail recursion', () => {
     it('should be possible without overflow', () => {
@@ -241,37 +327,13 @@ describe('recursion', () => {
 
 describe('applications', () => {
   it('argument expressions should be evaluated in order', () => {
-    exec('(cons (set *x* 1) (set *x* 2))');
-    equal(2, $.symbols['*x*']);
+    exec('((set x (lambda X (lambda Y (+ X Y)))) (set x 1) (set x 2))');
+    equal(2, $.symbols['x']);
   });
   it('partial application', () => {
     equal(13, exec('((+ 6) 7)'));
   });
   it('curried application', () => {
     equal(13, exec('((lambda X (lambda Y (+ X Y))) 6 7)'));
-  });
-});
-
-describe('globals', () => {
-  describe('value', () => {
-    it('should accept idle symbols', () => {
-      equal('JavaScript', exec('(value *language*)'));
-    });
-    it('should raise error for symbol with no value', () => {
-      throws(() => exec('(value *qwerty*)'));
-    });
-    it('should raise error for non-symbol argument', () => {
-      throws(() => exec('(value 5)'));
-      throws(() => exec('(value (cons 1 2))'));
-    });
-  });
-  describe('set', () => {
-    it('should return the assigned value', () => {
-      equal(1, exec('(set *x* 1)'));
-    });
-    it('should allow value to be retrieved later', () => {
-      exec('(set *x* "abc")');
-      equal("abc", exec('(value *x*)'));
-    });
   });
 });

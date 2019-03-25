@@ -127,8 +127,9 @@ const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x === null ? [] :
 const equal = (x, y) =>
   x === y
   || isCons(x)  && isCons(y)  && equal(x.head, y.head) && equal(x.tail, y.tail)
-  || isArray(x) && isArray(y) && x.length === y.length && x.every((v, i) => equal(v, y[i]));
+  || isArray(x) && isArray(y) && x.length === y.length && x.every((v, i) => equal(v, y[i]))
 //|| x.constructor === y.constructor && equal(Object.keys(x), Object.keys(y)) && Object.keys(x).every(k => equal(x[k], y[k]))
+// TODO: what about NaN?
 
 const fun = (f, id = f.id || f.name, arity = f.arity || f.length) =>
   Object.assign(
@@ -288,7 +289,7 @@ exports.kl = (options = {}) => {
     isError(x)    ? `<Error "${x.toString() + x.stack}">` :
     isStream(x)   ? `<Stream ${x.name}>` :
     `${x}`;
-  const out = options.stoutput || options.sterror;
+  const out = options.stoutput;
   const symbols = {
     '*language*':       'JavaScript',
     '*implementation*': options.implementation || 'Unknown',
@@ -321,7 +322,6 @@ exports.kl = (options = {}) => {
     ['write-byte',      (b, s) => (asOutStream(s).write(asNumber(b)), b)],
     ['number?',         x => asShenBool(isNumber(x))],
     ['string?',         x => asShenBool(isString(x))],
-    ['symbol?',         x => asShenBool(isSymbol(x))],
     ['absvector?',      x => asShenBool(isArray(x))],
     ['cons?',           x => asShenBool(isCons(x))],
     ['hd',              c => asCons(c).head],

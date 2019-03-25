@@ -7,6 +7,7 @@ const s = parts => $.s(parts[0]);
 const parse1 = s => parse(s)[0];
 const exec = s => $.settle($.evalKl(parse1(s)));
 const isShenBool = x => x === s`true` || x === s`false`;
+const values = [12, null, undefined, 'abc', s`asd`, 0, Infinity, [], $.cons(1, 2)];
 
 describe('parsing', () => {
   describe('symbolic literals', () => {
@@ -183,11 +184,43 @@ describe('symbols', () => {
   });
 });
 
+describe('conses', () => {
+  describe('cons', () => {
+    it('should accept values of any type', () => {
+      values.forEach(x => values.forEach(y => ok($.isCons($.f.cons(x, y)))));
+    });
+  });
+  describe('hd', () => {
+    it('should raise an error on empty list', () => {
+      throws(() => $.f.hd(null));
+    });
+    it('should retrieve head value of any cons', () => {
+      values.forEach(x => ok($.equal(x, $.f.hd($.f.cons(x, null)))));
+    });
+  });
+  describe('tl', () => {
+    it('should raise an error on empty list', () => {
+      throws(() => $.f.tl(null));
+    });
+    it('should retrieve head value of any cons', () => {
+      values.forEach(x => ok($.equal(x, $.f.tl($.f.cons(null, x)))));
+    });
+  });
+});
+
 describe('recognisors', () => {
   it('should return Shen booleans', () => {
-    const ops = ['cons?', 'number?', 'string?', 'symbol?', 'absvector?'];
-    const values = [12, null, undefined, 'abc', s`asd`, 0, NaN, Infinity, [], $.cons(1, 2)];
+    const ops = ['cons?', 'number?', 'string?', 'absvector?'];
     ops.forEach(op => values.forEach(x => ok(isShenBool($.f[op](x)))));
+  });
+});
+
+describe('equality', () => {
+  describe('=', () => {
+    it('should handle Infinity', () => {
+      ok($.f['='](Infinity, Infinity));
+      ok($.f['='](-Infinity, -Infinity));
+    });
   });
 });
 

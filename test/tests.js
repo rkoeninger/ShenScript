@@ -6,6 +6,7 @@ const $ = kl();
 const s = parts => $.s(parts[0]);
 const parse1 = s => parse(s)[0];
 const exec = s => $.settle($.evalKl(parse1(s)));
+const isShenBool = x => x === s`true` || x === s`false`;
 
 describe('parsing', () => {
   describe('symbolic literals', () => {
@@ -113,7 +114,6 @@ describe('math', () => {
     });
   });
   describe('<, >, <=, >=, =', () => {
-    const isShenBool = x => x === s`true` || x === s`false`;
     const ops = ['<', '>', '<=', '>=', '='].map(x => $.f[x]);
     it('should return a Shen boolean', () => {
       ops.forEach(op => {
@@ -143,19 +143,31 @@ describe('strings', () => {
   });
   describe('cn', () => {
     it('should return non-empty argument when other is empty', () => {
-      ['lorem ipsum', '&`#%^@*'].forEach(s => {
+      ['', 'lorem ipsum', '&`#%^@*'].forEach(s => {
         equal(s, $.f.cn('', s));
         equal(s, $.f.cn(s, ''));
       });
+    });
+  });
+  describe('string->n', () => {
+    it('should raise an error when given empty string', () => {
+      throws(() => $.f['string->n'](''));
+    });
+    it('should only return code point for first character', () => {
+      [[97, 'abc'], [63, '?12']].forEach(([n, s]) => equal(n, $.f['string->n'](s)));
+    });
+  });
+  describe('n->string', () => {
+    it('should always return a string of length 1', () => {
+      [10, 45, 81, 76, 118].forEach(n => $.asString($.f['n->string'](n)).length === 1);
     });
   });
 });
 
 describe('symbols', () => {
   describe('intern', () => {
-    const intern = $.f.intern;
     it('should return the same symbol for the same name', () => {
-      equal(intern('qwerty'), intern('qwerty'));
+      equal($.f.intern('qwerty'), $.f.intern('qwerty'));
     });
   });
   describe('value', () => {
@@ -183,30 +195,9 @@ describe('symbols', () => {
 
 describe('recognisors', () => {
   it('should return Shen booleans', () => {
-    const ops = ['cons?', 'number?', 'string?'].map(x => $.f[x]);
-  });
-  describe('cons?', () => {
-    const consp = $.f['cons?'];
-    it('should return a Shen boolean', () => {
-      equal(s`true`,  consp($.cons(1, 2)));
-      equal(s`true`,  consp($.cons(1, $.cons(2, null))));
-      equal(s`false`, consp(12));
-      equal(s`false`, consp(null));
-    });
-  });
-  describe('number?', () => {
-    const numberp = $.f['number?'];
-    it('should return a Shen boolean', () => {
-      equal(s`true`,  numberp(4));
-      equal(s`false`, numberp(''));
-    });
-  });
-  describe('string?', () => {
-    const stringp = $.f['string?'];
-    it('should return a Shen boolean', () => {
-      equal(s`true`,  stringp(''));
-      equal(s`false`, stringp(s`qwerty`));
-    });
+    const ops = ['cons?', 'number?', 'string?', 'symbol?', 'absvector?'];
+    const values = [12, null, undefined, 'abc', s`asd`, 0, NaN, Infinity, [], $.cons(1, 2)];
+    ops.forEach(op => values.forEach(x => ok(isShenBool($.f[op](x)))));
   });
 });
 

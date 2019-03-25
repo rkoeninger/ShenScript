@@ -73,27 +73,31 @@ const trapAsync = async (f, g) => {
   }
 };
 
-const nameOf     = Symbol.keyFor;
-const symbolOf   = Symbol.for; // TODO: verify it's a valid symbol /[^\s\(\)]+/ ?
-const shenTrue   = symbolOf('true');
-const shenFalse  = symbolOf('false');
-const isNumber   = x => typeof x === 'number' && isFinite(x);
-const isString   = x => typeof x === 'string';
-const isSymbol   = x => typeof x === 'symbol';
-const isFunction = x => typeof x === 'function';
-const isArray    = x => Array.isArray(x);
-const isError    = x => x instanceof Error;
-const isCons     = x => x instanceof Cons || x instanceof ArrayCons;
+const nameOf       = Symbol.keyFor;
+const symbolOf     = Symbol.for; // TODO: verify it's a valid symbol /[^\s\(\)]+/ ?
+const shenTrue     = symbolOf('true');
+const shenFalse    = symbolOf('false');
+const isNumber     = x => typeof x === 'number' && isFinite(x);
+const isFullNumber = x => typeof x === 'number' && x > 0;
+const isString     = x => typeof x === 'string';
+const isFullString = x => typeof x === 'string' && x.length > 0;
+const isSymbol     = x => typeof x === 'symbol';
+const isFunction   = x => typeof x === 'function';
+const isArray      = x => Array.isArray(x);
+const isError      = x => x instanceof Error;
+const isCons       = x => x instanceof Cons || x instanceof ArrayCons;
 
 // TODO: remove debug stuff here
-const asNumber   = x => isNumber(x)   ? x : raise('number expected, but: ' + showDebug(x));
-const asString   = x => isString(x)   ? x : raise('string expected, but: ' + showDebug(x));
-const asSymbol   = x => isSymbol(x)   ? x : raise('symbol expected, but: ' + showDebug(x));
-const asFunction = (x, y) => isFunction(x) ? x : raise('function expected: ' + showDebug(y));
-const asArray    = x => isArray(x)    ? x : raise('array expected, but: ' + showDebug(x));
-const asCons     = x => isCons(x)     ? x : raise('cons expected, but: ' + showDebug(x));
-const asError    = x => isError(x)    ? x : raise('error expected, but: ' + showDebug(x));
-const asIndex    = (i, a) =>
+const asNumber     = x => isNumber(x)     ? x : raise('number expected, but: ' + showDebug(x));
+const asFullNumber = x => isFullNumber(x) ? x : raise('non-empty number expected, but: ' + showDebug(x));
+const asString     = x => isString(x)     ? x : raise('string expected, but: ' + showDebug(x));
+const asFullString = x => isFullString(x) ? x : raise('non-empty string expected, but: ' + showDebug(x));
+const asSymbol     = x => isSymbol(x)     ? x : raise('symbol expected, but: ' + showDebug(x));
+const asFunction   = (x, y) => isFunction(x) ? x : raise('function expected: ' + showDebug(y));
+const asArray      = x => isArray(x)      ? x : raise('array expected, but: ' + showDebug(x));
+const asCons       = x => isCons(x)       ? x : raise('cons expected, but: ' + showDebug(x));
+const asError      = x => isError(x)      ? x : raise('error expected, but: ' + showDebug(x));
+const asIndex      = (i, a) =>
   !Number.isInteger(i)   ? raise(`index ${i} is not valid`) :
   i < 0 || i >= a.length ? raise(`index ${i} is not with array bounds of [0, ${a.length})`) :
   i;
@@ -323,9 +327,9 @@ exports.kl = (options = {}) => {
     ['hd',              c => asCons(c).head],
     ['tl',              c => asCons(c).tail],
     ['cons',            cons],
-    ['tlstr',           s => s === '' ? raise('non-empty string expected') : asString(s).substring(1)],
+    ['tlstr',           s => asFullString(s).substring(1)],
     ['cn',              (s, t) => asString(s) + asString(t)],
-    ['string->n',       s => asString(s).charCodeAt(0)],
+    ['string->n',       s => asFullString(s).charCodeAt(0)],
     ['n->string',       n => String.fromCharCode(asNumber(n))],
     ['pos',             (s, i) => asString(s)[asIndex(i, s)]],
     ['str',             show],
@@ -335,7 +339,7 @@ exports.kl = (options = {}) => {
     ['+',               (x, y) => asNumber(x) + asNumber(y)],
     ['-',               (x, y) => asNumber(x) - asNumber(y)],
     ['*',               (x, y) => asNumber(x) * asNumber(y)],
-    ['/',               (x, y) => y === 0 ? raise('div by zero') : asNumber(x) / asNumber(y)],
+    ['/',               (x, y) => asNumber(x) / asFullNumber(y)],
     ['>',               (x, y) => asShenBool(asNumber(x) >  asNumber(y))],
     ['<',               (x, y) => asShenBool(asNumber(x) <  asNumber(y))],
     ['>=',              (x, y) => asShenBool(asNumber(x) >= asNumber(y))],

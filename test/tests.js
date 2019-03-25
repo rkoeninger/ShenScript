@@ -30,14 +30,10 @@ describe('parsing', () => {
       equal(0, parse1('0'));
     });
     it('should parse numbers', () => {
-      equal(5,    parse1('5'));
-      equal(287,  parse1('287'));
-      equal(9456, parse1('9456'));
+      [[5, '5'], [287, '287'], [9456, '9456']].forEach(([n, s]) => equal(n, parse1(s)));
     });
     it('should parse negative numbers', () => {
-      equal(-4,   parse1('-4'));
-      equal(-143, parse1('-143'));
-      equal(-79,  parse1('-79'));
+      [[-4, '-4'], [-143, '-143'], [-79, '-79']].forEach(([n, s]) => equal(n, parse1(s)));
     });
   });
   describe('forms', () => {
@@ -74,9 +70,7 @@ describe('math', () => {
       equal(4024423313307, add(75848374834, 3948574938473));
     });
     it('should raise error for non-numbers', () => {
-      throws(() => add(undefined, 55));
-      throws(() => add(125, NaN));
-      throws(() => add(-4, 'qwerty'));
+      [[undefined, 55], [125, NaN], [-4, 'qwerty']].forEach(([x, y]) => throws(() => add(x, y)));
     });
   });
   describe('-', () => {
@@ -91,9 +85,7 @@ describe('math', () => {
       equal(24, mul(4, 6));
     });
     it('should raise error for non-numbers', () => {
-      throws(() => mul(undefined, 55));
-      throws(() => mul(125, NaN));
-      throws(() => mul(-4, 'qwerty'));
+      [[undefined, 55], [125, NaN], [-4, 'qwerty']].forEach(([x, y]) => throws(() => mul(x, y)));
     });
     it('should return zero when multiplying by zero', () => {
       [34, -7, 449384736738485434.45945].forEach(x => equal(0, mul(0, x)));
@@ -105,9 +97,7 @@ describe('math', () => {
       equal(4, div(24, 6));
     });
     it('should raise error for non-numbers', () => {
-      throws(() => div(undefined, 55));
-      throws(() => div(125, NaN));
-      throws(() => div(-4, 'qwerty'));
+      [[undefined, 55], [125, NaN], [-4, 'qwerty']].forEach(([x, y]) => throws(() => div(x, y)));
     });
     it('should raise error when divisor is zero', () => {
       [1, 0, -3].forEach(x => throws(() => div(x, 0)));

@@ -31,15 +31,6 @@ const Context = class {
   has(local)  { return this.locals && this.locals.has(local); }
 };
 
-const produce = (proceed, render, next, state) => {
-  const array = [];
-  while (proceed(state)) {
-    array.push(render(state));
-    state = next(state);
-  }
-  return array;
-};
-
 const raise = x => { throw new Error(x); };
 const handle = (f, g) => {
   try {
@@ -57,9 +48,10 @@ const trap = async (f, g) => {
 };
 
 const nameOf       = Symbol.keyFor;
-const symbolOf     = Symbol.for; // TODO: verify it's a valid symbol /[^\s\(\)]+/ ?
+const symbolOf     = Symbol.for;
 const shenTrue     = symbolOf('true');
 const shenFalse    = symbolOf('false');
+const isDefined    = x => x !== undefined;
 const isNumber     = x => typeof x === 'number' && isFinite(x);
 const isFullNumber = x => typeof x === 'number' && x > 0;
 const isString     = x => typeof x === 'string';
@@ -69,36 +61,34 @@ const isFunction   = x => typeof x === 'function';
 const isArray      = x => Array.isArray(x);
 const isError      = x => x instanceof Error;
 const isCons       = x => x instanceof Cons;
-
-// TODO: remove debug stuff here
-const asNumber     = x => isNumber(x)     ? x : raise('number expected, but: ' + showDebug(x));
-const asFullNumber = x => isFullNumber(x) ? x : raise('non-zero number expected, but: ' + showDebug(x));
-const asString     = x => isString(x)     ? x : raise('string expected, but: ' + showDebug(x));
-const asFullString = x => isFullString(x) ? x : raise('non-empty string expected, but: ' + showDebug(x));
-const asSymbol     = x => isSymbol(x)     ? x : raise('symbol expected, but: ' + showDebug(x));
-const asFunction   = x => isFunction(x)   ? x : raise('function expected: ' + showDebug(x));
-const asArray      = x => isArray(x)      ? x : raise('array expected, but: ' + showDebug(x));
-const asCons       = x => isCons(x)       ? x : raise('cons expected, but: ' + showDebug(x));
-const asError      = x => isError(x)      ? x : raise('error expected, but: ' + showDebug(x));
+const asDefined    = x => isDefined(x)    ? x : raise('defined value expected');
+const asNumber     = x => isNumber(x)     ? x : raise('number expected');
+const asFullNumber = x => isFullNumber(x) ? x : raise('non-zero number expected');
+const asString     = x => isString(x)     ? x : raise('string expected');
+const asFullString = x => isFullString(x) ? x : raise('non-empty string expected');
+const asSymbol     = x => isSymbol(x)     ? x : raise('symbol expected');
+const asFunction   = x => isFunction(x)   ? x : raise('function expected');
+const asArray      = x => isArray(x)      ? x : raise('array expected');
+const asCons       = x => isCons(x)       ? x : raise('cons expected');
+const asError      = x => isError(x)      ? x : raise('error expected');
 const asIndex      = (i, a) =>
   !Number.isInteger(i)   ? raise(`index ${i} is not valid`) :
   i < 0 || i >= a.length ? raise(`index ${i} is not with array bounds of [0, ${a.length})`) :
   i;
-
-// TODO: remove this
-const showDebug = x =>
-  x === undefined ? '<-undefined->' :
-  x === null ? '<-null->' :
-  isSymbol(x) ? nameOf(x) :
-  typeof x === 'object' ? x.constructor :
-  x;
-const asDefined = x => x === undefined ? raise('defined value expected, but: ' + showDebug(x)) : x;
-
 const asShenBool = x => x ? shenTrue : shenFalse;
 const asJsBool   = x =>
   x === shenTrue  ? true :
   x === shenFalse ? false :
-  raise(`value ${showDebug(x)} is not a valid boolean`);
+  raise('Shen boolean expected');
+
+const produce = (proceed, render, next, state) => {
+  const array = [];
+  while (proceed(state)) {
+    array.push(render(state));
+    state = next(state);
+  }
+  return array;
+};
 
 const cons             = (h, t) => new Cons(h, t);
 const consFromArray    = a => a.reduceRight((t, h) => cons(h, t), null);
@@ -233,6 +223,7 @@ const build = (context, expr) =>
     buildApp(context, expr)
   ) : raise('not a valid form');
 
+// TODO: need to be able to provide definition for (y-or-n?)
 exports.kl = (options = {}) => {
   // TODO: have shen-script.*instream-supported*, shen-script.*outstream-supported* flags?
   const isInStream  = options.isInStream  || (() => false);
@@ -324,7 +315,7 @@ exports.kl = (options = {}) => {
     ['simple-error',    s => raise(asString(s))],
     ['error-to-string', e => asError(e).message],
     ['set',             (s, x) => symbols[nameOf(asSymbol(s))] = x],
-    ['value',           s => asDefined(symbols[nameOf(asSymbol(s))])], // this asDefined is required
+    ['value',           s => asDefined(symbols[nameOf(asSymbol(s))])],
     ['type',            (x, _) => x],
     ['eval-kl',         env.evalKl]
   ].forEach(([id, f]) => functions[id] = fun(f, id));

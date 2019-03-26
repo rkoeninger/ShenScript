@@ -28,6 +28,7 @@
     "test-core": "mocha",
     "test-kernel": "node load.js",
     "test": "npm run test-core && npm run test-kernel",
-    "render": "node render.js"
+    "render": "node render.js",
+    "bundle": "echo \"bundle not implemented\" && exit 1"
   }
 }

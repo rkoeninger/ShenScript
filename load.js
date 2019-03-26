@@ -1,7 +1,7 @@
 Error.stackTraceLimit = 32;
 
 const fs = require('fs');
-const { kl } = require('./refactor/core');
+const { kl } = require('./src/core');
 const { parse } = require('./parser');
 
 const InStream = class {

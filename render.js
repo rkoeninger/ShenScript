@@ -1,6 +1,6 @@
 const fs = require('fs');
 const { generate } = require('astring');
-const { kl } = require('./refactor/core');
+const { kl } = require('./src/core');
 const { parse } = require('./parser');
 const env = kl();
 

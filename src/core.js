@@ -31,47 +31,31 @@ const Context = class {
   has(local)  { return this.locals && this.locals.has(local); }
 };
 
-const raise = x => { throw new Error(x); };
-const handle = (f, g) => {
-  try {
-    return f();
-  } catch (e) {
-    return g(e);
-  }
-};
-const trap = async (f, g) => {
-  try {
-    return f();
-  } catch (e) {
-    return g(e);
-  }
-};
-
-const nameOf       = Symbol.keyFor;
-const symbolOf     = Symbol.for;
-const shenTrue     = symbolOf('true');
-const shenFalse    = symbolOf('false');
-const isDefined    = x => x !== undefined;
-const isNumber     = x => typeof x === 'number' && isFinite(x);
-const isFullNumber = x => typeof x === 'number' && x > 0;
-const isString     = x => typeof x === 'string';
-const isFullString = x => typeof x === 'string' && x.length > 0;
-const isSymbol     = x => typeof x === 'symbol';
-const isFunction   = x => typeof x === 'function';
-const isArray      = x => Array.isArray(x);
-const isError      = x => x instanceof Error;
-const isCons       = x => x instanceof Cons;
-const asDefined    = x => isDefined(x)    ? x : raise('defined value expected');
-const asNumber     = x => isNumber(x)     ? x : raise('number expected');
-const asFullNumber = x => isFullNumber(x) ? x : raise('non-zero number expected');
-const asString     = x => isString(x)     ? x : raise('string expected');
-const asFullString = x => isFullString(x) ? x : raise('non-empty string expected');
-const asSymbol     = x => isSymbol(x)     ? x : raise('symbol expected');
-const asFunction   = x => isFunction(x)   ? x : raise('function expected');
-const asArray      = x => isArray(x)      ? x : raise('array expected');
-const asCons       = x => isCons(x)       ? x : raise('cons expected');
-const asError      = x => isError(x)      ? x : raise('error expected');
-const asIndex      = (i, a) =>
+const nameOf     = Symbol.keyFor;
+const symbolOf   = Symbol.for;
+const shenTrue   = symbolOf('true');
+const shenFalse  = symbolOf('false');
+const isDefined  = x => x !== undefined;
+const isNumber   = x => typeof x === 'number' && isFinite(x);
+const isNzNumber = x => isNumber(x) && x !== 0;
+const isString   = x => typeof x === 'string';
+const isNeString = x => isString(x) && x.length > 0;
+const isSymbol   = x => typeof x === 'symbol';
+const isFunction = x => typeof x === 'function';
+const isArray    = x => Array.isArray(x);
+const isError    = x => x instanceof Error;
+const isCons     = x => x instanceof Cons;
+const asDefined  = x => isDefined(x)  ? x : raise('defined value expected');
+const asNumber   = x => isNumber(x)   ? x : raise('number expected');
+const asNzNumber = x => isNzNumber(x) ? x : raise('non-zero number expected');
+const asString   = x => isString(x)   ? x : raise('string expected');
+const asNeString = x => isNeString(x) ? x : raise('non-empty string expected');
+const asSymbol   = x => isSymbol(x)   ? x : raise('symbol expected');
+const asFunction = x => isFunction(x) ? x : raise('function expected');
+const asArray    = x => isArray(x)    ? x : raise('array expected');
+const asCons     = x => isCons(x)     ? x : raise('cons expected');
+const asError    = x => isError(x)    ? x : raise('error expected');
+const asIndex    = (i, a) =>
   !Number.isInteger(i)   ? raise(`index ${i} is not valid`) :
   i < 0 || i >= a.length ? raise(`index ${i} is not with array bounds of [0, ${a.length})`) :
   i;
@@ -102,26 +86,41 @@ const equal = (x, y) =>
   || isCons(x)  && isCons(y)  && equal(x.head, y.head) && equal(x.tail, y.tail)
   || isArray(x) && isArray(y) && x.length === y.length && x.every((v, i) => equal(v, y[i]))
 //|| x.constructor === y.constructor && equal(Object.keys(x), Object.keys(y)) && Object.keys(x).every(k => equal(x[k], y[k]))
-// TODO: what about NaN?
+// TODO: what about NaN? do we want NaN to equal itself in shenscript?
 
 const fun = (f, id = f.id || f.name, arity = f.arity || f.length) =>
   Object.assign(
     (...args) =>
       args.length === arity ? f(...args) :
+      // TODO: what if async? async curried application?
       args.length > arity ? asFunction(settle(f(...args.slice(0, arity))))(...args.slice(arity)) :
       fun((...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length),
     { id, arity });
 
+const raise = x => { throw new Error(x); };
+const handle = (f, g) => {
+  try {
+    return f();
+  } catch (e) {
+    return g(e);
+  }
+};
+const trap = async (f, g) => {
+  try {
+    return f(); // TODO: await here?
+  } catch (e) {
+    return g(e); // TODO: await here?
+  }
+};
+
 const bounce = (f, args) => new Trampoline(f, args);
-const settle = (f, args) => {
-  let x = isFunction(f) ? f(...(args || [])) : f;
+const settle = x => {
   while (x instanceof Trampoline) {
     x = x.run();
   }
   return x;
 };
-const future = async (f, args) => {
-  let x = isFunction(f) ? f(...(args || [])) : f;
+const future = async x => {
   while (true) {
     const y = await x;
     if (y instanceof Trampoline) {
@@ -132,8 +131,6 @@ const future = async (f, args) => {
   }
 };
 
-// TOOD: build async/await
-
 const literal = value => ({ type: 'Literal', value });
 const array = elements => ({ type: 'ArrayExpression', elements });
 const identifier = name => ({ type: 'Identifier', name });
@@ -143,15 +140,14 @@ const assign = (left, right, operator = '=') => ({ type: 'AssignmentExpression',
 const answer = argument => ({ type: 'ReturnStatement', argument });
 const sequential = expressions => ({ type: 'SequenceExpression', expressions });
 const arrow = (params, body, async = false) => ({ type: 'ArrowFunctionExpression', async, params, body });
+// TOOD: pass async into invoke calls
 const invoke = (callee, arguments, async = false) => (async ? wait : (x => x))({ type: 'CallExpression', callee, arguments });
 const conditional = (test, consequent, alternate) => ({ type: 'ConditionalExpression', test, consequent, alternate });
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
 const ofEnv = name => access(identifier('$'), identifier(name));
-const cast = (dataType, value) =>
-  dataType === 'JsBool' && value === shenTrue
-    ? literal(true)
-    : invoke(ofEnv('as' + dataType), [value]);
+// TODO: const invokeOfEnv(name, ...args) => invoke(ofEnv(name), args);
+const cast = (dataType, value) => dataType === 'JsBool' && value === shenTrue ? literal(true) : invoke(ofEnv('as' + dataType), [value]);
 const isForm = (expr, lead, length) => isArray(expr) && expr.length > 0 && expr[0] === symbolOf(lead) && (!length || expr.length === length);
 const isConsForm = (expr, depth) => depth === 0 || isForm(expr, 'cons', 3) && isConsForm(expr[2], depth - 1);
 const hex = ch => ('0' + ch.charCodeAt(0).toString(16)).slice(-2);
@@ -188,7 +184,7 @@ const buildTrap = (context, [_, body, handler]) => {
   const t = invoke(
               ofEnv(context.async ? 'trap' : 'handle'),
               [arrow([], build(context.now(), body)), build(context.now(), handler)]);
-  return context.head ? invoke(ofEnv('settle'), [t]) : t;
+  return context.head ? invoke(ofEnv(context.async ? 'future' : 'settle'), [t]) : t;
 };
 const buildLambda = (context, name, params, body) =>
   // TODO: group nested lambdas into single 2+ arity function? ex. (lambda X (lambda Y Q)) ==> (lambda (X Y) Q)
@@ -197,14 +193,18 @@ const buildLambda = (context, name, params, body) =>
     literal(name)]);
 const buildDefun = (context, [_, id, params, body]) =>
   sequential([assign(ofEnvFunctions(id), buildLambda(context.clear(), nameOf(id), params, body)), idle(id)]);
-const buildApp = (context, [f, ...args]) =>
-  invoke(ofEnv(context.head ? (context.async ? 'future' : 'settle') : 'bounce'), [
-    cast('Function', (
+const buildApp = (context, [f, ...args]) => {
+  const builtF = cast('Function', (
       context.has(f) ? escapeIdentifier(f) :
       isArray(f)     ? build(context.now(), f) :
       isSymbol(f)    ? ofEnvFunctions(f) :
-      raise('not a valid application form'))),
-    array(args.map(arg => build(context.now(), arg)))]);
+      raise('not a valid application form')));
+  const builtArgs = array(args.map(arg => build(context.now(), arg)));
+  const builtBounce = invoke(ofEnv('bounce'), [builtF, builtArgs]); // TODO: why do we have to bounce when we're just going to settle?
+  return context.head // same pattern here as in buildTrap
+    ? invoke(ofEnv(context.async ? 'future' : 'settle'), [builtBounce])
+    : builtBounce;
+};
 const build = (context, expr) =>
   expr === null || isNumber(expr) || isString(expr) ? literal(expr) :
   isSymbol(expr) ? (context.has(expr) ? escapeIdentifier : idle)(expr) :
@@ -223,7 +223,7 @@ const build = (context, expr) =>
     buildApp(context, expr)
   ) : raise('not a valid form');
 
-// TODO: need to be able to provide definition for (y-or-n?)
+// TODO: need to be able to provide definition for (y-or-n?) maybe in frontend?
 exports.kl = (options = {}) => {
   // TODO: have shen-script.*instream-supported*, shen-script.*outstream-supported* flags?
   const isInStream  = options.isInStream  || (() => false);
@@ -268,15 +268,16 @@ exports.kl = (options = {}) => {
     '*home-directory*': options.homeDirectory  || ''
   };
   const functions = {};
-  const context = new Context({ async: options.async, head: true });
+  const rootContext = new Context({ async: options.async, head: true });
+  const rootBuild = expr => build(rootContext, expr);
   const env = {
     cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree, asJsBool, asShenBool,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
     symbolOf, nameOf, show, equal, raise, handle, trap, fun, bounce, settle, future, symbols, functions,
-    build: x => build(context, x), f: functions, s: symbolOf
+    build: rootBuild, f: functions, s: symbolOf
   };
-  env.evalKl = expr => Function('$', generate(answer(build(context, valueToArrayTree(expr)))))(env);
+  env.evalKl = expr => Function('$', generate(answer(rootBuild(valueToArrayTree(expr)))))(env);
   [
     ['if',              (b, x, y) => asJsBool(b) ? x : y],
     ['and',             (x, y) => asShenBool(asJsBool(x) && asJsBool(y))],
@@ -292,9 +293,9 @@ exports.kl = (options = {}) => {
     ['hd',              c => asCons(c).head],
     ['tl',              c => asCons(c).tail],
     ['cons',            cons],
-    ['tlstr',           s => asFullString(s).substring(1)],
+    ['tlstr',           s => asNeString(s).substring(1)],
     ['cn',              (s, t) => asString(s) + asString(t)],
-    ['string->n',       s => asFullString(s).charCodeAt(0)],
+    ['string->n',       s => asNeString(s).charCodeAt(0)],
     ['n->string',       n => String.fromCharCode(asNumber(n))],
     ['pos',             (s, i) => asString(s)[asIndex(i, s)]],
     ['str',             show],
@@ -304,7 +305,7 @@ exports.kl = (options = {}) => {
     ['+',               (x, y) => asNumber(x) + asNumber(y)],
     ['-',               (x, y) => asNumber(x) - asNumber(y)],
     ['*',               (x, y) => asNumber(x) * asNumber(y)],
-    ['/',               (x, y) => asNumber(x) / asFullNumber(y)],
+    ['/',               (x, y) => asNumber(x) / asNzNumber(y)],
     ['>',               (x, y) => asShenBool(asNumber(x) >  asNumber(y))],
     ['<',               (x, y) => asShenBool(asNumber(x) <  asNumber(y))],
     ['>=',              (x, y) => asShenBool(asNumber(x) >= asNumber(y))],

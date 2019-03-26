@@ -377,9 +377,27 @@ describe('recursion', () => {
     [[0, 1], [5, 120], [7, 5040]].forEach(([n, r]) => equal(r, $.settle($.f.fac(n))));
   });
   describe('tail recursion', () => {
+    const countDown = body => {
+      $.evalKl([s`defun`, s`count-down`, [s`X`], parse1(body)]);
+      ok($.evalKl([s`count-down`, 20000]));
+    };
     it('should be possible without overflow', () => {
-      exec('(defun count-down (X) (if (= 0 X) "done" (count-down (- X 1))))');
-      equal('done', exec('(count-down 20000)'));
+      countDown('(if (= 0 X) true (count-down (- X 1)))');
+    });
+    it('should optimize through an if true branch', () => {
+      countDown('(if (> X 0) (count-down (- X 1)) true)');
+    });
+    it('should optimize through an if false branch', () => {
+      countDown('(if (<= X 0) true (count-down (- X 1)))');
+    });
+    it('should optimize through let body', () => {
+      countDown('(if (<= X 0) true (let F 1 (count-down (- X F))))');
+    });
+    it('should optimize through a first cond consequent', () => {
+      countDown('(cond ((> X 0) (count-down (- X 1))) (true true))');
+    });
+    it('should optimize through a last cond consequent', () => {
+      countDown('(cond ((<= X 0) true) (true (count-down (- X 1))))');
     });
     it('should be possible for mutually recursive functions without overflow', () => {
       exec('(defun even? (X) (if (= 0 X) true  (odd?  (- X 1))))');

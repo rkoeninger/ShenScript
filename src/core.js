@@ -8,22 +8,6 @@ const Cons = class {
   }
 };
 
-const ArrayCons = class {
-  constructor(values, offset = 0) {
-    this.values = values.slice();
-    this.offset = offset;
-    Object.freeze(this);
-  }
-  get head() {
-    return this.values[this.offset];
-  }
-  get tail() {
-    return this.offset < this.values.length - 1
-      ? new ArrayCons(this.values, this.offset + 1)
-      : null;
-  }
-};
-
 const Trampoline = class {
   constructor(f, args) {
     this.f = f;
@@ -47,7 +31,6 @@ const Context = class {
   has(local)  { return this.locals && this.locals.has(local); }
 };
 
-const flatMap = [].flatMap ? ((f, xs) => xs.flatMap(f)) : ((f, xs) => [].concat(...xs.map(f)));
 const produce = (proceed, render, next, state) => {
   const array = [];
   while (proceed(state)) {
@@ -85,7 +68,7 @@ const isSymbol     = x => typeof x === 'symbol';
 const isFunction   = x => typeof x === 'function';
 const isArray      = x => Array.isArray(x);
 const isError      = x => x instanceof Error;
-const isCons       = x => x instanceof Cons || x instanceof ArrayCons;
+const isCons       = x => x instanceof Cons;
 
 // TODO: remove debug stuff here
 const asNumber     = x => isNumber(x)     ? x : raise('number expected, but: ' + showDebug(x));
@@ -118,8 +101,8 @@ const asJsBool   = x =>
   raise(`value ${showDebug(x)} is not a valid boolean`);
 
 const cons             = (h, t) => new Cons(h, t);
-const consFromArray    = a => a.length === 0 ? null : new ArrayCons(a);
-const consToArray      = c => c instanceof ArrayCons ? c.values.slice() : produce(isCons, c => c.head, c => c.tail, c);
+const consFromArray    = a => a.reduceRight((t, h) => cons(h, t), null);
+const consToArray      = c => produce(isCons, c => c.head, c => c.tail, c);
 const consToArrayTree  = c => produce(isCons, c => valueToArrayTree(c.head), c => c.tail, c);
 const valueToArray     = x => isCons(x) ? consToArray(x) : x === null ? [] : x;
 const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x === null ? [] : x;

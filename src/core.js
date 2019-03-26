@@ -158,6 +158,10 @@ const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '
 const escapeIdentifier = id => identifier(nameOf(id).split('').map(escapeCharacter).join(''));
 const idle = id => invoke(ofEnv('s'), [literal(nameOf(id))]);
 const ofEnvFunctions = id => access(ofEnv('f'), (validIdentifier(id) ? identifier : literal)(nameOf(id)));
+const complete = (context, expr) => invoke(ofEnv(context.async ? 'future' : 'settle'), [expr]);
+const completeOrReturn = (context, expr) => context.head ? complete(context, expr) : expr;
+const completeOrBounce = (context, fAst, argsAsts) =>
+  context.head ? complete(context, invoke(fAst, argsAsts)) : invoke(ofEnv('bounce'), [fAst, array(argsAsts)]);
 const buildCons = (context, expr) =>
   invoke(
     ofEnv('consFromArray'),
@@ -180,12 +184,12 @@ const buildLet = (context, [_, id, value, body]) =>
   invoke(
     arrow([escapeIdentifier(id)], build(context.add([asSymbol(id)]), body), context.async),
     [build(context.now(), value)]);
-const buildTrap = (context, [_, body, handler]) => {
-  const t = invoke(
-              ofEnv(context.async ? 'trap' : 'handle'),
-              [arrow([], build(context.now(), body)), build(context.now(), handler)]);
-  return context.head ? invoke(ofEnv(context.async ? 'future' : 'settle'), [t]) : t;
-};
+const buildTrap = (context, [_, body, handler]) =>
+  completeOrReturn(
+    context,
+    invoke(
+      ofEnv(context.async ? 'trap' : 'handle'),
+      [arrow([], build(context.now(), body)), build(context.now(), handler)]));
 const buildLambda = (context, name, params, body) =>
   // TODO: group nested lambdas into single 2+ arity function? ex. (lambda X (lambda Y Q)) ==> (lambda (X Y) Q)
   invoke(ofEnv('fun'), [
@@ -193,18 +197,15 @@ const buildLambda = (context, name, params, body) =>
     literal(name)]);
 const buildDefun = (context, [_, id, params, body]) =>
   sequential([assign(ofEnvFunctions(id), buildLambda(context.clear(), nameOf(id), params, body)), idle(id)]);
-const buildApp = (context, [f, ...args]) => {
-  const builtF = cast('Function', (
+const buildApp = (context, [f, ...args]) =>
+  completeOrBounce(
+    context,
+    cast('Function', (
       context.has(f) ? escapeIdentifier(f) :
       isArray(f)     ? build(context.now(), f) :
       isSymbol(f)    ? ofEnvFunctions(f) :
-      raise('not a valid application form')));
-  const builtArgs = array(args.map(arg => build(context.now(), arg)));
-  const builtBounce = invoke(ofEnv('bounce'), [builtF, builtArgs]); // TODO: why do we have to bounce when we're just going to settle?
-  return context.head // same pattern here as in buildTrap
-    ? invoke(ofEnv(context.async ? 'future' : 'settle'), [builtBounce])
-    : builtBounce;
-};
+      raise('not a valid application form'))),
+    args.map(arg => build(context.now(), arg)));
 const build = (context, expr) =>
   expr === null || isNumber(expr) || isString(expr) ? literal(expr) :
   isSymbol(expr) ? (context.has(expr) ? escapeIdentifier : idle)(expr) :
@@ -322,5 +323,3 @@ exports.kl = (options = {}) => {
   ].forEach(([id, f]) => functions[id] = fun(f, id));
   return env;
 };
-
-// TODO: need override for (function F) : symbol -> function, can remove special function form

@@ -26,4 +26,4 @@ const syntax = generate({ type: 'Program', body });
 
 console.log(`${syntax.length} chars`);
 
-fs.writeFileSync(`./dist/kernel_2.js`, syntax, 'utf-8');
+fs.writeFileSync(`./dist/kernel.js`, syntax, 'utf-8');

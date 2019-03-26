@@ -41,14 +41,14 @@ const produce = (proceed, render, next, state) => {
 };
 
 const raise = x => { throw new Error(x); };
-const trap = (f, g) => {
+const handle = (f, g) => {
   try {
     return f();
   } catch (e) {
     return g(e);
   }
 };
-const trapAsync = async (f, g) => {
+const trap = async (f, g) => {
   try {
     return f();
   } catch (e) {
@@ -72,11 +72,11 @@ const isCons       = x => x instanceof Cons;
 
 // TODO: remove debug stuff here
 const asNumber     = x => isNumber(x)     ? x : raise('number expected, but: ' + showDebug(x));
-const asFullNumber = x => isFullNumber(x) ? x : raise('non-empty number expected, but: ' + showDebug(x));
+const asFullNumber = x => isFullNumber(x) ? x : raise('non-zero number expected, but: ' + showDebug(x));
 const asString     = x => isString(x)     ? x : raise('string expected, but: ' + showDebug(x));
 const asFullString = x => isFullString(x) ? x : raise('non-empty string expected, but: ' + showDebug(x));
 const asSymbol     = x => isSymbol(x)     ? x : raise('symbol expected, but: ' + showDebug(x));
-const asFunction   = (x, y) => isFunction(x) ? x : raise('function expected: ' + showDebug(y));
+const asFunction   = x => isFunction(x)   ? x : raise('function expected: ' + showDebug(x));
 const asArray      = x => isArray(x)      ? x : raise('array expected, but: ' + showDebug(x));
 const asCons       = x => isCons(x)       ? x : raise('cons expected, but: ' + showDebug(x));
 const asError      = x => isError(x)      ? x : raise('error expected, but: ' + showDebug(x));
@@ -196,7 +196,7 @@ const buildLet = (context, [_, id, value, body]) =>
     [build(context.now(), value)]);
 const buildTrap = (context, [_, body, handler]) => {
   const t = invoke(
-              ofEnv(context.async ? 'trapAsync' : 'trap'),
+              ofEnv(context.async ? 'trap' : 'handle'),
               [arrow([], build(context.now(), body)), build(context.now(), handler)]);
   return context.head ? invoke(ofEnv('settle'), [t]) : t;
 };
@@ -207,22 +207,13 @@ const buildLambda = (context, name, params, body) =>
     literal(name)]);
 const buildDefun = (context, [_, id, params, body]) =>
   sequential([assign(ofEnvFunctions(id), buildLambda(context.clear(), nameOf(id), params, body)), idle(id)]);
-
-// TODO: remove this debug stuff and from buildApp
-const showArray = x =>
-  isArray(x) ? `[${x.map(showArray).join(', ')}]` :
-  isSymbol(x) ? x.toString() :
-  ('' + x);
-
 const buildApp = (context, [f, ...args]) =>
   invoke(ofEnv(context.head ? (context.async ? 'future' : 'settle') : 'bounce'), [
-    context.has(f) ? cast('Function', escapeIdentifier(f)) :
-    // isArray(f)     ? cast('Function', build(context.now(), f)) :
-
-    // TODO: remove debug code here
-    isArray(f)     ? invoke(ofEnv('asFunction'), [build(context.now(), f), literal(showArray(f))]) :
-    isSymbol(f)    ? cast('Function', ofEnvFunctions(f)) : // TODO: raise error if global function is undefined
-    raise('not a valid application form'),
+    cast('Function', (
+      context.has(f) ? escapeIdentifier(f) :
+      isArray(f)     ? build(context.now(), f) :
+      isSymbol(f)    ? ofEnvFunctions(f) :
+      raise('not a valid application form'))),
     array(args.map(arg => build(context.now(), arg)))]);
 const build = (context, expr) =>
   expr === null || isNumber(expr) || isString(expr) ? literal(expr) :
@@ -291,10 +282,10 @@ exports.kl = (options = {}) => {
     cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree, asJsBool, asShenBool,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
-    symbolOf, nameOf, show, equal, raise, trap, trapAsync, fun, bounce, settle, future, symbols, functions,
+    symbolOf, nameOf, show, equal, raise, handle, trap, fun, bounce, settle, future, symbols, functions,
     build: x => build(context, x), f: functions, s: symbolOf
   };
-  env.evalKl = expr => asDefined(Function('$', generate(answer(asDefined(build(context, valueToArrayTree(asDefined(expr)))))))(env));
+  env.evalKl = expr => Function('$', generate(answer(build(context, valueToArrayTree(expr)))))(env);
   [
     ['if',              (b, x, y) => asJsBool(b) ? x : y],
     ['and',             (x, y) => asShenBool(asJsBool(x) && asJsBool(y))],

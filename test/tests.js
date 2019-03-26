@@ -79,6 +79,9 @@ describe('math', () => {
     it('should subtract numbers', () => {
       equal(69, sub(142, 73));
     });
+    it('should raise error for non-numbers', () => {
+      [[undefined, 55], [125, NaN], [-4, 'qwerty']].forEach(([x, y]) => throws(() => sub(x, y)));
+    });
   });
   describe('*', () => {
     const mul = $.f['*'];
@@ -119,9 +122,7 @@ describe('math', () => {
 describe('strings', () => {
   describe('pos', () => {
     it('should raise an error if index is out of range or not an integer', () => {
-      throws(() => $.f.pos('abc', -1));
-      throws(() => $.f.pos('abc', 3));
-      throws(() => $.f.pos('abc', 1.5));
+      [-1, 3, 1.5, 'a', null].forEach(i => throws(() => $.f.pos('abc', i)));
     });
   });
   describe('tlstr', () => {
@@ -151,6 +152,11 @@ describe('strings', () => {
   describe('n->string', () => {
     it('should always return a string of length 1', () => {
       [10, 45, 81, 76, 118].forEach(n => $.asString($.f['n->string'](n)).length === 1);
+    });
+  });
+  describe('str', () => {
+    it('should return a string for any argument', () => {
+      values.forEach(x => $.f.str(x));
     });
   });
 });
@@ -208,6 +214,38 @@ describe('conses', () => {
   });
 });
 
+describe('absvectors', () => {
+  it('should store values in specified index', () => {
+    equal('hi', $.f['<-address']($.f['address->']($.f.absvector(16), 3, 'hi'), 3));
+  });
+  describe('absvector', () => {
+    it('should raise error when given non-positive-integer', () => {
+      [-1, 'a', null, undefined].forEach(n => throws(() => $.f.absvector(n)));
+    });
+    it('should initialize all values to null', () => {
+      const a = $.f.absvector(5);
+      [0, 1, 2, 3, 4].forEach(i => equal(null, $.f['<-address'](a, i)));
+    });
+  });
+  describe('<-address', () => {
+    it('should raise error when given non-positive-integer', () => {
+      const a = $.f.absvector(5);
+      [-1, 'a', null, undefined].forEach(i => throws(() => $.f['<-address'](a, i)));
+    });
+  });
+  describe('address->', () => {
+    it('should raise error when given non-positive-integer', () => {
+      const a = $.f.absvector(5);
+      [-1, 'a', null, undefined].forEach(i => throws(() => $.f['address->'](a, i, null)));
+    });
+  });
+  describe('absvector?', () => {
+    it('should return true for values returned by (absvector N)', () => {
+      [0, 12, 4835].forEach(n => equal(s`true`, $.f['absvector?']($.f.absvector(n))));
+    });
+  });
+});
+
 describe('recognisors', () => {
   it('should return Shen booleans', () => {
     const ops = ['cons?', 'number?', 'string?', 'absvector?'];
@@ -218,8 +256,15 @@ describe('recognisors', () => {
 describe('equality', () => {
   describe('=', () => {
     it('should handle Infinity', () => {
-      ok($.f['='](Infinity, Infinity));
-      ok($.f['='](-Infinity, -Infinity));
+      equal(s`true`,  $.f['='](Infinity, Infinity));
+      equal(s`true`,  $.f['='](-Infinity, -Infinity));
+      equal(s`false`, $.f['='](-Infinity, Infinity));
+    });
+    it('should compare functions based on reference equality', () => {
+      const f = $.evalKl([s`lambda`, s`X`, 0]);
+      const g = $.evalKl([s`lambda`, s`X`, 0]);
+      equal(s`true`,  $.f['='](f, f));
+      equal(s`false`, $.f['='](f, g));
     });
   });
 });
@@ -307,8 +352,8 @@ describe('variable bindings', () => {
       equal(8, exec('(let X 3 ((lambda X (+ X X)) 4))'));
     });
     it('should shadow defun parameters in outer scope', () => {
-      exec('(defun triple (X) (lambda X (* 3 X)))');
-      equal(12, exec('((triple 2) 4)'));
+      exec('(defun three (X) (lambda X (* 3 X)))');
+      equal(12, exec('((three 2) 4)'));
     });
   });
 });
@@ -317,6 +362,11 @@ describe('error handling', () => {
   describe('trap-error', () => {
     it('should provide error to handler', () => {
       equal('hi', exec('(trap-error (simple-error "hi") (lambda X (error-to-string X)))'));
+    });
+  });
+  describe('error-to-string', () => {
+    it('should raise error when given non-error', () => {
+      values.forEach(x => throws(() => $.f['error-to-string'](x)));
     });
   });
 });

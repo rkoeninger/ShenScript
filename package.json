@@ -37,6 +37,8 @@
     "astring": "^1.3.1"
   },
   "scripts": {
-    "test": "mocha"
+    "test-core": "mocha",
+    "test-kernel": "node load.js",
+    "test": "npm run test-core && npm run test-kernel"
   }
 }

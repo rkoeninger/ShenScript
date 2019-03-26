@@ -389,6 +389,25 @@ describe('recursion', () => {
   });
 });
 
+describe('scope capture', () => {
+  describe('lambda', () => {
+    it('should capture local variables', () => {
+      equal(1, exec('(let X 1 (let F (lambda Y X) (F 0)))'));
+    });
+    it('should not have access to symbols outside lexical scope', () => {
+      equal(s`Y`, exec('(let F (lambda X Y) (let Y 3 (F 0)))'));
+    });
+  });
+  describe('freeze', () => {
+    it('should capture local variables', () => {
+      equal(1, exec('(let X 1 (let F (freeze X) (F)))'));
+    });
+    it('should not have access to symbols outside lexical scope', () => {
+      equal(s`Y`, exec('(let F (freeze Y) (let Y 3 (F)))'));
+    });
+  });
+});
+
 describe('applications', () => {
   it('argument expressions should be evaluated in order', () => {
     exec('((set x (lambda X (lambda Y (+ X Y)))) (set x 1) (set x 2))');

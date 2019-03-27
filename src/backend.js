@@ -265,7 +265,7 @@ module.exports = (options = {}) => {
     cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree, asJsBool, asShenBool,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
-    symbolOf, nameOf, show, equal, raise, handle, trap, fun, bounce, settle, future, symbols, functions,
+    symbolOf, nameOf, show, equal, raise, trap, bait, fun, bounce, settle, future, symbols, functions,
     compile, f: functions, s: symbolOf
   };
   env.evalKl = expr => Function('$', generate(answer(compile(valueToArrayTree(expr)))))(env);

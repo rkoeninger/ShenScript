@@ -19,10 +19,29 @@ files.forEach(file => parse(fs.readFileSync(`./kernel/klambda/${file}.kl`, 'utf-
   }
 }));
 
-const body = [].concat(defuns, statements).map(compile);
-
-const syntax = generate({ type: 'Program', body });
+const syntax = generate({
+  type: 'Program',
+  body: [{
+    type: 'ExpressionStatement',
+    expression: {
+      type: 'AssignmentExpression',
+      operator: '=',
+      left: {
+        type: 'MemberExpression',
+        object: { type: 'Identifier', name: 'module' },
+        property: { type: 'Identifier', name: 'exports' }
+      },
+      right: {
+        type: 'ArrowFunctionExpression',
+        params: [{ type: 'Identifier', name: '$' }],
+        body: {
+          type: 'BlockStatement',
+          body: [].concat(defuns, statements).map(compile)
+        }
+      }
+    }
+  }]
+});
 
 console.log(`${syntax.length} chars`);
-
 fs.writeFileSync(`./dist/kernel.js`, syntax, 'utf-8');

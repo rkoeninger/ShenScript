@@ -98,14 +98,14 @@ const fun = (f, id = f.id || f.name, arity = f.arity || f.length) =>
     { id, arity });
 
 const raise = x => { throw new Error(x); };
-const handle = (f, g) => {
+const trap = (f, g) => {
   try {
     return f();
   } catch (e) {
     return g(e);
   }
 };
-const trap = async (f, g) => {
+const bait = async (f, g) => {
   try {
     return f(); // TODO: await here?
   } catch (e) {
@@ -193,7 +193,7 @@ const build = (context, expr) =>
     isForm(expr, 'trap-error', 3) ?
       completeOrReturn(
         context,
-        invokeEnv(context.async ? 'trap' : 'handle',
+        invokeEnv(context.async ? 'bait' : 'trap',
           [arrow([], build(context.now(), expr[1])), build(context.now(), expr[2])])) :
     isForm(expr, 'lambda', 3) ? lambda(context, 'lambda', [expr[1]], expr[2]) :
     isForm(expr, 'freeze', 2) ? lambda(context, 'freeze', [], expr[1]) :

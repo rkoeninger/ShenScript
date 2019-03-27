@@ -1,7 +1,7 @@
 const { equal, ok, throws } = require('assert');
 const { parse } = require('../parser');
-const { kl } = require('../src/core');
-const $ = kl();
+const backend = require('../src/backend');
+const $ = backend();
 
 const s = parts => $.s(parts[0]);
 const parse1 = s => parse(s)[0];

@@ -1,8 +1,8 @@
 const fs = require('fs');
 const { generate } = require('astring');
-const { kl } = require('./src/core');
+const backend = require('./src/backend');
 const { parse } = require('./parser');
-const env = kl();
+const $ = backend();
 
 const files = [
   'toplevel', 'core',   'sys',          'dict',  'sequent',
@@ -10,17 +10,16 @@ const files = [
   'writer',   'macros', 'declarations', 'types', 't-star'
 ];
 
-
 const defuns = [];
 const statements = [];
 
 files.forEach(file => parse(fs.readFileSync(`./kernel/klambda/${file}.kl`, 'utf-8')).forEach(expr => {
   if (Array.isArray(expr) && expr.length > 0) {
-    (expr[0] === env.symbolOf('defun') ? defuns : statements).push(expr);
+    (expr[0] === $.symbolOf('defun') ? defuns : statements).push(expr);
   }
 }));
 
-const body = [].concat(defuns, statements).map(expr => env.build(expr));
+const body = [].concat(defuns, statements).map(expr => $.build(expr));
 
 const syntax = generate({ type: 'Program', body });
 

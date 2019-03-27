@@ -1,7 +1,7 @@
 Error.stackTraceLimit = 32;
 
 const fs = require('fs');
-const { kl } = require('./src/core');
+const backend = require('./src/backend');
 const { parse } = require('./parser');
 
 const InStream = class {
@@ -20,7 +20,7 @@ const OutStream = class {
 const stoutput = new OutStream();
 
 let home = () => '';
-const $ = kl({
+const $ = backend({
   implementation: 'node',
   release: process.version.slice(1),
   os: process.platform,

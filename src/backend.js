@@ -215,7 +215,7 @@ const build = (context, expr) =>
   ) : raise('not a valid form');
 
 // TODO: need to be able to provide definition for (y-or-n?) maybe in frontend?
-exports.kl = (options = {}) => {
+module.exports = (options = {}) => {
   // TODO: have shen-script.*instream-supported*, shen-script.*outstream-supported* flags?
   const isInStream  = options.isInStream  || (() => false);
   const isOutStream = options.isOutStream || (() => false);

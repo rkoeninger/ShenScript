@@ -141,7 +141,7 @@ const answer = argument => ({ type: 'ReturnStatement', argument });
 const sequential = expressions => ({ type: 'SequenceExpression', expressions });
 const arrow = (params, body, async = false) => ({ type: 'ArrowFunctionExpression', async, params, body });
 // TOOD: pass async into invoke calls
-const invoke = (callee, arguments, async = false) => (async ? wait : (x => x))({ type: 'CallExpression', callee, arguments });
+const invoke = (callee, args, async = false) => (async ? wait : (x => x))({ type: 'CallExpression', callee, arguments: args });
 const conditional = (test, consequent, alternate) => ({ type: 'ConditionalExpression', test, consequent, alternate });
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });

@@ -1,4 +1,4 @@
-const async = process.argv.some(a => a === 'async');
+const async = process.argv.includes('async');
 
 const fs = require('fs');
 const { generate } = require('astring');

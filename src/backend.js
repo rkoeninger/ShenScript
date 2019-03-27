@@ -27,8 +27,8 @@ const Context = class {
   now()       { return new Context({ ...this, head: true }); }
   later()     { return new Context({ ...this, head: false }); }
   clear()     { return new Context({ ...this, locals: new Set() }); }
-  add(locals) { return new Context({ ...this, locals: new Set([...(this.locals || []), ...locals]) }); }
-  has(local)  { return this.locals && this.locals.has(local); }
+  add(locals) { return new Context({ ...this, locals: new Set([...this.locals, ...locals]) }); }
+  has(local)  { return this.locals.has(local); }
 };
 
 const nameOf     = Symbol.keyFor;
@@ -86,7 +86,7 @@ const equal = (x, y) =>
   || isCons(x)  && isCons(y)  && equal(x.head, y.head) && equal(x.tail, y.tail)
   || isArray(x) && isArray(y) && x.length === y.length && x.every((v, i) => equal(v, y[i]))
 //|| x.constructor === y.constructor && equal(Object.keys(x), Object.keys(y)) && Object.keys(x).every(k => equal(x[k], y[k]))
-// TODO: what about NaN? do we want NaN to equal itself in shenscript?
+// TODO: what about NaN? do we want NaN to equal itself in shenscript? use Number.isNaN()
 
 const fun = (f, id = f.id || f.name, arity = f.arity || f.length) =>
   Object.assign(
@@ -259,16 +259,16 @@ module.exports = (options = {}) => {
     '*home-directory*': options.homeDirectory  || ''
   };
   const functions = {};
-  const rootContext = new Context({ async: options.async, head: true });
-  const rootBuild = expr => build(rootContext, expr);
+  const context = new Context({ async: options.async, head: true, locals: new Set() });
+  const compile = expr => build(context, expr);
   const env = {
     cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree, asJsBool, asShenBool,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
     symbolOf, nameOf, show, equal, raise, handle, trap, fun, bounce, settle, future, symbols, functions,
-    build: rootBuild, f: functions, s: symbolOf
+    compile, f: functions, s: symbolOf
   };
-  env.evalKl = expr => Function('$', generate(answer(rootBuild(valueToArrayTree(expr)))))(env);
+  env.evalKl = expr => Function('$', generate(answer(compile(valueToArrayTree(expr)))))(env);
   [
     ['if',              (b, x, y) => asJsBool(b) ? x : y],
     ['and',             (x, y) => asShenBool(asJsBool(x) && asJsBool(y))],

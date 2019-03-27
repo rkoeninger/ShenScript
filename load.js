@@ -32,9 +32,10 @@ const $ = backend({
   stoutput,
   sterror: stoutput
 });
-home = () => $.symbols['*home-directory*'];
-const load = expr => $.trap(() => $.evalKl(expr), e => (console.log(expr), console.log(e)));
-const s = parts => $.s(parts[0]);
+const { evalKl, symbolOf, symbols, trap } = $;
+home = () => symbols['*home-directory*'];
+const load = expr => trap(() => evalKl(expr), e => (console.log(expr), console.log(e)));
+const s = parts => symbolOf(parts[0]);
 
 const files = [
   'toplevel', 'core',   'sys',          'dict',  'sequent',
@@ -65,8 +66,8 @@ const loadGroup = (name, exprs) => {
 loadGroup('defuns', defuns);
 loadGroup('statements', statements);
 
-console.log($.evalKl([s`cd`, './kernel/tests']));
-console.log($.evalKl([s`load`, 'README.shen']));
-console.log($.evalKl([s`load`, 'tests.shen']));
+console.log(evalKl([s`cd`, './kernel/tests']));
+console.log(evalKl([s`load`, 'README.shen']));
+console.log(evalKl([s`load`, 'tests.shen']));
 
 module.exports = $;

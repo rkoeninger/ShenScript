@@ -146,25 +146,23 @@ const conditional = (test, consequent, alternate) => ({ type: 'ConditionalExpres
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
 const ofEnv = name => access(identifier('$'), identifier(name));
-// TODO: const invokeOfEnv(name, ...args) => invoke(ofEnv(name), args);
-const cast = (dataType, value) => dataType === 'JsBool' && value === shenTrue ? literal(true) : invoke(ofEnv('as' + dataType), [value]);
+const invokeEnv = (name, args) => invoke(ofEnv(name), args);
+const cast = (dataType, value) => dataType === 'JsBool' && value === shenTrue ? literal(true) : invokeEnv('as' + dataType, [value]);
 const isForm = (expr, lead, length) => isArray(expr) && expr.length > 0 && expr[0] === symbolOf(lead) && (!length || expr.length === length);
 const isConsForm = (expr, depth) => depth === 0 || isForm(expr, 'cons', 3) && isConsForm(expr[2], depth - 1);
 const hex = ch => ('0' + ch.charCodeAt(0).toString(16)).slice(-2);
 const validCharacterRegex = /^[_A-Za-z0-9]$/;
 const validCharactersRegex = /^[_A-Za-z][_A-Za-z0-9]*$/;
-const validIdentifier = id => validCharactersRegex.test(nameOf(id));
 const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '_' : `$${hex(ch)}`;
 const escapeIdentifier = id => identifier(nameOf(id).split('').map(escapeCharacter).join(''));
-const idle = id => invoke(ofEnv('s'), [literal(nameOf(id))]);
-const ofEnvFunctions = id => access(ofEnv('f'), (validIdentifier(id) ? identifier : literal)(nameOf(id)));
-const complete = (context, ast) => invoke(ofEnv(context.async ? 'future' : 'settle'), [ast]);
+const idle = id => invokeEnv('s', [literal(nameOf(id))]);
+const globalFunction = id => access(ofEnv('f'), literal(nameOf(id)));
+const complete = (context, ast) => invokeEnv(context.async ? 'future' : 'settle', [ast]);
 const completeOrReturn = (context, ast) => context.head ? complete(context, ast) : ast;
 const completeOrBounce = (context, fAst, argsAsts) =>
-  context.head ? complete(context, invoke(fAst, argsAsts)) : invoke(ofEnv('bounce'), [fAst, array(argsAsts)]);
+  context.head ? complete(context, invoke(fAst, argsAsts)) : invokeEnv('bounce', [fAst, array(argsAsts)]);
 const lambda = (context, name, params, body) =>
-  // TODO: group nested lambdas into single 2+ arity function? ex. (lambda X (lambda Y Q)) ==> (lambda (X Y) Q)
-  invoke(ofEnv('fun'), [
+  invokeEnv('fun', [
     arrow(params.map(escapeIdentifier), build(context.later().add(params.map(asSymbol)), body), context.async),
     literal(name)]);
 const build = (context, expr) =>
@@ -186,6 +184,8 @@ const build = (context, expr) =>
       build(context, expr.slice(1).reduceRight(
         (alternate, [test, consequent]) => [symbolOf('if'), test, consequent, alternate],
         [symbolOf('simple-error'), 'no condition was true'])) :
+    isForm(expr, 'do', 3) ?
+      sequential([build(context.now(), expr[1]), build(context, expr[2])]) :
     isForm(expr, 'let', 4) ?
       invoke(
         arrow([escapeIdentifier(expr[1])], build(context.add([asSymbol(expr[1])]), expr[3]), context.async),
@@ -193,25 +193,23 @@ const build = (context, expr) =>
     isForm(expr, 'trap-error', 3) ?
       completeOrReturn(
         context,
-        invoke(
-          ofEnv(context.async ? 'trap' : 'handle'),
+        invokeEnv(context.async ? 'trap' : 'handle',
           [arrow([], build(context.now(), expr[1])), build(context.now(), expr[2])])) :
     isForm(expr, 'lambda', 3) ? lambda(context, 'lambda', [expr[1]], expr[2]) :
     isForm(expr, 'freeze', 2) ? lambda(context, 'freeze', [], expr[1]) :
     isForm(expr, 'defun', 4) ?
       sequential([
-        assign(ofEnvFunctions(expr[1]), lambda(context.clear(), nameOf(expr[1]), expr[2], expr[3])),
+        assign(globalFunction(expr[1]), lambda(context.clear(), nameOf(expr[1]), expr[2], expr[3])),
         idle(expr[1])]) :
     isConsForm(expr, 8) ?
-      invoke(
-        ofEnv('consFromArray'),
+      invokeEnv('consFromArray',
         [array(produce(x => isForm(x, 'cons', 3), x => build(context.now(), x[1]), x => x[2], expr))]) :
     completeOrBounce(
       context,
       cast('Function', (
         context.has(expr[0]) ? escapeIdentifier(expr[0]) :
         isArray(expr[0])     ? build(context.now(), expr[0]) :
-        isSymbol(expr[0])    ? ofEnvFunctions(expr[0]) :
+        isSymbol(expr[0])    ? globalFunction(expr[0]) :
         raise('not a valid application form'))),
       expr.slice(1).map(arg => build(context.now(), arg)))
   ) : raise('not a valid form');

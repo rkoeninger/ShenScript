@@ -390,6 +390,9 @@ describe('recursion', () => {
     it('should optimize through an if false branch', () => {
       countDown('(if (<= X 0) true (count-down (- X 1)))');
     });
+    it('should optimize through nested if expressions', () => {
+      countDown('(if (<= X 0) true (if true (count-down (- X 1)) false))');
+    });
     it('should optimize through let body', () => {
       countDown('(if (<= X 0) true (let F 1 (count-down (- X F))))');
     });
@@ -398,6 +401,21 @@ describe('recursion', () => {
     });
     it('should optimize through a last cond consequent', () => {
       countDown('(cond ((<= X 0) true) (true (count-down (- X 1))))');
+    });
+    it('should optimize through last expression in a do expression', () => {
+      countDown('(do 0 (if (<= X 0) true (do 0 (count-down (- X 1)))))');
+    });
+    it('should optimize through handler of trap-error expression', () => {
+      countDown('(trap-error (if (> X 0) (simple-error "recur") true) (lambda E (count-down (- X 1))))');
+    });
+    it('should optimize through freeze calls', () => {
+      countDown('(if (<= X 0) true ((freeze (count-down (- X 1)))))');
+    });
+    it('should optimize through lambda calls', () => {
+      countDown('(if (<= X 0) true ((lambda Y (count-down (- X Y))) 1))');
+    });
+    it('should optimize through nested lambdas', () => {
+      countDown('(let F (lambda F (lambda X (if (<= X 0) true ((F F) (- X 1))))) ((F F) 20000))');
     });
     it('should be possible for mutually recursive functions without overflow', () => {
       exec('(defun even? (X) (if (= 0 X) true  (odd?  (- X 1))))');

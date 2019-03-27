@@ -1,8 +1,10 @@
+const async = process.argv.some(a => a === 'async');
+
 const fs = require('fs');
 const { generate } = require('astring');
 const backend = require('./src/backend');
 const { parse } = require('./parser');
-const { compile, symbolOf } = backend();
+const { compile, symbolOf } = backend({ async });
 
 const files = [
   'toplevel', 'core',   'sys',          'dict',  'sequent',
@@ -36,7 +38,10 @@ const syntax = generate({
         params: [{ type: 'Identifier', name: '$' }],
         body: {
           type: 'BlockStatement',
-          body: [].concat(defuns, statements).map(compile)
+          body: [].concat([].concat(defuns, statements).map(compile), [{
+            type: 'ReturnStatement',
+            argument: { type: 'Identifier', name: '$' }
+          }])
         }
       }
     }
@@ -44,4 +49,4 @@ const syntax = generate({
 });
 
 console.log(`${syntax.length} chars`);
-fs.writeFileSync(`./dist/kernel.js`, syntax, 'utf-8');
+fs.writeFileSync(`./dist/kernel_${async ? 'async' : 'sync'}.js`, syntax, 'utf-8');

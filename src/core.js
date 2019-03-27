@@ -158,70 +158,62 @@ const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '
 const escapeIdentifier = id => identifier(nameOf(id).split('').map(escapeCharacter).join(''));
 const idle = id => invoke(ofEnv('s'), [literal(nameOf(id))]);
 const ofEnvFunctions = id => access(ofEnv('f'), (validIdentifier(id) ? identifier : literal)(nameOf(id)));
-const complete = (context, expr) => invoke(ofEnv(context.async ? 'future' : 'settle'), [expr]);
-const completeOrReturn = (context, expr) => context.head ? complete(context, expr) : expr;
+const complete = (context, ast) => invoke(ofEnv(context.async ? 'future' : 'settle'), [ast]);
+const completeOrReturn = (context, ast) => context.head ? complete(context, ast) : ast;
 const completeOrBounce = (context, fAst, argsAsts) =>
   context.head ? complete(context, invoke(fAst, argsAsts)) : invoke(ofEnv('bounce'), [fAst, array(argsAsts)]);
-const buildCons = (context, expr) =>
-  invoke(
-    ofEnv('consFromArray'),
-    [array(produce(x => isForm(x, 'cons', 3), x => build(context.now(), x[1]), x => x[2], expr))]);
-const buildAndOr = (operator, context, [_, left, right]) =>
-  cast('ShenBool',
-    logical(operator,
-      cast('JsBool', build(context.now(), left)),
-      cast('JsBool', build(context.now(), right))));
-const buildIf = (context, [_, test, consequent, alternate]) =>
-  conditional(
-    cast('JsBool', build(context.now(), test)),
-    build(context, consequent),
-    build(context, alternate));
-const buildCond = (context, [_, ...clauses]) =>
-  build(context, clauses.reduceRight(
-    (alternate, [test, consequent]) => [symbolOf('if'), test, consequent, alternate],
-    [symbolOf('simple-error'), 'no condition was true']));
-const buildLet = (context, [_, id, value, body]) =>
-  invoke(
-    arrow([escapeIdentifier(id)], build(context.add([asSymbol(id)]), body), context.async),
-    [build(context.now(), value)]);
-const buildTrap = (context, [_, body, handler]) =>
-  completeOrReturn(
-    context,
-    invoke(
-      ofEnv(context.async ? 'trap' : 'handle'),
-      [arrow([], build(context.now(), body)), build(context.now(), handler)]));
-const buildLambda = (context, name, params, body) =>
+const lambda = (context, name, params, body) =>
   // TODO: group nested lambdas into single 2+ arity function? ex. (lambda X (lambda Y Q)) ==> (lambda (X Y) Q)
   invoke(ofEnv('fun'), [
     arrow(params.map(escapeIdentifier), build(context.later().add(params.map(asSymbol)), body), context.async),
     literal(name)]);
-const buildDefun = (context, [_, id, params, body]) =>
-  sequential([assign(ofEnvFunctions(id), buildLambda(context.clear(), nameOf(id), params, body)), idle(id)]);
-const buildApp = (context, [f, ...args]) =>
-  completeOrBounce(
-    context,
-    cast('Function', (
-      context.has(f) ? escapeIdentifier(f) :
-      isArray(f)     ? build(context.now(), f) :
-      isSymbol(f)    ? ofEnvFunctions(f) :
-      raise('not a valid application form'))),
-    args.map(arg => build(context.now(), arg)));
 const build = (context, expr) =>
   expr === null || isNumber(expr) || isString(expr) ? literal(expr) :
   isSymbol(expr) ? (context.has(expr) ? escapeIdentifier : idle)(expr) :
   isArray(expr) ? (
-    expr.length === 0             ? literal(null) :
-    isForm(expr, 'and', 3)        ? buildAndOr('&&', context, expr) :
-    isForm(expr, 'or',  3)        ? buildAndOr('||', context, expr) :
-    isForm(expr, 'if', 4)         ? buildIf(context, expr) :
-    isForm(expr, 'cond')          ? buildCond(context, expr) :
-    isForm(expr, 'let', 4)        ? buildLet(context, expr) :
-    isForm(expr, 'trap-error', 3) ? buildTrap(context, expr) :
-    isForm(expr, 'lambda', 3)     ? buildLambda(context, 'lambda', [expr[1]], expr[2]) :
-    isForm(expr, 'freeze', 2)     ? buildLambda(context, 'freeze', [], expr[1]) :
-    isForm(expr, 'defun', 4)      ? buildDefun(context, expr) :
-    isConsForm(expr, 8)           ? buildCons(context, expr) :
-    buildApp(context, expr)
+    expr.length === 0 ? literal(null) :
+    isForm(expr, 'and', 3) || isForm(expr, 'or', 3) ?
+      cast('ShenBool',
+        logical(expr[0] === symbolOf('and') ? '&&' : '||',
+          cast('JsBool', build(context.now(), expr[1])),
+          cast('JsBool', build(context.now(), expr[2])))) :
+    isForm(expr, 'if', 4) ?
+      conditional(
+        cast('JsBool', build(context.now(), expr[1])),
+        build(context, expr[2]),
+        build(context, expr[3])) :
+    isForm(expr, 'cond') ?
+      build(context, expr.slice(1).reduceRight(
+        (alternate, [test, consequent]) => [symbolOf('if'), test, consequent, alternate],
+        [symbolOf('simple-error'), 'no condition was true'])) :
+    isForm(expr, 'let', 4) ?
+      invoke(
+        arrow([escapeIdentifier(expr[1])], build(context.add([asSymbol(expr[1])]), expr[3]), context.async),
+        [build(context.now(), expr[2])]) :
+    isForm(expr, 'trap-error', 3) ?
+      completeOrReturn(
+        context,
+        invoke(
+          ofEnv(context.async ? 'trap' : 'handle'),
+          [arrow([], build(context.now(), expr[1])), build(context.now(), expr[2])])) :
+    isForm(expr, 'lambda', 3) ? lambda(context, 'lambda', [expr[1]], expr[2]) :
+    isForm(expr, 'freeze', 2) ? lambda(context, 'freeze', [], expr[1]) :
+    isForm(expr, 'defun', 4) ?
+      sequential([
+        assign(ofEnvFunctions(expr[1]), lambda(context.clear(), nameOf(expr[1]), expr[2], expr[3])),
+        idle(expr[1])]) :
+    isConsForm(expr, 8) ?
+      invoke(
+        ofEnv('consFromArray'),
+        [array(produce(x => isForm(x, 'cons', 3), x => build(context.now(), x[1]), x => x[2], expr))]) :
+    completeOrBounce(
+      context,
+      cast('Function', (
+        context.has(expr[0]) ? escapeIdentifier(expr[0]) :
+        isArray(expr[0])     ? build(context.now(), expr[0]) :
+        isSymbol(expr[0])    ? ofEnvFunctions(expr[0]) :
+        raise('not a valid application form'))),
+      expr.slice(1).map(arg => build(context.now(), arg)))
   ) : raise('not a valid form');
 
 // TODO: need to be able to provide definition for (y-or-n?) maybe in frontend?

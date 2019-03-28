@@ -1,5 +1,7 @@
 const { generate } = require('astring');
 
+const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
+
 const Cons = class {
   constructor(head, tail) {
     this.head = head;
@@ -273,8 +275,8 @@ module.exports = (options = {}) => {
     symbolOf, nameOf, show, equal, raise, trap, bait, fun, bounce, settle, future, symbols, functions,
     compile, f: functions, s: symbolOf
   };
-  const Function = context.async ? Object.getPrototypeOf(async () => {}).constructor : Function;
-  env.evalKl = expr => Function('$', generate(answer(compile(valueToArrayTree(expr)))))(env);
+  const Func = context.async ? AsyncFunction : Function;
+  env.evalKl = expr => Func('$', generate(answer(compile(valueToArrayTree(expr)))))(env);
   [
     ['if',              (b, x, y) => asJsBool(b) ? x : y],
     ['and',             (x, y) => asShenBool(asJsBool(x) && asJsBool(y))],

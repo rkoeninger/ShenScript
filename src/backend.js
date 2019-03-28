@@ -90,15 +90,19 @@ const equal = (x, y) =>
 //|| x.constructor === y.constructor && equal(Object.keys(x), Object.keys(y)) && Object.keys(x).every(k => equal(x[k], y[k]))
 // TODO: what about NaN? do we want NaN to equal itself in shenscript? use Number.isNaN()
 
-// TODO: need async variant of this function?
+const funSync = (f, id, arity) =>
+  (...args) =>
+    args.length === arity ? f(...args) :
+    args.length > arity ? asFunction(settle(f(...args.slice(0, arity))))(...args.slice(arity)) :
+    fun((...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length);
+const funAsync = (f, id, arity) =>
+  async (...args) =>
+    args.length === arity ? f(...args) :
+    args.length > arity ? asFunction(await future(f(...args.slice(0, arity))))(...args.slice(arity)) :
+    fun(async (...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length);
 const fun = (f, id = f.id || f.name, arity = f.arity || f.length) =>
   Object.assign(
-    (...args) => // TODO: this needs to be async
-      args.length === arity ? f(...args) :
-      // TODO: what if async? async curried application?
-      args.length > arity ? asFunction(settle(f(...args.slice(0, arity))))(...args.slice(arity)) :
-      // TODO: this needs to be async
-      fun((...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length),
+    f instanceof AsyncFunction ? funAsync(f, id, arity) : funSync(f, id, arity),
     { id, arity });
 
 const raise = x => { throw new Error(x); };
@@ -144,7 +148,6 @@ const assign = (left, right, operator = '=') => ({ type: 'AssignmentExpression',
 const answer = argument => ({ type: 'ReturnStatement', argument });
 const sequential = expressions => ({ type: 'SequenceExpression', expressions });
 const arrow = (params, body, async = false) => ({ type: 'ArrowFunctionExpression', async, params, body });
-// TOOD: pass async into invoke calls
 const invoke = (callee, args, async = false) => (async ? wait : (x => x))({ type: 'CallExpression', callee, arguments: args });
 const conditional = (test, consequent, alternate) => ({ type: 'ConditionalExpression', test, consequent, alternate });
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });

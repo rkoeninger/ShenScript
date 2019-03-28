@@ -6,8 +6,6 @@ const $ = backend({ async: true });
 const s = parts => $.s(parts[0]);
 const parse1 = s => parse(s)[0];
 const exec = s => $.future($.evalKl(parse1(s)));
-const isShenBool = x => x === s`true` || x === s`false`;
-const values = [12, null, undefined, 'abc', s`asd`, 0, Infinity, [], $.cons(1, 2)];
 
 // TODO: shouldn't have to provide custom rejects function
 const rejects = p => new Promise((resolve, reject) =>

@@ -28,7 +28,7 @@
     "fetch": "node fetch.js",
     "test-core": "mocha",
     "test-kernel": "node load.js",
-    "test": "npm run test-core && npm run test-kernel",
+    "test": "npm run test-core",
     "render": "node render.js",
     "bundle": "node bundle.js"
   }

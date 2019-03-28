@@ -1,3 +1,5 @@
+const async = process.argv.includes('async');
+
 const fs = require('fs');
 const backend = require('./src/backend');
 const { parse } = require('./parser');
@@ -19,7 +21,7 @@ const stoutput = new OutStream();
 
 let home = () => '';
 const $ = backend({
-  async: true,
+  async,
   implementation: 'node',
   release: process.version.slice(1),
   os: process.platform,
@@ -50,7 +52,24 @@ files.forEach(file => parse(fs.readFileSync(`./kernel/klambda/${file}.kl`, 'utf-
   }
 }));
 
-const loadGroup = async (name, exprs) => {
+const loadGroup = (name, exprs) => {
+  const start = Date.now();
+  let i = 0;
+  for (let expr of exprs) {
+    process.stdout.write(`${name}: loading ${i++ + 1}/${exprs.length}...`);
+    try {
+      evalKl(expr);
+    } catch (e) {
+      console.log(expr);
+      console.log(e);
+    }
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
+  }
+  process.stdout.write(`${name}: ${exprs.length} loaded in ${Date.now() - start}ms\n`);
+};
+
+const loadGroupAsync = async (name, exprs) => {
   const start = Date.now();
   let i = 0;
   for (let expr of exprs) {
@@ -67,12 +86,18 @@ const loadGroup = async (name, exprs) => {
   process.stdout.write(`${name}: ${exprs.length} loaded in ${Date.now() - start}ms\n`);
 };
 
-(async () => {
-  await loadGroup('defuns', defuns);
-  await loadGroup('statements', statements);
-  console.log(await evalKl([s`cd`, './kernel/tests']));
-  console.log(await evalKl([s`load`, 'README.shen']));
-  console.log(await evalKl([s`load`, 'tests.shen']));
-})();
-
-// module.exports = $;
+if (async) {
+  (async () => {
+    await loadGroupAsync('defuns', defuns);
+    await loadGroupAsync('statements', statements);
+    console.log(await evalKl([s`cd`, './kernel/tests']));
+    console.log(await evalKl([s`load`, 'README.shen']));
+    console.log(await evalKl([s`load`, 'tests.shen']));
+  })();
+} else {
+  loadGroup('defuns', defuns);
+  loadGroup('statements', statements);
+  console.log(evalKl([s`cd`, './kernel/tests']));
+  console.log(evalKl([s`load`, 'README.shen']));
+  console.log(evalKl([s`load`, 'tests.shen']));
+}

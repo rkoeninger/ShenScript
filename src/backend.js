@@ -111,9 +111,9 @@ const trap = (f, g) => {
 };
 const bait = async (f, g) => {
   try {
-    return f(); // TODO: await here?
+    return await f();
   } catch (e) {
-    return g(e); // TODO: await here?
+    return g(e);
   }
 };
 

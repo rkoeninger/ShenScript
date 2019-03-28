@@ -88,12 +88,14 @@ const equal = (x, y) =>
 //|| x.constructor === y.constructor && equal(Object.keys(x), Object.keys(y)) && Object.keys(x).every(k => equal(x[k], y[k]))
 // TODO: what about NaN? do we want NaN to equal itself in shenscript? use Number.isNaN()
 
+// TODO: need async variant of this function?
 const fun = (f, id = f.id || f.name, arity = f.arity || f.length) =>
   Object.assign(
-    (...args) =>
+    (...args) => // TODO: this needs to be async
       args.length === arity ? f(...args) :
       // TODO: what if async? async curried application?
       args.length > arity ? asFunction(settle(f(...args.slice(0, arity))))(...args.slice(arity)) :
+      // TODO: this needs to be async
       fun((...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length),
     { id, arity });
 

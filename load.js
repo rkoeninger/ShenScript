@@ -1,5 +1,3 @@
-Error.stackTraceLimit = 32;
-
 const fs = require('fs');
 const backend = require('./src/backend');
 const { parse } = require('./parser');
@@ -21,6 +19,7 @@ const stoutput = new OutStream();
 
 let home = () => '';
 const $ = backend({
+  async: true,
   implementation: 'node',
   release: process.version.slice(1),
   os: process.platform,
@@ -34,7 +33,6 @@ const $ = backend({
 });
 const { evalKl, symbolOf, symbols, trap } = $;
 home = () => symbols['*home-directory*'];
-const load = expr => trap(() => evalKl(expr), e => (console.log(expr), console.log(e)));
 const s = parts => symbolOf(parts[0]);
 
 const files = [
@@ -52,22 +50,29 @@ files.forEach(file => parse(fs.readFileSync(`./kernel/klambda/${file}.kl`, 'utf-
   }
 }));
 
-const loadGroup = (name, exprs) => {
+const loadGroup = async (name, exprs) => {
   const start = Date.now();
-  exprs.forEach((expr, i) => {
-    process.stdout.write(`${name}: loading ${i + 1}/${exprs.length}...`);
-    load(expr);
+  let i = 0;
+  for (let expr of exprs) {
+    process.stdout.write(`${name}: loading ${i++ + 1}/${exprs.length}...`);
+    try {
+      await evalKl(expr);
+    } catch (e) {
+      console.log(expr);
+      console.log(e);
+    }
     process.stdout.clearLine();
     process.stdout.cursorTo(0);
-  });
+  }
   process.stdout.write(`${name}: ${exprs.length} loaded in ${Date.now() - start}ms\n`);
 };
 
-loadGroup('defuns', defuns);
-loadGroup('statements', statements);
+(async () => {
+  await loadGroup('defuns', defuns);
+  await loadGroup('statements', statements);
+  console.log(await evalKl([s`cd`, './kernel/tests']));
+  console.log(await evalKl([s`load`, 'README.shen']));
+  console.log(await evalKl([s`load`, 'tests.shen']));
+})();
 
-console.log(evalKl([s`cd`, './kernel/tests']));
-console.log(evalKl([s`load`, 'README.shen']));
-console.log(evalKl([s`load`, 'tests.shen']));
-
-module.exports = $;
+// module.exports = $;

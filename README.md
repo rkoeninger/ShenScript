@@ -31,7 +31,7 @@ Requires recent version (10+) of [Node](https://nodejs.org/en/download/).
 
 Run `npm install` to download all dependencies.
 
-The primitive backend environment can be tested with `npm run test-core`.
+The primitive backend environment can be tested with `npm run test-backend`.
 
 The Shen kernel sources can be retrieved with `npm run fetch`. Shen Kernel version can be updated in `fetch.js`.
 

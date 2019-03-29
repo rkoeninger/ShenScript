@@ -26,9 +26,9 @@
   },
   "scripts": {
     "fetch": "node fetch.js",
-    "test-core": "mocha",
+    "test-backend": "mocha",
     "test-kernel": "node load.js",
-    "test": "npm run test-core",
+    "test": "npm run test-backend",
     "render": "node render.js",
     "bundle": "node bundle.js"
   }

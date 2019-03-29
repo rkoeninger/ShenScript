@@ -21,6 +21,8 @@ files.forEach(file => parse(fs.readFileSync(`./kernel/klambda/${file}.kl`, 'utf-
   }
 }));
 
+// TODO: in async mode, toplevel statements are in awaits even though init function is not async
+
 const syntax = generate({
   type: 'Program',
   body: [{

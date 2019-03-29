@@ -143,7 +143,6 @@ const literal = value => ({ type: 'Literal', value });
 const array = elements => ({ type: 'ArrayExpression', elements });
 const identifier = name => ({ type: 'Identifier', name });
 const wait = argument => ({ type: 'AwaitExpression', argument });
-const spread = argument => ({ type: 'SpreadElement', argument });
 const assign = (left, right, operator = '=') => ({ type: 'AssignmentExpression', left, right, operator });
 const answer = argument => ({ type: 'ReturnStatement', argument });
 const sequential = expressions => ({ type: 'SequenceExpression', expressions });
@@ -216,13 +215,81 @@ const build = (context, expr) =>
         context.async) :
     completeOrBounce(
       context,
-      cast('Function', (
+      invokeEnv('asf', [ // TODO: formerly cast('Function', ...)
         context.has(expr[0]) ? escapeIdentifier(expr[0]) :
         isArray(expr[0])     ? build(context.now(), expr[0]) :
         isSymbol(expr[0])    ? globalFunction(expr[0]) :
-        raise('not a valid application form'))),
+        raise('not a valid application form')]),
       expr.slice(1).map(arg => build(context.now(), arg)))
   ) : raise('not a valid form');
+
+/*
+statement/expression context:
+  root of function is in statement context
+  conditionals prefer if/else over ?: to stay in statement context
+  when a statement is needed in expression context, use an iife
+
+return transform:
+  returning a block statment -> apply return transform to last statement in block
+  returning an if or try statement -> apply return transform to both branches
+  returning an ExpressionStatement -> replace ExpressionStatement with ReturnStatement returning same expression
+    ExpressionStatement would include lambda, freeze, and, or, if(already in expression form), function application
+  returning a let -> apply return transform to let body
+*/
+
+const optimize = ast =>
+  // $.asJsBool($.asShenBool(X)) -> X
+  ast.type === 'CallExpression'
+    && ast.callee.type === 'MemberExpression'
+    && ast.callee.object.type === 'Identifier'
+    && ast.callee.object.name === '$'
+    && ast.callee.property.type === 'Identifier'
+    && ast.callee.property.name === 'asJsBool'
+    && ast.arguments.length === 1
+    && ast.arguments[0].type === 'CallExpression'
+    && ast.arguments[0].callee.type === 'MemberExpression'
+    && ast.arguments[0].callee.object.type === 'Identifier'
+    && ast.arguments[0].callee.object.name === '$'
+    && ast.arguments[0].callee.property.type === 'Identifier'
+    && ast.arguments[0].callee.property.name === 'asShenBool'
+    && ast.arguments[0].arguments.length === 1
+    ? optimize(ast.arguments[0].arguments[0]) :
+  // $.asShenBool($.asJsBool(X)) -> X
+  // ast.type === 'CallExpression'
+  //   && ast.callee.type === 'MemberExpression'
+  //   && ast.callee.object.type === 'Identifier'
+  //   && ast.callee.object.name === '$'
+  //   && ast.callee.property.type === 'Identifier'
+  //   && ast.callee.property.name === 'asJsBool'
+  //   && ast.arguments.length === 1
+  //   && ast.arguments[0].type === 'CallExpression'
+  //   && ast.arguments[0].callee.type === 'MemberExpression'
+  //   && ast.arguments[0].callee.object.type === 'Identifier'
+  //   && ast.arguments[0].callee.object.name === '$'
+  //   && ast.arguments[0].callee.property.type === 'Identifier'
+  //   && ast.arguments[0].callee.property.name === 'asShenBool'
+  //   && ast.arguments[0].arguments.length === 1
+  //   ? optimize(ast.arguments[0].arguments[0]) :
+  // navigate sub-expressions
+  ast.type === 'ArrayExpression'
+    ? { ...ast, elements: ast.elements.map(optimize) } :
+  ast.type === 'AwaitExpression'
+    ? { ...ast, argument: optimize(ast.argument) } :
+  ast.type === 'AssignmentExpression'
+    ? { ...ast, right: optimize(ast.right) } :
+  ast.type === 'SequenceExpression'
+    ? { ...ast, expressions: ast.expressions.map(optimize) } :
+  ast.type === 'ArrowFunctionExpression'
+    ? { ...ast, body: optimize(ast.body) } :
+  ast.type === 'CallExpression'
+    ? { ...ast, callee: optimize(ast.callee), arguments: ast.arguments.map(optimize) } :
+  ast.type === 'ConditionalExpression'
+    ? { ...ast, test: optimize(ast.test), consequent: optimize(ast.consequent), alternate: optimize(ast.alternate) } :
+  ast.type === 'LogicalExpression'
+    ? { ...ast, left: optimize(ast.left), right: optimize(ast.right) } :
+  ast.type === 'MemberExpression'
+    ? { ...ast, object: optimize(ast.object), property: optimize(ast.property) } :
+  ast;
 
 // TODO: need to be able to provide definition for (y-or-n?) maybe in frontend?
 module.exports = (options = {}) => {
@@ -270,13 +337,13 @@ module.exports = (options = {}) => {
   };
   const functions = {};
   const context = new Context({ async: options.async, head: true, locals: new Set() });
-  const compile = expr => build(context, expr);
+  const compile = expr => optimize(build(context, expr));
   const env = {
     cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree, asJsBool, asShenBool,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
     symbolOf, nameOf, show, equal, raise, trap, bait, fun, bounce, settle, future, symbols, functions,
-    compile, f: functions, s: symbolOf
+    compile, f: functions, s: symbolOf, asf: asFunction
   };
   const Func = context.async ? AsyncFunction : Function;
   env.evalKl = expr => Func('$', generate(answer(compile(valueToArrayTree(expr)))))(env);

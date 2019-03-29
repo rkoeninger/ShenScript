@@ -25,21 +25,25 @@ Despite being only 90% of the way to completion, I think ShenScript can still be
 
 ## Prerequisites
 
-Get [Node](https://nodejs.org/en/download/) installed.
+Requires recent version (10+) of [Node](https://nodejs.org/en/download/).
 
 ## Building and Testing
 
 Run `npm install` to download all dependencies.
 
-The basic KL environment can be tested with `npm run test-core`.
+The primitive backend environment can be tested with `npm run test-core`.
 
-The Shen Kernel sources can be retrieved with `npm run fetch`. Shen Kernel version can be updated in the gulpfile.
+The Shen kernel sources can be retrieved with `npm run fetch`. Shen Kernel version can be updated in `fetch.js`.
 
-Running `npm run render` will render the KL files to JavaScript and output `dist/kernel.js`.
+Running `npm run test-kernel` will load the kernel sources and run the kernel test suite. Passing `--async` will generate async code for the kernel.
 
-Webpack bundle can be built with `npm run bundle`.
+Running `npm run render` will render the KL files to JavaScript and output `dist/kernel_sync.js` or `dist/kernel_async.js` based on optional `--async` argument.
+
+`dist/shenscript.js` bundle can be built with `npm run bundle`.
 
 ## Running
+
+TODO: update this
 
 `index.html` contains a basic KL/Shen test bed. There, one can experiment with parsing, translating and running Shen code. It will not be able to mount files to the virtual file system unless it is loaded through a web server like `http-server`.
 

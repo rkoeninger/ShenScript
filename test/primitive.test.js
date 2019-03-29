@@ -3,9 +3,7 @@ const { parse } = require('../parser');
 const backend = require('../src/backend');
 const $ = backend();
 
-const s = parts => $.s(parts[0]);
-const parse1 = s => parse(s)[0];
-const exec = s => $.settle($.evalKl(parse1(s)));
+const s = x => Symbol.for(typeof x === 'string' ? x : x[0]);
 const isShenBool = x => x === s`true` || x === s`false`;
 const values = [12, null, undefined, 'abc', s`asd`, 0, Infinity, [], $.cons(1, 2)];
 
@@ -74,8 +72,8 @@ describe('primitive', () => {
       });
     });
     describe('tlstr', () => {
-      it('should return ', () => {
-        [['a', ''], ['12', '2'], ['#*%', '*%']].forEach(([s, t]) => equal(t, $.f.tlstr(s)));
+      it('should return all but first character of string', () => {
+        [['a', ''], ['12', '2'], ['#*%', '*%']].forEach(([x, y]) => equal(y, $.f.tlstr(x)));
       });
       it('should raise an error when given empty string', () => {
         throws(() => $.f.tlstr(''));
@@ -83,9 +81,9 @@ describe('primitive', () => {
     });
     describe('cn', () => {
       it('should return non-empty argument when other is empty', () => {
-        ['', 'lorem ipsum', '&`#%^@*'].forEach(s => {
-          equal(s, $.f.cn('', s));
-          equal(s, $.f.cn(s, ''));
+        ['', 'lorem ipsum', '&`#%^@*'].forEach(x => {
+          equal(x, $.f.cn('', x));
+          equal(x, $.f.cn(x, ''));
         });
       });
     });
@@ -94,7 +92,7 @@ describe('primitive', () => {
         throws(() => $.f['string->n'](''));
       });
       it('should only return code point for first character', () => {
-        [[97, 'abc'], [63, '?12']].forEach(([n, s]) => equal(n, $.f['string->n'](s)));
+        [[97, 'abc'], [63, '?12']].forEach(([n, x]) => equal(n, $.f['string->n'](x)));
       });
     });
     describe('n->string', () => {
@@ -110,6 +108,8 @@ describe('primitive', () => {
   });
 
   describe('symbols', () => {
+    const set = $.f.set;
+    const value = $.f.value;
     describe('intern', () => {
       it('should return the same symbol for the same name', () => {
         equal($.f.intern('qwerty'), $.f.intern('qwerty'));
@@ -117,23 +117,23 @@ describe('primitive', () => {
     });
     describe('value', () => {
       it('should accept idle symbols', () => {
-        equal('JavaScript', exec('(value *language*)'));
+        equal('JavaScript', value(s`*language*`));
       });
       it('should raise error for symbol with no value', () => {
-        throws(() => exec('(value *qwerty*)'));
+        throws(() => value(s`qwerty`));
       });
       it('should raise error for non-symbol argument', () => {
-        throws(() => exec('(value 5)'));
-        throws(() => exec('(value (cons 1 2))'));
+        throws(() => value(5));
+        throws(() => value($.cons(1, 2)));
       });
     });
     describe('set', () => {
       it('should return the assigned value', () => {
-        equal(1, exec('(set x 1)'));
+        equal(1, set(s`x`, 1));
       });
       it('should allow value to be retrieved later', () => {
-        exec('(set x "abc")');
-        equal("abc", exec('(value x)'));
+        set(s`x`, 'abc');
+        equal("abc", value(s`x`));
       });
     });
   });

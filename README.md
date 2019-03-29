@@ -35,9 +35,9 @@ The primitive backend environment can be tested with `npm run test-core`.
 
 The Shen kernel sources can be retrieved with `npm run fetch`. Shen Kernel version can be updated in `fetch.js`.
 
-Running `npm run test-kernel` will load the kernel sources and run the kernel test suite. Passing `--async` will generate async code for the kernel.
+Running `npm run test-kernel` will load the kernel sources and run the kernel test suite. Passing `async` will generate async code for the kernel.
 
-Running `npm run render` will render the KL files to JavaScript and output `dist/kernel_sync.js` or `dist/kernel_async.js` based on optional `--async` argument.
+Running `npm run render` will render the KL files to JavaScript and output `dist/kernel_sync.js` or `dist/kernel_async.js` based on optional `async` argument.
 
 `dist/shenscript.js` bundle can be built with `npm run bundle`.
 

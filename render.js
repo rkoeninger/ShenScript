@@ -21,34 +21,21 @@ files.forEach(file => parse(fs.readFileSync(`./kernel/klambda/${file}.kl`, 'utf-
   }
 }));
 
-// TODO: in async mode, toplevel statements are in awaits even though init function is not async
-
-const syntax = generate({
-  type: 'Program',
-  body: [{
-    type: 'ExpressionStatement',
-    expression: {
-      type: 'AssignmentExpression',
-      operator: '=',
-      left: {
-        type: 'MemberExpression',
-        object: { type: 'Identifier', name: 'module' },
-        property: { type: 'Identifier', name: 'exports' }
-      },
-      right: {
-        type: 'ArrowFunctionExpression',
-        params: [{ type: 'Identifier', name: '$' }],
-        body: {
-          type: 'BlockStatement',
-          body: [].concat([].concat(defuns, statements).map(compile), [{
-            type: 'ReturnStatement',
-            argument: { type: 'Identifier', name: '$' }
-          }])
-        }
-      }
-    }
-  }]
-});
+const identifier = name => ({ type: 'Identifier', name });
+const answer = argument => ({ type: 'ReturnStatement', argument });
+const block = body => ({ type: 'BlockStatement', body });
+const arrow = (params, body, async = false) => ({ type: 'ArrowFunctionExpression', async, params, body });
+const member = (object, property) => ({ type: 'MemberExpression', object, property });
+const assign = (left, right) => ({ type: 'AssignmentExpression', operator: '=', left, right });
+const statement = expression => ({ type: 'ExpressionStatement', expression });
+const program = body => ({ type: 'Program', body });
+const syntax =
+  generate(program([statement(assign(
+    member(identifier('module'), identifier('exports')),
+    arrow(
+      [identifier('$')],
+      block([].concat(defuns.map(compile), statements.map(compile), [answer(identifier('$'))])),
+      async)))]));
 
 console.log(`${syntax.length} chars`);
 fs.writeFileSync(`./dist/kernel_${async ? 'async' : 'sync'}.js`, syntax, 'utf-8');

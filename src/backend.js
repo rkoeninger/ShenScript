@@ -37,6 +37,7 @@ const nameOf     = Symbol.keyFor;
 const symbolOf   = Symbol.for;
 const shenTrue   = symbolOf('true');
 const shenFalse  = symbolOf('false');
+const isObject   = x => typeof x === 'object' && x !== null;
 const isDefined  = x => x !== undefined;
 const isNumber   = x => typeof x === 'number' && isFinite(x);
 const isNzNumber = x => isNumber(x) && x !== 0;
@@ -85,21 +86,21 @@ const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x === null ? [] :
 
 const equal = (x, y) =>
   x === y
-  || isCons(x)  && isCons(y)  && equal(x.head, y.head) && equal(x.tail, y.tail)
-  || isArray(x) && isArray(y) && x.length === y.length && x.every((v, i) => equal(v, y[i]))
-//|| x.constructor === y.constructor && equal(Object.keys(x), Object.keys(y)) && Object.keys(x).every(k => equal(x[k], y[k]))
-// TODO: what about NaN? do we want NaN to equal itself in shenscript? use Number.isNaN()
+  || isCons(x)   && isCons(y)   && equal(x.head, y.head) && equal(x.tail, y.tail)
+  || isArray(x)  && isArray(y)  && x.length === y.length && x.every((v, i) => equal(v, y[i]))
+  || isObject(x) && isObject(y) && x.constructor === y.constructor
+    && equal(Object.keys(x), Object.keys(y)) && Object.keys(x).every(k => equal(x[k], y[k]));
 
 const funSync = (f, id, arity) =>
   (...args) =>
     args.length === arity ? f(...args) :
     args.length > arity ? asFunction(settle(f(...args.slice(0, arity))))(...args.slice(arity)) :
-    fun((...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length);
+    funSync((...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length);
 const funAsync = (f, id, arity) =>
   async (...args) =>
     args.length === arity ? f(...args) :
     args.length > arity ? asFunction(await future(f(...args.slice(0, arity))))(...args.slice(arity)) :
-    fun(async (...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length);
+    funAsync(async (...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length);
 const fun = (f, id = f.id || f.name, arity = f.arity || f.length) =>
   Object.assign(
     f instanceof AsyncFunction ? funAsync(f, id, arity) : funSync(f, id, arity),

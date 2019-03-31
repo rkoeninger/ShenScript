@@ -202,17 +202,24 @@ describe('primitive', () => {
   });
 
   describe('equality', () => {
-    describe('=', () => {
+    describe('equal', () => {
       it('should handle Infinity', () => {
-        equal(s`true`,  $.f['='](Infinity, Infinity));
-        equal(s`true`,  $.f['='](-Infinity, -Infinity));
-        equal(s`false`, $.f['='](-Infinity, Infinity));
+        ok($.equal(Infinity, Infinity));
+        ok($.equal(-Infinity, -Infinity));
+        ok(!$.equal(-Infinity, Infinity));
       });
       it('should compare functions based on reference equality', () => {
         const f = $.evalKl([s`lambda`, s`X`, 0]);
         const g = $.evalKl([s`lambda`, s`X`, 0]);
-        equal(s`true`,  $.f['='](f, f));
-        equal(s`false`, $.f['='](f, g));
+        ok($.equal(f, f));
+        ok(!$.equal(f, g));
+      });
+      it('should be able to compare objects', () => {
+        ok($.equal({}, {}));
+        ok(!$.equal({}, null));
+        ok($.equal({ a: 45, b: s`sym` }, { a: 45, b: s`sym` }));
+        ok($.equal({ ['key']: [{ a: 'abc', b: false }] }, { ['key']: [{ a: 'abc', b: false }] }));
+        ok(!$.equal({ ['key']: [{ a: 'abc', b: false }] }, { ['key']: [{ a: 'abc', b: null }] }));
       });
     });
   });

@@ -151,10 +151,16 @@ const arrow = (params, body, async = false) => ({ type: 'ArrowFunctionExpression
 const invoke = (callee, args, async = false) => (async ? wait : (x => x))({ type: 'CallExpression', callee, arguments: args });
 const conditional = (test, consequent, alternate) => ({ type: 'ConditionalExpression', test, consequent, alternate });
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
+const binary = (operator, left, right) => ({ type: 'BinaryExpression', operator, left, right });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
 const ofEnv = name => access(identifier('$'), identifier(name));
 const invokeEnv = (name, args, async = false) => invoke(ofEnv(name), args, async);
-const cast = (dataType, value) => dataType === 'JsBool' && value === shenTrue ? literal(true) : invokeEnv('as' + dataType, [value]);
+const cast = (dataType, ast) =>
+  //dataType === 'JsBool' && ast.type === 'CallExpression' && ast.callee.type === 'MemberExpression' && ... ? literal(true) :
+  dataType === 'Number' && ast.type === 'Literal' && isNumber(ast.value) ? ast :
+  dataType === 'String' && ast.type === 'Literal' && isString(ast.value) ? ast :
+  dataType === 'Function' ? invokeEnv('asf', [ast]) :
+  invokeEnv('as' + dataType, [ast]);
 const isForm = (expr, lead, length) => isArray(expr) && expr.length > 0 && expr[0] === symbolOf(lead) && (!length || expr.length === length);
 const isConsForm = (expr, depth) => depth === 0 || isForm(expr, 'cons', 3) && isConsForm(expr[2], depth - 1);
 const hex = ch => ('0' + ch.charCodeAt(0).toString(16)).slice(-2);
@@ -214,13 +220,53 @@ const build = (context, expr) =>
       invokeEnv('consFromArray',
         [array(produce(x => isForm(x, 'cons', 3), x => build(context.now(), x[1]), x => x[2], expr))],
         context.async) :
+    // TODO: abstract over these inlines and primitve functions with asts
+    isForm(expr, '+', 3) || isForm(expr, '-', 3) || isForm(expr, '*', 3) ?
+      binary(nameOf(expr[0]),
+        cast('Number', build(context.now(), expr[1])),
+        cast('Number', build(context.now(), expr[2]))) :
+    isForm(expr, '/', 3) ?
+      binary('/',
+        cast('Number',   build(context.now(), expr[1])),
+        cast('NzNumber', build(context.now(), expr[2]))) :
+    isForm(expr, '<', 3) || isForm(expr, '>', 3) || isForm(expr, '<=', 3) || isForm(expr, '>=', 3) ?
+      cast('ShenBool',
+        binary(nameOf(expr[0]),
+          cast('Number', build(context.now(), expr[1])),
+          cast('Number', build(context.now(), expr[2])))) :
+    isForm(expr, '=', 3) ?
+      cast('ShenBool',
+        expr[1] === null || isArray(expr[1]) && expr[1].length === 0 ?
+          binary('===', literal(null), build(context.now(), expr[2])) :
+        expr[2] === null || isArray(expr[2]) && expr[2].length === 0 ?
+          binary('===', literal(null), build(context.now(), expr[1])) :
+        isNumber(expr[1]) || isString(expr[1]) ?
+          binary('===', literal(expr[1]), build(context.now(), expr[2])) :
+        isNumber(expr[2]) || isString(expr[2]) ?
+          binary('===', literal(expr[2]), build(context.now(), expr[1])) :
+        invokeEnv('equal', [
+          build(context.now(), expr[1]),
+          build(context.now(), expr[2])])) :
+    isForm(expr, 'intern', 2) ?
+      invokeEnv('s', [
+        cast('String', build(context.now(), expr[1]))]) :
+    isForm(expr, 'cn', 3) ?
+      binary('+',
+        cast('String', build(context.now(), expr[1])),
+        cast('String', build(context.now(), expr[2]))) :
+    isForm(expr, 'hd', 2) ? access(cast('Cons', build(context.now(), expr[1])), identifier('head')) :
+    isForm(expr, 'tl', 2) ? access(cast('Cons', build(context.now(), expr[1])), identifier('tail')) :
+    isForm(expr, 'number?', 2)    ? cast('ShenBool', invokeEnv('isNumber', [build(context.now(), expr[1])])) :
+    isForm(expr, 'string?', 2)    ? cast('ShenBool', invokeEnv('isString', [build(context.now(), expr[1])])) :
+    isForm(expr, 'cons?', 2)      ? cast('ShenBool', invokeEnv('isCons',   [build(context.now(), expr[1])])) :
+    isForm(expr, 'absvector?', 2) ? cast('ShenBool', invokeEnv('isArray',  [build(context.now(), expr[1])])) :
     completeOrBounce(
       context,
-      invokeEnv('asf', [ // TODO: formerly cast('Function', ...)
+      cast('Function',
         context.has(expr[0]) ? escapeIdentifier(expr[0]) :
         isArray(expr[0])     ? build(context.now(), expr[0]) :
         isSymbol(expr[0])    ? globalFunction(expr[0]) :
-        raise('not a valid application form')]),
+        raise('not a valid application form')),
       expr.slice(1).map(arg => build(context.now(), arg)))
   ) : raise('not a valid form');
 
@@ -340,7 +386,8 @@ module.exports = (options = {}) => {
   const context = new Context({ async: options.async, head: true, locals: new Set() });
   const compile = expr => optimize(build(context, expr));
   const env = {
-    cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree, asJsBool, asShenBool,
+    cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree,
+    asJsBool, asShenBool, asNzNumber, asNeString,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
     symbolOf, nameOf, show, equal, raise, trap, bait, fun, bounce, settle, future, symbols, functions,

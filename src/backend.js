@@ -238,6 +238,17 @@ return transform:
   returning a let -> apply return transform to let body
 */
 
+const isAwait = ast =>
+  ast.type === 'ArrayExpression' ? ast.elements.some(isAwait) :
+  ast.type === 'AssignmentExpression' ? isAwait(ast.right) :
+  ast.type === 'SequenceExpression' ? ast.expressions.some(isAwait) :
+  ast.type === 'CallExpression' ? isAwait(ast.callee) || ast.arguments.some(isAwait) :
+  ast.type === 'ConditionalExpression' ? [ast.test, ast.consequent, ast.alternate].some(isAwait) :
+  ast.type === 'LogicalExpression' ? [ast.left, ast.right].some(isAwait) :
+  ast.type === 'MemberExpression' ? [ast.object, ast.property].some(isAwait) :
+  ast.type === 'CallExpression' ? ast.async || isAwait(ast.callee) || ast.arguments.some(isAwait) :
+  ast.type === 'AwaitExpression';
+
 const optimize = ast =>
   // $.asJsBool($.asShenBool(X)) -> X
   ast.type === 'CallExpression'
@@ -281,7 +292,7 @@ const optimize = ast =>
   ast.type === 'SequenceExpression'
     ? { ...ast, expressions: ast.expressions.map(optimize) } :
   ast.type === 'ArrowFunctionExpression'
-    ? { ...ast, body: optimize(ast.body) } :
+    ? { ...ast, async: isAwait(ast.body), body: optimize(ast.body) } :
   ast.type === 'CallExpression'
     ? { ...ast, callee: optimize(ast.callee), arguments: ast.arguments.map(optimize) } :
   ast.type === 'ConditionalExpression'

@@ -55,35 +55,31 @@ files.forEach(file => parse(fs.readFileSync(`./kernel/klambda/${file}.kl`, 'utf-
 const loadGroup = (name, exprs) => {
   const start = Date.now();
   let i = 0;
+  console.log(`${name}: loading...`);
   for (let expr of exprs) {
-    process.stdout.write(`${name}: loading ${i++ + 1}/${exprs.length}...`);
     try {
       evalKl(expr);
     } catch (e) {
       console.log(expr);
       console.log(e);
     }
-    process.stdout.clearLine();
-    process.stdout.cursorTo(0);
   }
-  process.stdout.write(`${name}: ${exprs.length} loaded in ${Date.now() - start}ms\n`);
+  console.log(`${name}: ${exprs.length} loaded in ${Date.now() - start}ms`);
 };
 
 const loadGroupAsync = async (name, exprs) => {
   const start = Date.now();
   let i = 0;
+  console.log(`${name}: loading...`);
   for (let expr of exprs) {
-    process.stdout.write(`${name}: loading ${i++ + 1}/${exprs.length}...`);
     try {
       await evalKl(expr);
     } catch (e) {
       console.log(expr);
       console.log(e);
     }
-    process.stdout.clearLine();
-    process.stdout.cursorTo(0);
   }
-  process.stdout.write(`${name}: ${exprs.length} loaded in ${Date.now() - start}ms\n`);
+  console.log(`${name}: ${exprs.length} loaded in ${Date.now() - start}ms`);
 };
 
 if (async) {

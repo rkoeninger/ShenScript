@@ -68,6 +68,7 @@ const asJsBool   = x =>
   x === shenFalse ? false :
   raise('Shen boolean expected');
 
+const identity = x => x;
 const produce = (proceed, render, next, state) => {
   const array = [];
   while (proceed(state)) {
@@ -148,7 +149,7 @@ const assign = (left, right, operator = '=') => ({ type: 'AssignmentExpression',
 const answer = argument => ({ type: 'ReturnStatement', argument });
 const sequential = expressions => ({ type: 'SequenceExpression', expressions });
 const arrow = (params, body, async = false) => ({ type: 'ArrowFunctionExpression', async, params, body });
-const invoke = (callee, args, async = false) => (async ? wait : (x => x))({ type: 'CallExpression', callee, arguments: args });
+const invoke = (callee, args, async = false) => (async ? wait : identity)({ type: 'CallExpression', callee, arguments: args });
 const conditional = (test, consequent, alternate) => ({ type: 'ConditionalExpression', test, consequent, alternate });
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
 const binary = (operator, left, right) => ({ type: 'BinaryExpression', operator, left, right });
@@ -156,7 +157,6 @@ const access = (object, property) => ({ type: 'MemberExpression', computed: prop
 const ofEnv = name => access(identifier('$'), identifier(name));
 const invokeEnv = (name, args, async = false) => invoke(ofEnv(name), args, async);
 const cast = (dataType, ast) =>
-  //dataType === 'JsBool' && ast.type === 'CallExpression' && ast.callee.type === 'MemberExpression' && ... ? literal(true) :
   dataType === 'Number' && ast.type === 'Literal' && isNumber(ast.value) ? ast :
   dataType === 'String' && ast.type === 'Literal' && isString(ast.value) ? ast :
   dataType === 'Function' ? invokeEnv('asf', [ast]) :
@@ -188,11 +188,12 @@ const build = (context, expr) =>
         logical(expr[0] === symbolOf('and') ? '&&' : '||',
           cast('JsBool', build(context.now(), expr[1])),
           cast('JsBool', build(context.now(), expr[2])))) :
-    isForm(expr, 'if', 4) ?
+    isForm(expr, 'if', 4) ? (
+      expr[1] === shenTrue ? build(context, expr[2]) :
       conditional(
         cast('JsBool', build(context.now(), expr[1])),
         build(context, expr[2]),
-        build(context, expr[3])) :
+        build(context, expr[3]))) :
     isForm(expr, 'cond') ?
       build(context, expr.slice(1).reduceRight(
         (alternate, [test, consequent]) => [symbolOf('if'), test, consequent, alternate],
@@ -247,18 +248,19 @@ const build = (context, expr) =>
         invokeEnv('equal', [
           build(context.now(), expr[1]),
           build(context.now(), expr[2])])) :
+    isForm(expr, 'str', 2) ?
+      invokeEnv('show', [build(context.now(), expr[1])]) :
     isForm(expr, 'intern', 2) ?
-      invokeEnv('s', [
-        cast('String', build(context.now(), expr[1]))]) :
+      invokeEnv('s', [cast('String', build(context.now(), expr[1]))]) :
     isForm(expr, 'cn', 3) ?
       binary('+',
         cast('String', build(context.now(), expr[1])),
         cast('String', build(context.now(), expr[2]))) :
     isForm(expr, 'hd', 2) ? access(cast('Cons', build(context.now(), expr[1])), identifier('head')) :
     isForm(expr, 'tl', 2) ? access(cast('Cons', build(context.now(), expr[1])), identifier('tail')) :
-    isForm(expr, 'number?', 2)    ? cast('ShenBool', invokeEnv('isNumber', [build(context.now(), expr[1])])) :
-    isForm(expr, 'string?', 2)    ? cast('ShenBool', invokeEnv('isString', [build(context.now(), expr[1])])) :
-    isForm(expr, 'cons?', 2)      ? cast('ShenBool', invokeEnv('isCons',   [build(context.now(), expr[1])])) :
+    isForm(expr, 'number?',    2) ? cast('ShenBool', invokeEnv('isNumber', [build(context.now(), expr[1])])) :
+    isForm(expr, 'string?',    2) ? cast('ShenBool', invokeEnv('isString', [build(context.now(), expr[1])])) :
+    isForm(expr, 'cons?',      2) ? cast('ShenBool', invokeEnv('isCons',   [build(context.now(), expr[1])])) :
     isForm(expr, 'absvector?', 2) ? cast('ShenBool', invokeEnv('isArray',  [build(context.now(), expr[1])])) :
     completeOrBounce(
       context,

@@ -29,12 +29,13 @@ const member = (object, property) => ({ type: 'MemberExpression', object, proper
 const assign = (left, right) => ({ type: 'AssignmentExpression', operator: '=', left, right });
 const statement = expression => ({ type: 'ExpressionStatement', expression });
 const program = body => ({ type: 'Program', body });
+const cleanupDefun = ast => ast.expressions[0];
 const syntax =
   generate(program([statement(assign(
     member(identifier('module'), identifier('exports')),
     arrow(
       [identifier('$')],
-      block([].concat(defuns.map(compile), statements.map(compile), [answer(identifier('$'))])),
+      block([].concat(defuns.map(compile).map(cleanupDefun), statements.map(compile), [answer(identifier('$'))])),
       async)))]));
 
 console.log(`${syntax.length} chars`);

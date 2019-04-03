@@ -3,7 +3,7 @@ const { parse } = require('../parser');
 const backend = require('../src/backend');
 const $ = backend();
 
-const s = parts => $.s(parts[0]);
+const s = $.s;
 const parse1 = s => parse(s)[0];
 const exec = s => $.settle($.evalKl(parse1(s)));
 const values = [12, null, undefined, 'abc', s`asd`, 0, Infinity, [], $.cons(1, 2)];

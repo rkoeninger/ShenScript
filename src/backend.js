@@ -144,6 +144,10 @@ const future = async x => {
   }
 };
 
+const taggedTemplate = (tag, quasi) => ({ type: 'TaggedTemplateExpression', tag, quasi });
+const template = (quasis, expressions = []) => ({ type: 'TemplateLiteral', expressions, quasis });
+const templateElement = raw => ({ type: 'TemplateElement', value: { raw } });
+const simpleTemplateLiteral = (tag, text) => taggedTemplate(tag, template([templateElement(text)]));
 const literal = value => ({ type: 'Literal', value });
 const array = elements => ({ type: 'ArrayExpression', elements });
 const identifier = name => ({ type: 'Identifier', name });
@@ -172,7 +176,7 @@ const validCharacterRegex = /^[_A-Za-z0-9]$/;
 const validCharactersRegex = /^[_A-Za-z][_A-Za-z0-9]*$/;
 const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '_' : `$${hex(ch)}`;
 const escapeIdentifier = id => identifier(nameOf(id).split('').map(escapeCharacter).join(''));
-const idle = id => ofDataType('Symbol', invokeEnv('s', [literal(nameOf(id))]));
+const idle = id => ofDataType('Symbol', simpleTemplateLiteral(accessEnv('s'), nameOf(id)));
 const globalFunction = id => access(accessEnv('f'), literal(nameOf(id)));
 const complete = (context, ast) => invokeEnv(context.async ? 'future' : 'settle', [ast], context.async);
 const completeOrReturn = (context, ast) => context.head ? complete(context, ast) : ast;
@@ -262,7 +266,7 @@ const build = (context, expr) =>
     isForm(expr, 'str', 2) ?
       ofDataType('String', invokeEnv('show', [build(context.now(), expr[1])])) :
     isForm(expr, 'intern', 2) ?
-      ofDataType('Symbol', invokeEnv('s', [cast('String', build(context.now(), expr[1]))])) :
+      ofDataType('Symbol', invokeEnv('symbolOf', [cast('String', build(context.now(), expr[1]))])) :
     isForm(expr, 'cn', 3) ?
       ofDataType('String',
         binary('+',
@@ -411,7 +415,7 @@ module.exports = (options = {}) => {
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
     symbolOf, nameOf, show, equal, raise, trap, bait, fun, bounce, settle, future, symbols, functions,
-    compile, f: functions, s: symbolOf, asf: asFunction
+    compile, f: functions, s: x => symbolOf(x[0]), asf: asFunction
   };
   const Func = context.async ? AsyncFunction : Function;
   env.evalKl = expr => Func('$', generate(answer(compile(valueToArrayTree(expr)))))(env);

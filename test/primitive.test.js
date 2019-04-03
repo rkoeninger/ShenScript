@@ -3,7 +3,7 @@ const { parse } = require('../parser');
 const backend = require('../src/backend');
 const $ = backend();
 
-const s = x => Symbol.for(typeof x === 'string' ? x : x[0]);
+const s = $.s;
 const isShenBool = x => x === s`true` || x === s`false`;
 const values = [12, null, undefined, 'abc', s`asd`, 0, Infinity, [], $.cons(1, 2)];
 

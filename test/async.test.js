@@ -3,7 +3,7 @@ const { parse } = require('../parser');
 const backend = require('../src/backend');
 const $ = backend({ async: true });
 
-const s = parts => $.s(parts[0]);
+const s = $.s;
 const parse1 = s => parse(s)[0];
 const exec = s => $.future($.evalKl(parse1(s)));
 

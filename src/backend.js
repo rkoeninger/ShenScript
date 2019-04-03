@@ -154,8 +154,9 @@ const conditional = (test, consequent, alternate) => ({ type: 'ConditionalExpres
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
 const binary = (operator, left, right) => ({ type: 'BinaryExpression', operator, left, right });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
-const ofEnv = name => access(identifier('$'), identifier(name));
-const invokeEnv = (name, args, async = false) => invoke(ofEnv(name), args, async);
+const accessEnv = name => access(identifier('$'), identifier(name));
+const invokeEnv = (name, args, async = false) => invoke(accessEnv(name), args, async);
+const ofDataType = (dataType, ast) => Object(ast, { dataType });
 const cast = (dataType, ast) =>
   dataType === 'Number' && ast.type === 'Literal' && isNumber(ast.value) ? ast :
   dataType === 'String' && ast.type === 'Literal' && isString(ast.value) ? ast :
@@ -169,7 +170,7 @@ const validCharactersRegex = /^[_A-Za-z][_A-Za-z0-9]*$/;
 const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '_' : `$${hex(ch)}`;
 const escapeIdentifier = id => identifier(nameOf(id).split('').map(escapeCharacter).join(''));
 const idle = id => invokeEnv('s', [literal(nameOf(id))]);
-const globalFunction = id => access(ofEnv('f'), literal(nameOf(id)));
+const globalFunction = id => access(accessEnv('f'), literal(nameOf(id)));
 const complete = (context, ast) => invokeEnv(context.async ? 'future' : 'settle', [ast], context.async);
 const completeOrReturn = (context, ast) => context.head ? complete(context, ast) : ast;
 const completeOrBounce = (context, fAst, argsAsts) =>

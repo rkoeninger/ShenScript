@@ -97,20 +97,18 @@ const equal = (x, y) =>
   || isObject(x) && isObject(y) && x.constructor === y.constructor
     && equal(Object.keys(x), Object.keys(y)) && Object.keys(x).every(k => equal(x[k], y[k]));
 
-const funSync = (f, id, arity) =>
+const funSync = (f, arity) =>
   (...args) =>
     args.length === arity ? f(...args) :
     args.length > arity ? asFunction(settle(f(...args.slice(0, arity))))(...args.slice(arity)) :
-    funSync((...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length);
-const funAsync = (f, id, arity) =>
+    funSync((...more) => f(...args, ...more), arity - args.length);
+const funAsync = (f, arity) =>
   async (...args) =>
     args.length === arity ? f(...args) :
     args.length > arity ? asFunction(await future(f(...args.slice(0, arity))))(...args.slice(arity)) :
-    funAsync(async (...more) => f(...args, ...more), `${id}(${args.length})`, arity - args.length);
-const fun = (f, id = f.id || f.name, arity = f.arity || f.length) =>
-  Object.assign(
-    f instanceof AsyncFunction ? funAsync(f, id, arity) : funSync(f, id, arity),
-    { id, arity });
+    funAsync(async (...more) => f(...args, ...more), arity - args.length);
+const fun = (f, arity = f.arity || f.length) =>
+  Object.assign((f instanceof AsyncFunction ? funAsync : funSync)(f, arity), { arity });
 
 const raise = x => { throw new Error(x); };
 const trap = (f, g) => {
@@ -183,8 +181,7 @@ const completeOrBounce = (context, fAst, argsAsts) =>
 const lambda = (context, name, params, body) =>
   ofDataType('Function',
     invokeEnv('fun', [
-      arrow(params.map(escapeIdentifier), returnCast(build(context.later().add(params.map(asSymbol)), body)), context.async),
-      literal(name)]));
+      arrow(params.map(escapeIdentifier), returnCast(build(context.later().add(params.map(asSymbol)), body)), context.async)]));
 const build = (context, expr) =>
   isNumber(expr) ? ofDataType('Number', literal(expr)) :
   isString(expr) ? ofDataType('String', literal(expr)) :
@@ -387,7 +384,7 @@ module.exports = (options = {}) => {
     isString(x)   ? `"${x}"` :
     isSymbol(x)   ? nameOf(x) :
     isCons(x)     ? `[${consToArray(x).map(show).join(' ')}]` :
-    isFunction(x) ? `<Function ${x.id}>` :
+    isFunction(x) ? `<Function ${x.arity}>` :
     isArray(x)    ? `<Vector ${x.length}>` :
     isError(x)    ? `<Error "${x.toString() + x.stack}">` :
     isStream(x)   ? `<Stream ${x.name}>` :
@@ -459,6 +456,6 @@ module.exports = (options = {}) => {
     ['value',           s => asDefined(symbols[nameOf(asSymbol(s))])],
     ['type',            (x, _) => x],
     ['eval-kl',         env.evalKl]
-  ].forEach(([id, f]) => functions[id] = fun(f, id));
+  ].forEach(([id, f]) => functions[id] = fun(f));
   return env;
 };

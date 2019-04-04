@@ -155,6 +155,7 @@ const arrow = (params, body, async = false) => ({ type: 'ArrowFunctionExpression
 const invoke = (callee, args, async = false) => (async ? wait : identity)({ type: 'CallExpression', callee, arguments: args });
 const conditional = (test, consequent, alternate) => ({ type: 'ConditionalExpression', test, consequent, alternate });
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
+const unary = (operator, argument, prefix = true) => ({ type: 'UnaryExpression', operator, argument, prefix });
 const binary = (operator, left, right) => ({ type: 'BinaryExpression', operator, left, right });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
 const template = (tag, raw) => ({ type: 'TaggedTemplateExpression', tag, quasi: { type: 'TemplateLiteral', expressions: [], quasis: [{ type: 'TemplateElement', value: { raw } }] } });
@@ -199,6 +200,9 @@ const build = (context, expr) =>
         logical(expr[0] === symbolOf('and') ? '&&' : '||',
           cast('JsBool', build(context.now(), expr[1])),
           cast('JsBool', build(context.now(), expr[2])))) :
+    isForm(expr, 'not', 2) ?
+      //ofDataType('JsBool',
+      cast('ShenBool', unary('!', cast('JsBool', build(context.now(), expr[1])))) :
     isForm(expr, 'if', 4) ? (
       expr[1] === shenTrue ? build(context, expr[2]) :
       conditional(
@@ -339,21 +343,21 @@ const optimize = ast =>
     && ast.arguments[0].arguments.length === 1
     ? optimize(ast.arguments[0].arguments[0]) :
   // $.asShenBool($.asJsBool(X)) -> X
-  // ast.type === 'CallExpression'
-  //   && ast.callee.type === 'MemberExpression'
-  //   && ast.callee.object.type === 'Identifier'
-  //   && ast.callee.object.name === '$'
-  //   && ast.callee.property.type === 'Identifier'
-  //   && ast.callee.property.name === 'asJsBool'
-  //   && ast.arguments.length === 1
-  //   && ast.arguments[0].type === 'CallExpression'
-  //   && ast.arguments[0].callee.type === 'MemberExpression'
-  //   && ast.arguments[0].callee.object.type === 'Identifier'
-  //   && ast.arguments[0].callee.object.name === '$'
-  //   && ast.arguments[0].callee.property.type === 'Identifier'
-  //   && ast.arguments[0].callee.property.name === 'asShenBool'
-  //   && ast.arguments[0].arguments.length === 1
-  //   ? optimize(ast.arguments[0].arguments[0]) :
+  ast.type === 'CallExpression'
+    && ast.callee.type === 'MemberExpression'
+    && ast.callee.object.type === 'Identifier'
+    && ast.callee.object.name === '$'
+    && ast.callee.property.type === 'Identifier'
+    && ast.callee.property.name === 'asJsBool'
+    && ast.arguments.length === 1
+    && ast.arguments[0].type === 'CallExpression'
+    && ast.arguments[0].callee.type === 'MemberExpression'
+    && ast.arguments[0].callee.object.type === 'Identifier'
+    && ast.arguments[0].callee.object.name === '$'
+    && ast.arguments[0].callee.property.type === 'Identifier'
+    && ast.arguments[0].callee.property.name === 'asShenBool'
+    && ast.arguments[0].arguments.length === 1
+    ? optimize(ast.arguments[0].arguments[0]) :
   // navigate sub-expressions
   ast.type === 'ArrayExpression'
     ? { ...ast, elements: ast.elements.map(optimize) } :

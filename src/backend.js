@@ -268,7 +268,7 @@ const build = (context, expr) =>
       ofDataType('String', invokeEnv('show', [build(context.now(), expr[1])])) :
     isForm(expr, 'intern', 2) ?
       ofDataType('Symbol', invokeEnv('symbolOf', [cast('String', build(context.now(), expr[1]))])) :
-    isForm(expr, 'set', 3) ? // mark ast with dataType of body ast
+    isForm(expr, 'set', 3) ?
       assign(access(accessEnv('symbols'), symbolKey(context, expr[1])), build(context.now(), expr[2])) :
     isForm(expr, 'value', 2) ?
       invokeEnv('valueOf', [symbolKey(context, expr[1])]) :
@@ -289,15 +289,14 @@ const build = (context, expr) =>
     isForm(expr, 'error-to-string', 2) ?
       ofDataType('String',
         access(cast('Error', build(context.now(), expr[1])), identifier('message'))) :
-    // built application can be labelled with expected return type and ignore settle, future, await
-    // open: Stream
-    // read-byte: Number
-    // write-byte: Number
-    // tlstr: String
-    // string->n: Number
-    // n->string: String
-    // pos: String
-    // absvector: Array
+    isForm(expr, 'read-byte', 2) || isForm(expr, 'write-byte', 3) || isForm(expr, 'string->n', 2) ?
+      ofDataType('Number',
+        invoke(globalFunction(expr[0]),
+          expr.slice(1).map(arg => returnCast(build(context.now(), arg))))) :
+    isForm(expr, 'tlstr', 2) || isForm(expr, 'n->string', 2) || isForm(expr, 'pos', 3) ?
+      ofDataType('String',
+        invoke(globalFunction(expr[0]),
+          expr.slice(1).map(arg => returnCast(build(context.now(), arg))))) :
     completeOrBounce(
       context,
       cast('Function',

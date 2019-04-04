@@ -205,7 +205,7 @@ const build = (context, expr) =>
         cast('JsBool', build(context.now(), expr[1])),
         build(context, expr[2]),
         build(context, expr[3]))) :
-    isForm(expr, 'cond') ? // if all branches are same dataType, mark dataType
+    isForm(expr, 'cond') ?
       build(context, expr.slice(1).reduceRight(
         (alternate, [test, consequent]) => [symbolOf('if'), test, consequent, alternate],
         [symbolOf('simple-error'), 'no condition was true'])) :
@@ -216,7 +216,7 @@ const build = (context, expr) =>
         arrow([escapeIdentifier(expr[1])], build(context.add([asSymbol(expr[1])]), expr[3]), context.async),
         [build(context.now(), expr[2])],
         context.async) :
-    isForm(expr, 'trap-error', 3) ? // if all branches are same dataType, mark dataType
+    isForm(expr, 'trap-error', 3) ?
       completeOrReturn(
         context,
         invokeEnv(context.async ? 'bait' : 'trap',

@@ -211,7 +211,7 @@ const build = (context, expr) =>
         [symbolOf('simple-error'), 'no condition was true'])) :
     isForm(expr, 'do', 3) ?
       sequential([build(context.now(), expr[1]), build(context, expr[2])]) :
-    isForm(expr, 'let', 4) ? // mark ast with dataType of body ast
+    isForm(expr, 'let', 4) ?
       invoke(
         arrow([escapeIdentifier(expr[1])], build(context.add([asSymbol(expr[1])]), expr[3]), context.async),
         [build(context.now(), expr[2])],

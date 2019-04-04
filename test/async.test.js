@@ -1,11 +1,9 @@
 const { equal, ok } = require('assert'); // TODO: rejects does not exist?
 const { parse } = require('../parser');
 const backend = require('../src/backend');
-const $ = backend({ async: true });
-
-const s = $.s;
+const { cons, evalKl, f, future, s, valueOf } = backend({ async: true });
 const parse1 = s => parse(s)[0];
-const exec = s => $.future($.evalKl(parse1(s)));
+const exec = s => future(evalKl(parse1(s)));
 
 // TODO: shouldn't have to provide custom rejects function
 const rejects = p => new Promise((resolve, reject) =>
@@ -22,10 +20,10 @@ describe('async', () => {
   describe('evaluation', () => {
     it('eval-kl', async () => {
       equal(5, await exec('(eval-kl (cons + (cons 2 (cons 3 ()))))'));
-      equal(5, await $.f['eval-kl']($.cons(s`+`, $.cons(2, $.cons(3, null)))));
-      equal(5, await $.f['eval-kl']([s`+`, 2, 3]));
-      equal(5, await $.evalKl($.cons(s`+`, $.cons(2, $.cons(3, null)))));
-      equal(5, await $.evalKl([s`+`, 2, 3]));
+      equal(5, await f['eval-kl'](cons(s`+`, cons(2, cons(3, null)))));
+      equal(5, await f['eval-kl']([s`+`, 2, 3]));
+      equal(5, await evalKl(cons(s`+`, cons(2, cons(3, null)))));
+      equal(5, await evalKl([s`+`, 2, 3]));
     });
   });
 
@@ -119,12 +117,12 @@ describe('async', () => {
   describe('recursion', () => {
     it('functions should be able to call themselves', async () => {
       await exec('(defun fac (N) (if (= 0 N) 1 (* N (fac (- N 1)))))');
-      await [[0, 1], [5, 120], [7, 5040]].forEachAsync(([n, r]) => equal(r, $.future($.f.fac(n))));
+      await [[0, 1], [5, 120], [7, 5040]].forEachAsync(([n, r]) => equal(r, future(f.fac(n))));
     });
     describe('tail recursion', () => {
       const countDown = async body => {
-        await $.evalKl([s`defun`, s`count-down`, [s`X`], parse1(body)]);
-        ok(await $.evalKl([s`count-down`, 20000]));
+        await evalKl([s`defun`, s`count-down`, [s`X`], parse1(body)]);
+        ok(await evalKl([s`count-down`, 20000]));
       };
       it('should be possible without overflow', async () => {
         await countDown('(if (= 0 X) true (count-down (- X 1)))');
@@ -192,7 +190,7 @@ describe('async', () => {
   describe('applications', () => {
     it('argument expressions should be evaluated in order', async () => {
       await exec('((set x (lambda X (lambda Y (+ X Y)))) (set x 1) (set x 2))');
-      equal(2, $.symbols['x']);
+      equal(2, valueOf('x'));
     });
     it('partial application', async () => {
       equal(13, await exec('((+ 6) 7)'));

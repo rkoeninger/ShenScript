@@ -163,7 +163,7 @@ const invokeEnv = (name, args, async = false) => invoke(accessEnv(name), args, a
 const ofDataType = (dataType, ast) => Object(ast, { dataType });
 const cast = (dataType, ast) =>
   dataType !== undefined && dataType !== ast.dataType
-    ? invokeEnv(dataType === 'Function' ? 'asf' : 'as' + dataType, [ast])
+    ? invokeEnv(dataType === 'Function' ? 'af' : 'as' + dataType, [ast])
     : ast;
 const returnCast = ast => ast;//invokeEnv('asShenValue', [ast]);
 const isForm = (expr, lead, length) => isArray(expr) && expr.length > 0 && expr[0] === symbolOf(lead) && (!length || expr.length === length);
@@ -179,6 +179,10 @@ const complete = (context, ast) => invokeEnv(context.async ? 'future' : 'settle'
 const completeOrReturn = (context, ast) => context.head ? complete(context, ast) : ast;
 const completeOrBounce = (context, fAst, argsAsts) =>
   context.head ? complete(context, invoke(fAst, argsAsts)) : invokeEnv('bounce', [fAst, array(argsAsts)]);
+const symbolKey = (context, expr) =>
+  isSymbol(expr) && !context.has(expr)
+    ? literal(nameOf(expr))
+    : invokeEnv('nameOf', [cast('Symbol', build(context.now(), expr))]);
 const lambda = (context, name, params, body) =>
   ofDataType('Function',
     invokeEnv('fun', [
@@ -264,6 +268,10 @@ const build = (context, expr) =>
       ofDataType('String', invokeEnv('show', [build(context.now(), expr[1])])) :
     isForm(expr, 'intern', 2) ?
       ofDataType('Symbol', invokeEnv('symbolOf', [cast('String', build(context.now(), expr[1]))])) :
+    isForm(expr, 'set', 3) ?
+      assign(access(accessEnv('symbols'), symbolKey(context, expr[1])), build(context.now(), expr[2])) :
+    isForm(expr, 'value', 2) ?
+      invokeEnv('valueOf', [symbolKey(context, expr[1])]) :
     isForm(expr, 'cn', 3) ?
       ofDataType('String',
         binary('+',
@@ -273,14 +281,14 @@ const build = (context, expr) =>
       ofDataType('Cons', invokeEnv('cons', expr.slice(1).map(arg => returnCast(build(context.now(), arg))))) :
     isForm(expr, 'hd', 2) ? access(cast('Cons', build(context.now(), expr[1])), identifier('head')) :
     isForm(expr, 'tl', 2) ? access(cast('Cons', build(context.now(), expr[1])), identifier('tail')) :
-    // isForm(expr, 'number?',    2) ? ofDataType('JsBool', invokeEnv('isNumber', [build(context.now(), expr[1])])) :
-    // isForm(expr, 'string?',    2) ? ofDataType('JsBool', invokeEnv('isString', [build(context.now(), expr[1])])) :
-    // isForm(expr, 'cons?',      2) ? ofDataType('JsBool', invokeEnv('isCons',   [build(context.now(), expr[1])])) :
-    // isForm(expr, 'absvector?', 2) ? ofDataType('JsBool', invokeEnv('isArray',  [build(context.now(), expr[1])])) :
-    isForm(expr, 'number?',    2) ? cast('ShenBool', invokeEnv('isNumber', [build(context.now(), expr[1])])) :
-    isForm(expr, 'string?',    2) ? cast('ShenBool', invokeEnv('isString', [build(context.now(), expr[1])])) :
-    isForm(expr, 'cons?',      2) ? cast('ShenBool', invokeEnv('isCons',   [build(context.now(), expr[1])])) :
-    isForm(expr, 'absvector?', 2) ? cast('ShenBool', invokeEnv('isArray',  [build(context.now(), expr[1])])) :
+    isForm(expr, 'number?',    2) ? cast('ShenBool', invokeEnv('isNumber', [build(context.now(), expr[1])])) : //ofDataType('JsBool',
+    isForm(expr, 'string?',    2) ? cast('ShenBool', invokeEnv('isString', [build(context.now(), expr[1])])) : //ofDataType('JsBool',
+    isForm(expr, 'cons?',      2) ? cast('ShenBool', invokeEnv('isCons',   [build(context.now(), expr[1])])) : //ofDataType('JsBool',
+    isForm(expr, 'absvector?', 2) ? cast('ShenBool', invokeEnv('isArray',  [build(context.now(), expr[1])])) : //ofDataType('JsBool',
+    isForm(expr, 'simple-error', 2) ? invokeEnv('raise', [cast('String', build(context.now(), expr[1]))]) :
+    isForm(expr, 'error-to-string', 2) ?
+      ofDataType('String',
+        access(cast('Error', build(context.now(), expr[1])), identifier('message'))) :
     completeOrBounce(
       context,
       cast('Function',
@@ -403,19 +411,20 @@ module.exports = (options = {}) => {
     '*sterror*':        options.sterror || out || (() => raise('standard output not supported')),
     '*home-directory*': options.homeDirectory  || ''
   };
+  const valueOf = s => symbols.hasOwnProperty(s) ? symbols[s] : raise(`global "${s}" is not defined`);
   const functions = {};
   const context = new Context({ async: options.async, head: true, locals: new Set() });
   const compile = expr => optimize(build(context, expr));
-  const env = {
+  const $ = {
     cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree,
-    asJsBool, asShenBool, asShenValue, asNzNumber, asNeString,
+    asJsBool, asShenBool, asShenValue, asNzNumber, asNeString, asDefined,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
-    symbolOf, nameOf, show, equal, raise, trap, bait, fun, bounce, settle, future, symbols, functions,
-    compile, f: functions, s: x => symbolOf(x[0]), asf: asFunction
+    symbolOf, nameOf, valueOf, show, equal, raise, trap, bait, fun, bounce, settle, future, symbols, functions,
+    compile, f: functions, s: x => symbolOf(x[0]), af: asFunction
   };
   const Func = context.async ? AsyncFunction : Function;
-  env.evalKl = expr => Func('$', generate(answer(compile(valueToArrayTree(expr)))))(env);
+  $.evalKl = expr => Func('$', generate(answer(compile(valueToArrayTree(expr)))))($);
   [
     ['if',              (b, x, y) => asJsBool(b) ? x : y],
     ['and',             (x, y) => asShenBool(asJsBool(x) && asJsBool(y))],
@@ -454,9 +463,9 @@ module.exports = (options = {}) => {
     ['simple-error',    s => raise(asString(s))],
     ['error-to-string', e => asError(e).message],
     ['set',             (s, x) => symbols[nameOf(asSymbol(s))] = x],
-    ['value',           s => asDefined(symbols[nameOf(asSymbol(s))])],
+    ['value',           s => valueOf(nameOf(asSymbol(s)))],
     ['type',            (x, _) => x],
-    ['eval-kl',         env.evalKl]
+    ['eval-kl',         $.evalKl]
   ].forEach(([id, f]) => functions[id] = fun(f));
-  return env;
+  return $;
 };

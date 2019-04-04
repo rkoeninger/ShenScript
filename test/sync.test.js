@@ -1,21 +1,19 @@
 const { equal, ok, throws } = require('assert');
 const { parse } = require('../parser');
 const backend = require('../src/backend');
-const $ = backend();
-
-const s = $.s;
+const { cons, evalKl, f, s, settle, valueOf } = backend();
 const parse1 = s => parse(s)[0];
-const exec = s => $.settle($.evalKl(parse1(s)));
-const values = [12, null, undefined, 'abc', s`asd`, 0, Infinity, [], $.cons(1, 2)];
+const exec = s => settle(evalKl(parse1(s)));
+const values = [12, null, undefined, 'abc', s`asd`, 0, Infinity, [], cons(1, 2)];
 
 describe('sync', () => {
   describe('evaluation', () => {
     it('eval-kl', () => {
       equal(5, exec('(eval-kl (cons + (cons 2 (cons 3 ()))))'));
-      equal(5, $.f['eval-kl']($.cons(s`+`, $.cons(2, $.cons(3, null)))));
-      equal(5, $.f['eval-kl']([s`+`, 2, 3]));
-      equal(5, $.evalKl($.cons(s`+`, $.cons(2, $.cons(3, null)))));
-      equal(5, $.evalKl([s`+`, 2, 3]));
+      equal(5, f['eval-kl'](cons(s`+`, cons(2, cons(3, null)))));
+      equal(5, f['eval-kl']([s`+`, 2, 3]));
+      equal(5, evalKl(cons(s`+`, cons(2, cons(3, null)))));
+      equal(5, evalKl([s`+`, 2, 3]));
     });
   });
 
@@ -106,7 +104,7 @@ describe('sync', () => {
     });
     describe('error-to-string', () => {
       it('should raise error when given non-error', () => {
-        values.forEach(x => throws(() => $.f['error-to-string'](x)));
+        values.forEach(x => throws(() => f['error-to-string'](x)));
       });
     });
   });
@@ -114,12 +112,12 @@ describe('sync', () => {
   describe('recursion', () => {
     it('functions should be able to call themselves', () => {
       exec('(defun fac (N) (if (= 0 N) 1 (* N (fac (- N 1)))))');
-      [[0, 1], [5, 120], [7, 5040]].forEach(([n, r]) => equal(r, $.settle($.f.fac(n))));
+      [[0, 1], [5, 120], [7, 5040]].forEach(([n, r]) => equal(r, settle(f.fac(n))));
     });
     describe('tail recursion', () => {
       const countDown = body => {
-        $.evalKl([s`defun`, s`count-down`, [s`X`], parse1(body)]);
-        ok($.evalKl([s`count-down`, 20000]));
+        evalKl([s`defun`, s`count-down`, [s`X`], parse1(body)]);
+        ok(evalKl([s`count-down`, 20000]));
       };
       it('should be possible without overflow', () => {
         countDown('(if (= 0 X) true (count-down (- X 1)))');
@@ -187,7 +185,7 @@ describe('sync', () => {
   describe('applications', () => {
     it('argument expressions should be evaluated in order', () => {
       exec('((set x (lambda X (lambda Y (+ X Y)))) (set x 1) (set x 2))');
-      equal(2, $.symbols['x']);
+      equal(2, valueOf('x'));
     });
     it('partial application', () => {
       equal(13, exec('((+ 6) 7)'));

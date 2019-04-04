@@ -199,7 +199,7 @@ const build = (context, expr) =>
         logical(expr[0] === symbolOf('and') ? '&&' : '||',
           cast('JsBool', build(context.now(), expr[1])),
           cast('JsBool', build(context.now(), expr[2])))) :
-    isForm(expr, 'if', 4) ? ( // if all branches are same dataType, mark dataType
+    isForm(expr, 'if', 4) ? (
       expr[1] === shenTrue ? build(context, expr[2]) :
       conditional(
         cast('JsBool', build(context.now(), expr[1])),

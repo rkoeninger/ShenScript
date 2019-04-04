@@ -163,7 +163,7 @@ const invokeEnv = (name, args, async = false) => invoke(accessEnv(name), args, a
 const ofDataType = (dataType, ast) => Object(ast, { dataType });
 const cast = (dataType, ast) =>
   dataType !== undefined && dataType !== ast.dataType
-    ? invokeEnv(dataType === 'Function' ? 'af' : 'as' + dataType, [ast])
+    ? Object.assign(invokeEnv(dataType === 'Function' ? 'af' : 'as' + dataType, [ast]), { dataType })
     : ast;
 const returnCast = ast => ast;//invokeEnv('asShenValue', [ast]);
 const isForm = (expr, lead, length) => isArray(expr) && expr.length > 0 && expr[0] === symbolOf(lead) && (!length || expr.length === length);

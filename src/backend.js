@@ -85,9 +85,9 @@ const produce = (proceed, render, next, state) => {
 
 const cons             = (h, t) => new Cons(h, t);
 const consFromArray    = a => a.reduceRight((t, h) => cons(h, t), null);
-const consToArray      = c => produce(isCons, c => c.head, c => c.tail, c);
+const consToArray      = c => produce(isCons, c => c.head,                   c => c.tail, c);
 const consToArrayTree  = c => produce(isCons, c => valueToArrayTree(c.head), c => c.tail, c);
-const valueToArray     = x => isCons(x) ? consToArray(x) : x === null ? [] : x;
+const valueToArray     = x => isCons(x) ? consToArray(x)     : x === null ? [] : x;
 const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x === null ? [] : x;
 
 const equal = (x, y) =>

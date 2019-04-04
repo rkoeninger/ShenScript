@@ -199,24 +199,24 @@ const build = (context, expr) =>
         logical(expr[0] === symbolOf('and') ? '&&' : '||',
           cast('JsBool', build(context.now(), expr[1])),
           cast('JsBool', build(context.now(), expr[2])))) :
-    isForm(expr, 'if', 4) ? (
+    isForm(expr, 'if', 4) ? ( // if all branches are same dataType, mark dataType
       expr[1] === shenTrue ? build(context, expr[2]) :
       conditional(
         cast('JsBool', build(context.now(), expr[1])),
         build(context, expr[2]),
         build(context, expr[3]))) :
-    isForm(expr, 'cond') ?
+    isForm(expr, 'cond') ? // if all branches are same dataType, mark dataType
       build(context, expr.slice(1).reduceRight(
         (alternate, [test, consequent]) => [symbolOf('if'), test, consequent, alternate],
         [symbolOf('simple-error'), 'no condition was true'])) :
     isForm(expr, 'do', 3) ?
       sequential([build(context.now(), expr[1]), build(context, expr[2])]) :
-    isForm(expr, 'let', 4) ?
+    isForm(expr, 'let', 4) ? // mark ast with dataType of body ast
       invoke(
         arrow([escapeIdentifier(expr[1])], build(context.add([asSymbol(expr[1])]), expr[3]), context.async),
         [build(context.now(), expr[2])],
         context.async) :
-    isForm(expr, 'trap-error', 3) ?
+    isForm(expr, 'trap-error', 3) ? // if all branches are same dataType, mark dataType
       completeOrReturn(
         context,
         invokeEnv(context.async ? 'bait' : 'trap',
@@ -268,7 +268,7 @@ const build = (context, expr) =>
       ofDataType('String', invokeEnv('show', [build(context.now(), expr[1])])) :
     isForm(expr, 'intern', 2) ?
       ofDataType('Symbol', invokeEnv('symbolOf', [cast('String', build(context.now(), expr[1]))])) :
-    isForm(expr, 'set', 3) ?
+    isForm(expr, 'set', 3) ? // mark ast with dataType of body ast
       assign(access(accessEnv('symbols'), symbolKey(context, expr[1])), build(context.now(), expr[2])) :
     isForm(expr, 'value', 2) ?
       invokeEnv('valueOf', [symbolKey(context, expr[1])]) :
@@ -289,6 +289,15 @@ const build = (context, expr) =>
     isForm(expr, 'error-to-string', 2) ?
       ofDataType('String',
         access(cast('Error', build(context.now(), expr[1])), identifier('message'))) :
+    // built application can be labelled with expected return type and ignore settle, future, await
+    // open: Stream
+    // read-byte: Number
+    // write-byte: Number
+    // tlstr: String
+    // string->n: Number
+    // n->string: String
+    // pos: String
+    // absvector: Array
     completeOrBounce(
       context,
       cast('Function',

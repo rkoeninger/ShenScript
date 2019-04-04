@@ -161,7 +161,7 @@ const access = (object, property) => ({ type: 'MemberExpression', computed: prop
 const template = (tag, raw) => ({ type: 'TaggedTemplateExpression', tag, quasi: { type: 'TemplateLiteral', expressions: [], quasis: [{ type: 'TemplateElement', value: { raw } }] } });
 const accessEnv = name => access(identifier('$'), identifier(name));
 const invokeEnv = (name, args, async = false) => invoke(accessEnv(name), args, async);
-const ofDataType = (dataType, ast) => Object(ast, { dataType });
+const ofDataType = (dataType, ast) => Object.assign(ast, { dataType });
 const cast = (dataType, ast) =>
   dataType !== undefined && dataType !== ast.dataType
     ? Object.assign(invokeEnv(dataType === 'Function' ? 'af' : 'as' + dataType, [ast]), { dataType })
@@ -374,6 +374,10 @@ const optimize = ast =>
   ast.type === 'ConditionalExpression'
     ? { ...ast, test: optimize(ast.test), consequent: optimize(ast.consequent), alternate: optimize(ast.alternate) } :
   ast.type === 'LogicalExpression'
+    ? { ...ast, left: optimize(ast.left), right: optimize(ast.right) } :
+  ast.type === 'UnaryExpression'
+    ? { ...ast, argument: optimize(ast.argument) } :
+  ast.type === 'BinaryExpression'
     ? { ...ast, left: optimize(ast.left), right: optimize(ast.right) } :
   ast.type === 'MemberExpression'
     ? { ...ast, object: optimize(ast.object), property: optimize(ast.property) } :

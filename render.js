@@ -35,7 +35,10 @@ const syntax =
     member(identifier('module'), identifier('exports')),
     arrow(
       [identifier('$')],
-      block([].concat(defuns.map(compile).map(cleanupDefun), statements.map(compile), [answer(identifier('$'))])),
+      block([].concat(
+        defuns.map(compile).map(cleanupDefun).map(statement),
+        statements.map(compile).map(statement),
+        [answer(identifier('$'))])),
       async)))]));
 
 console.log(`${syntax.length} chars`);

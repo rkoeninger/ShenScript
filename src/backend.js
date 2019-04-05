@@ -107,21 +107,6 @@ const fun = (f, arity = f.arity || f.length) =>
   Object.assign((f instanceof AsyncFunction ? funAsync : funSync)(f, arity), { arity });
 
 const raise = x => { throw new Error(x); };
-const trap = (f, g) => {
-  try {
-    return f();
-  } catch (e) {
-    return g(e);
-  }
-};
-const bait = async (f, g) => {
-  try {
-    return await f();
-  } catch (e) {
-    return g(e);
-  }
-};
-
 const bounce = (f, args) => new Trampoline(f, args);
 const settle = x => {
   while (x instanceof Trampoline) {
@@ -147,9 +132,12 @@ const wait = argument => ({ type: 'AwaitExpression', argument });
 const assign = (left, right, operator = '=') => ({ type: 'AssignmentExpression', left, right, operator });
 const answer = argument => ({ type: 'ReturnStatement', argument });
 const sequential = expressions => ({ type: 'SequenceExpression', expressions, dataType: expressions[expressions.length - 1].dataType });
-const arrow = (params, body, async = false) => ({ type: 'ArrowFunctionExpression', async, params, body });
+const arrow = (params, body, async = false) => ({ type: 'ArrowFunctionExpression', async, params, body, });
 const invoke = (callee, args, async = false) => (async ? wait : identity)({ type: 'CallExpression', callee, arguments: args });
 const conditional = (test, consequent, alternate) => ({ type: 'ConditionalExpression', test, consequent, alternate });
+const block = body => ({ type: 'BlockStatement', body });
+const attempt = (block, handler) => ({ type: 'TryStatement', block, handler });
+const handle = (param, body) => ({ type: 'CatchClause', param, body });
 const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
 const unary = (operator, argument, prefix = true) => ({ type: 'UnaryExpression', operator, argument, prefix });
 const binary = (operator, left, right) => ({ type: 'BinaryExpression', operator, left, right });
@@ -221,8 +209,17 @@ const build = (context, expr) =>
     isForm(expr, 'trap-error', 3) ?
       completeOrReturn(
         context,
-        invokeEnv(context.async ? 'bait' : 'trap',
-          [arrow([], uncasted(build(context.now(), expr[1])), context.async), uncasted(build(context.now(), expr[2]))],
+        invoke(
+          arrow(
+            [],
+            block([
+              attempt(
+                block([answer(uncasted(build(context.now(), expr[1])))]),
+                handle(
+                  identifier('e$'),
+                  block([answer(invoke(uncasted(build(context, expr[2])), [identifier('e$')]))])))]),
+            context.async),
+          [],
           context.async)) :
     isForm(expr, 'lambda', 3) ? lambda(context, 'lambda', [expr[1]], expr[2]) :
     isForm(expr, 'freeze', 2) ? lambda(context, 'freeze', [], expr[1]) :
@@ -359,7 +356,7 @@ module.exports = (options = {}) => {
     asJsBool, asShenBool, asNzNumber, asNeString, asDefined,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
-    symbolOf, nameOf, valueOf, show, equal, raise, trap, bait, fun, bounce, settle, future, symbols, functions,
+    symbolOf, nameOf, valueOf, show, equal, raise, fun, bounce, settle, future, symbols, functions,
     compile, f: functions, s: x => symbolOf(isArray(x) ? x[0] : x)
   };
   const Func = context.async ? AsyncFunction : Function;

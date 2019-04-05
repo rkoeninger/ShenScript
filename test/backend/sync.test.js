@@ -1,6 +1,6 @@
 const { equal, ok, throws } = require('assert');
-const { parse } = require('../parser');
-const backend = require('../src/backend');
+const { parse } = require('../../parser');
+const backend = require('../../src/backend');
 const { cons, evalKl, f, s, settle, valueOf } = backend();
 const parse1 = s => parse(s)[0];
 const exec = s => settle(evalKl(parse1(s)));

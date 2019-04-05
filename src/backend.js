@@ -306,20 +306,6 @@ const build = (context, expr) =>
       expr.slice(1).map(arg => uncasted(build(context.now(), arg))))
   ) : raise('not a valid form');
 
-/*
-statement/expression context:
-  root of function is in statement context
-  conditionals prefer if/else over ?: to stay in statement context
-  when a statement is needed in expression context, use an iife
-
-return transform:
-  returning a block statment -> apply return transform to last statement in block
-  returning an if or try statement -> apply return transform to both branches
-  returning an ExpressionStatement -> replace ExpressionStatement with ReturnStatement returning same expression
-    ExpressionStatement would include lambda, freeze, and, or, if(already in expression form), function application
-  returning a let -> apply return transform to let body
-*/
-
 // TODO: need to be able to provide definition for (y-or-n?) maybe in frontend?
 module.exports = (options = {}) => {
   // TODO: have shen-script.*instream-supported*, shen-script.*outstream-supported* flags?

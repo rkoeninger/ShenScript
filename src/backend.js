@@ -68,10 +68,6 @@ const asJsBool   = x =>
   x === shenFalse ? false :
   raise('Shen boolean expected');
 const asShenBool = x => x ? shenTrue : shenFalse;
-const asShenValue = x => // TODO: remove this?
-  x === true  ? shenTrue :
-  x === false ? shenFalse :
-  x;
 
 const identity = x => x;
 const produce = (proceed, render, next, state) => {
@@ -162,11 +158,7 @@ const template = (tag, raw) => ({ type: 'TaggedTemplateExpression', tag, quasi: 
 const accessEnv = name => access(identifier('$'), identifier(name));
 const invokeEnv = (name, args, async = false) => invoke(accessEnv(name), args, async);
 const ofDataType = (dataType, ast) => Object.assign(ast, { dataType });
-const cast = (dataType, ast) =>
-  dataType !== undefined && dataType !== ast.dataType
-    ? Object.assign(invokeEnv(dataType === 'Function' ? 'af' : 'as' + dataType, [ast]), { dataType })
-    : ast;
-const returnCast = ast => ast;//invokeEnv('asShenValue', [ast]);
+const cast = (dataType, ast) => dataType !== ast.dataType ? Object.assign(invokeEnv('as' + dataType, [ast]), { dataType }) : ast;
 const isForm = (expr, lead, length) => isArray(expr) && expr.length > 0 && expr[0] === symbolOf(lead) && (!length || expr.length === length);
 const isConsForm = (expr, depth) => depth === 0 || isForm(expr, 'cons', 3) && isConsForm(expr[2], depth - 1);
 const hex = ch => ('0' + ch.charCodeAt(0).toString(16)).slice(-2);
@@ -187,7 +179,7 @@ const symbolKey = (context, expr) =>
 const lambda = (context, name, params, body) =>
   ofDataType('Function',
     invokeEnv('fun', [
-      arrow(params.map(escapeIdentifier), returnCast(build(context.later().add(params.map(asSymbol)), body)), context.async)]));
+      arrow(params.map(escapeIdentifier), build(context.later().add(params.map(asSymbol)), body), context.async)]));
 const build = (context, expr) =>
   isNumber(expr) ? ofDataType('Number', literal(expr)) :
   isString(expr) ? ofDataType('String', literal(expr)) :
@@ -235,7 +227,7 @@ const build = (context, expr) =>
     isConsForm(expr, 8) ?
       ofDataType('Cons',
         invokeEnv('consFromArray',
-          [array(produce(x => isForm(x, 'cons', 3), x => returnCast(build(context.now(), x[1])), x => x[2], expr))],
+          [array(produce(x => isForm(x, 'cons', 3), x => build(context.now(), x[1]), x => x[2], expr))],
           context.async)) :
     // TODO: abstract over these inlines and primitve functions with asts
     isForm(expr, '+', 3) || isForm(expr, '-', 3) || isForm(expr, '*', 3) ?
@@ -282,7 +274,7 @@ const build = (context, expr) =>
           cast('String', build(context.now(), expr[1])),
           cast('String', build(context.now(), expr[2])))) :
     isForm(expr, 'cons', 3) ?
-      ofDataType('Cons', invokeEnv('cons', expr.slice(1).map(arg => returnCast(build(context.now(), arg))))) :
+      ofDataType('Cons', invokeEnv('cons', expr.slice(1).map(arg => build(context.now(), arg)))) :
     isForm(expr, 'hd', 2) ? access(cast('Cons', build(context.now(), expr[1])), identifier('head')) :
     isForm(expr, 'tl', 2) ? access(cast('Cons', build(context.now(), expr[1])), identifier('tail')) :
     isForm(expr, 'number?',    2) ? cast('ShenBool', invokeEnv('isNumber', [build(context.now(), expr[1])])) : //ofDataType('JsBool',
@@ -296,19 +288,18 @@ const build = (context, expr) =>
     isForm(expr, 'read-byte', 2) || isForm(expr, 'write-byte', 3) || isForm(expr, 'string->n', 2) ?
       ofDataType('Number',
         invoke(globalFunction(expr[0]),
-          expr.slice(1).map(arg => returnCast(build(context.now(), arg))))) :
+          expr.slice(1).map(arg => build(context.now(), arg)))) :
     isForm(expr, 'tlstr', 2) || isForm(expr, 'n->string', 2) || isForm(expr, 'pos', 3) ?
       ofDataType('String',
         invoke(globalFunction(expr[0]),
-          expr.slice(1).map(arg => returnCast(build(context.now(), arg))))) :
+          expr.slice(1).map(arg => build(context.now(), arg)))) :
     completeOrBounce(
       context,
-      cast('Function',
-        context.has(expr[0]) ? escapeIdentifier(expr[0]) :
-        isArray(expr[0])     ? build(context.now(), expr[0]) :
-        isSymbol(expr[0])    ? globalFunction(expr[0]) :
-        raise('not a valid application form')),
-      expr.slice(1).map(arg => returnCast(build(context.now(), arg))))
+      context.has(expr[0]) ? escapeIdentifier(expr[0]) :
+      isArray(expr[0])     ? build(context.now(), expr[0]) :
+      isSymbol(expr[0])    ? globalFunction(expr[0]) :
+      raise('not a valid application form'),
+      expr.slice(1).map(arg => build(context.now(), arg)))
   ) : raise('not a valid form');
 
 /*
@@ -433,11 +424,11 @@ module.exports = (options = {}) => {
   const compile = expr => optimize(build(context, expr));
   const $ = {
     cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree,
-    asJsBool, asShenBool, asShenValue, asNzNumber, asNeString, asDefined,
+    asJsBool, asShenBool, asNzNumber, asNeString, asDefined,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
     symbolOf, nameOf, valueOf, show, equal, raise, trap, bait, fun, bounce, settle, future, symbols, functions,
-    compile, f: functions, s: x => symbolOf(x[0]), af: asFunction
+    compile, f: functions, s: x => symbolOf(x[0])
   };
   const Func = context.async ? AsyncFunction : Function;
   $.evalKl = expr => Func('$', generate(answer(compile(valueToArrayTree(expr)))))($);

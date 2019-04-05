@@ -164,10 +164,11 @@ const isConsForm = (expr, depth) => depth === 0 || isForm(expr, 'cons', 3) && is
 const hex = ch => ('0' + ch.charCodeAt(0).toString(16)).slice(-2);
 const validCharacterRegex = /^[_A-Za-z0-9]$/;
 const validCharactersRegex = /^[_A-Za-z][_A-Za-z0-9]*$/;
+const validIdentifier = id => validCharactersRegex.test(nameOf(id));
 const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '_' : `$${hex(ch)}`;
 const escapeIdentifier = id => identifier(nameOf(id).split('').map(escapeCharacter).join(''));
 const idle = id => ofDataType('Symbol', template(accessEnv('s'), nameOf(id)));
-const globalFunction = id => access(accessEnv('f'), literal(nameOf(id)));
+const globalFunction = id => access(accessEnv('f'), (validIdentifier(id) ? identifier : literal)(nameOf(id)));
 const complete = (context, ast) => invokeEnv(context.async ? 'future' : 'settle', [ast], context.async);
 const completeOrReturn = (context, ast) => context.head ? complete(context, ast) : ast;
 const completeOrBounce = (context, fAst, argsAsts) =>

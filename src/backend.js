@@ -230,8 +230,7 @@ const build = (context, expr) =>
     isConsForm(expr, 8) ?
       ofDataType('Cons',
         invokeEnv('consFromArray',
-          [array(produce(x => isForm(x, 'cons', 3), x => uncasted(build(context.now(), x[1])), x => x[2], expr))],
-          context.async)) :
+          [array(produce(x => isForm(x, 'cons', 3), x => uncasted(build(context.now(), x[1])), x => x[2], expr))])) :
     // TODO: abstract over these inlines and primitve functions with asts
     isForm(expr, '+', 3) || isForm(expr, '-', 3) || isForm(expr, '*', 3) ?
       ofDataType('Number',

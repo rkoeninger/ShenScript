@@ -215,9 +215,13 @@ const build = (context, expr) =>
             block([
               attempt(
                 block([answer(uncasted(build(context.now(), expr[1])))]),
-                handle(
-                  identifier('e$'),
-                  block([answer(invoke(uncasted(build(context, expr[2])), [identifier('e$')]))])))]),
+                isForm(expr[2], 'lambda', 3)
+                  ? handle(
+                      escapeIdentifier(expr[2][1]),
+                      block([answer(uncasted(build(context.later().add([asSymbol(expr[2][1])]), expr[2][2])))]))
+                  : handle(
+                      identifier('e$'),
+                      block([answer(invoke(uncasted(build(context.later(), expr[2])), [identifier('e$')]))])))]),
             context.async),
           [],
           context.async)) :

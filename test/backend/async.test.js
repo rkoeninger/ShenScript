@@ -1,5 +1,5 @@
 const { equal, ok } = require('assert'); // TODO: rejects does not exist?
-const { parse } = require('../../build/parser');
+const { parse } = require('../../scripts/parser');
 const backend = require('../../src/backend');
 const { cons, evalKl, f, future, s, valueOf } = backend({ async: true });
 const parse1 = s => parse(s)[0];

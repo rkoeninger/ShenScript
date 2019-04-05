@@ -63,11 +63,11 @@ const asIndex    = (i, a) =>
   !Number.isInteger(i)   ? raise(`index ${i} is not valid`) :
   i < 0 || i >= a.length ? raise(`index ${i} is not with array bounds of [0, ${a.length})`) :
   i;
+const asShenBool = x => x ? shenTrue : shenFalse;
 const asJsBool   = x =>
   x === shenTrue  ? true :
   x === shenFalse ? false :
   raise('Shen boolean expected');
-const asShenBool = x => x ? shenTrue : shenFalse;
 
 const identity = x => x;
 const produce = (proceed, render, next, state) => {
@@ -159,6 +159,7 @@ const accessEnv = name => access(identifier('$'), identifier(name));
 const invokeEnv = (name, args, async = false) => invoke(accessEnv(name), args, async);
 const ofDataType = (dataType, ast) => Object.assign(ast, { dataType });
 const cast = (dataType, ast) => dataType !== ast.dataType ? Object.assign(invokeEnv('as' + dataType, [ast]), { dataType }) : ast;
+const uncasted = ast => ast.dataType === 'JsBool' ? cast('ShenBool', ast) : ast;
 const isForm = (expr, lead, length) => isArray(expr) && expr.length > 0 && expr[0] === symbolOf(lead) && (!length || expr.length === length);
 const isConsForm = (expr, depth) => depth === 0 || isForm(expr, 'cons', 3) && isConsForm(expr[2], depth - 1);
 const hex = ch => ('0' + ch.charCodeAt(0).toString(16)).slice(-2);
@@ -180,7 +181,10 @@ const symbolKey = (context, expr) =>
 const lambda = (context, name, params, body) =>
   ofDataType('Function',
     invokeEnv('fun', [
-      arrow(params.map(escapeIdentifier), build(context.later().add(params.map(asSymbol)), body), context.async)]));
+      arrow(
+        params.map(escapeIdentifier),
+        uncasted(build(context.later().add(params.map(asSymbol)), body)),
+        context.async)]));
 const build = (context, expr) =>
   isNumber(expr) ? ofDataType('Number', literal(expr)) :
   isString(expr) ? ofDataType('String', literal(expr)) :
@@ -188,36 +192,37 @@ const build = (context, expr) =>
   isArray(expr) ? (
     expr.length === 0 ? literal(null) :
     isForm(expr, 'and', 3) || isForm(expr, 'or', 3) ?
-      //ofDataType('JsBool',
-      cast('ShenBool',
+      ofDataType('JsBool',
         logical(expr[0] === symbolOf('and') ? '&&' : '||',
           cast('JsBool', build(context.now(), expr[1])),
           cast('JsBool', build(context.now(), expr[2])))) :
     isForm(expr, 'not', 2) ?
-      //ofDataType('JsBool',
-      cast('ShenBool', unary('!', cast('JsBool', build(context.now(), expr[1])))) :
+      ofDataType('JsBool', unary('!', cast('JsBool', build(context.now(), expr[1])))) :
     isForm(expr, 'if', 4) ? (
-      expr[1] === shenTrue ? build(context, expr[2]) :
+      expr[1] === shenTrue ? uncasted(build(context, expr[2])) :
       conditional(
         cast('JsBool', build(context.now(), expr[1])),
-        build(context, expr[2]),
-        build(context, expr[3]))) :
+        uncasted(build(context, expr[2])),
+        uncasted(build(context, expr[3])))) :
     isForm(expr, 'cond') ?
-      build(context, expr.slice(1).reduceRight(
+      uncasted(build(context, expr.slice(1).reduceRight(
         (alternate, [test, consequent]) => [symbolOf('if'), test, consequent, alternate],
-        [symbolOf('simple-error'), 'no condition was true'])) :
+        [symbolOf('simple-error'), 'no condition was true']))) :
     isForm(expr, 'do', 3) ?
-      sequential([build(context.now(), expr[1]), build(context, expr[2])]) :
+      sequential([build(context.now(), expr[1]), uncasted(build(context, expr[2]))]) :
     isForm(expr, 'let', 4) ?
       invoke(
-        arrow([escapeIdentifier(expr[1])], build(context.add([asSymbol(expr[1])]), expr[3]), context.async),
-        [build(context.now(), expr[2])],
+        arrow(
+          [escapeIdentifier(expr[1])],
+          uncasted(build(context.add([asSymbol(expr[1])]), expr[3])),
+          context.async),
+        [uncasted(build(context.now(), expr[2]))],
         context.async) :
     isForm(expr, 'trap-error', 3) ?
       completeOrReturn(
         context,
         invokeEnv(context.async ? 'bait' : 'trap',
-          [arrow([], build(context.now(), expr[1]), context.async), build(context.now(), expr[2])],
+          [arrow([], uncasted(build(context.now(), expr[1])), context.async), uncasted(build(context.now(), expr[2]))],
           context.async)) :
     isForm(expr, 'lambda', 3) ? lambda(context, 'lambda', [expr[1]], expr[2]) :
     isForm(expr, 'freeze', 2) ? lambda(context, 'freeze', [], expr[1]) :
@@ -228,7 +233,7 @@ const build = (context, expr) =>
     isConsForm(expr, 8) ?
       ofDataType('Cons',
         invokeEnv('consFromArray',
-          [array(produce(x => isForm(x, 'cons', 3), x => build(context.now(), x[1]), x => x[2], expr))],
+          [array(produce(x => isForm(x, 'cons', 3), x => uncasted(build(context.now(), x[1])), x => x[2], expr))],
           context.async)) :
     // TODO: abstract over these inlines and primitve functions with asts
     isForm(expr, '+', 3) || isForm(expr, '-', 3) || isForm(expr, '*', 3) ?
@@ -242,31 +247,29 @@ const build = (context, expr) =>
           cast('Number',   build(context.now(), expr[1])),
           cast('NzNumber', build(context.now(), expr[2])))) :
     isForm(expr, '<', 3) || isForm(expr, '>', 3) || isForm(expr, '<=', 3) || isForm(expr, '>=', 3) ?
-      //ofDataType('JsBool',
-      cast('ShenBool',
+      ofDataType('JsBool',
         binary(nameOf(expr[0]),
           cast('Number', build(context.now(), expr[1])),
           cast('Number', build(context.now(), expr[2])))) :
     isForm(expr, '=', 3) ?
-      //ofDataType('JsBool',
-      cast('ShenBool',
+      ofDataType('JsBool',
         isArray(expr[1]) && expr[1].length === 0 ?
-          binary('===', literal(null), build(context.now(), expr[2])) :
+          binary('===', literal(null), uncasted(build(context.now(), expr[2]))) :
         isArray(expr[2]) && expr[2].length === 0 ?
-          binary('===', literal(null), build(context.now(), expr[1])) :
+          binary('===', literal(null), uncasted(build(context.now(), expr[1]))) :
         isNumber(expr[1]) || isString(expr[1]) ?
-          binary('===', literal(expr[1]), build(context.now(), expr[2])) :
+          binary('===', literal(expr[1]), uncasted(build(context.now(), expr[2]))) :
         isNumber(expr[2]) || isString(expr[2]) ?
-          binary('===', literal(expr[2]), build(context.now(), expr[1])) :
+          binary('===', literal(expr[2]), uncasted(build(context.now(), expr[1]))) :
         invokeEnv('equal', [
-          build(context.now(), expr[1]),
-          build(context.now(), expr[2])])) :
+          uncasted(build(context.now(), expr[1])),
+          uncasted(build(context.now(), expr[2]))])) :
     isForm(expr, 'str', 2) ?
       ofDataType('String', invokeEnv('show', [build(context.now(), expr[1])])) :
     isForm(expr, 'intern', 2) ?
       ofDataType('Symbol', invokeEnv('symbolOf', [cast('String', build(context.now(), expr[1]))])) :
     isForm(expr, 'set', 3) ?
-      assign(access(accessEnv('symbols'), symbolKey(context, expr[1])), build(context.now(), expr[2])) :
+      assign(access(accessEnv('symbols'), symbolKey(context, expr[1])), uncasted(build(context.now(), expr[2]))) :
     isForm(expr, 'value', 2) ?
       invokeEnv('valueOf', [symbolKey(context, expr[1])]) :
     isForm(expr, 'cn', 3) ?
@@ -275,13 +278,13 @@ const build = (context, expr) =>
           cast('String', build(context.now(), expr[1])),
           cast('String', build(context.now(), expr[2])))) :
     isForm(expr, 'cons', 3) ?
-      ofDataType('Cons', invokeEnv('cons', expr.slice(1).map(arg => build(context.now(), arg)))) :
+      ofDataType('Cons', invokeEnv('cons', expr.slice(1).map(arg => uncasted(build(context.now(), arg))))) :
     isForm(expr, 'hd', 2) ? access(cast('Cons', build(context.now(), expr[1])), identifier('head')) :
     isForm(expr, 'tl', 2) ? access(cast('Cons', build(context.now(), expr[1])), identifier('tail')) :
-    isForm(expr, 'number?',    2) ? cast('ShenBool', invokeEnv('isNumber', [build(context.now(), expr[1])])) : //ofDataType('JsBool',
-    isForm(expr, 'string?',    2) ? cast('ShenBool', invokeEnv('isString', [build(context.now(), expr[1])])) : //ofDataType('JsBool',
-    isForm(expr, 'cons?',      2) ? cast('ShenBool', invokeEnv('isCons',   [build(context.now(), expr[1])])) : //ofDataType('JsBool',
-    isForm(expr, 'absvector?', 2) ? cast('ShenBool', invokeEnv('isArray',  [build(context.now(), expr[1])])) : //ofDataType('JsBool',
+    isForm(expr, 'number?',    2) ? ofDataType('JsBool', invokeEnv('isNumber', [uncasted(build(context.now(), expr[1]))])) :
+    isForm(expr, 'string?',    2) ? ofDataType('JsBool', invokeEnv('isString', [uncasted(build(context.now(), expr[1]))])) :
+    isForm(expr, 'cons?',      2) ? ofDataType('JsBool', invokeEnv('isCons',   [uncasted(build(context.now(), expr[1]))])) :
+    isForm(expr, 'absvector?', 2) ? ofDataType('JsBool', invokeEnv('isArray',  [uncasted(build(context.now(), expr[1]))])) :
     isForm(expr, 'simple-error', 2) ? invokeEnv('raise', [cast('String', build(context.now(), expr[1]))]) :
     isForm(expr, 'error-to-string', 2) ?
       ofDataType('String',
@@ -289,18 +292,18 @@ const build = (context, expr) =>
     isForm(expr, 'read-byte', 2) || isForm(expr, 'write-byte', 3) || isForm(expr, 'string->n', 2) ?
       ofDataType('Number',
         invoke(globalFunction(expr[0]),
-          expr.slice(1).map(arg => build(context.now(), arg)))) :
+          expr.slice(1).map(arg => uncasted(build(context.now(), arg))))) :
     isForm(expr, 'tlstr', 2) || isForm(expr, 'n->string', 2) || isForm(expr, 'pos', 3) ?
       ofDataType('String',
         invoke(globalFunction(expr[0]),
-          expr.slice(1).map(arg => build(context.now(), arg)))) :
+          expr.slice(1).map(arg => uncasted(build(context.now(), arg))))) :
     completeOrBounce(
       context,
       context.has(expr[0]) ? escapeIdentifier(expr[0]) :
-      isArray(expr[0])     ? build(context.now(), expr[0]) :
+      isArray(expr[0])     ? uncasted(build(context.now(), expr[0])) :
       isSymbol(expr[0])    ? globalFunction(expr[0]) :
       raise('not a valid application form'),
-      expr.slice(1).map(arg => build(context.now(), arg)))
+      expr.slice(1).map(arg => uncasted(build(context.now(), arg))))
   ) : raise('not a valid form');
 
 /*
@@ -316,64 +319,6 @@ return transform:
     ExpressionStatement would include lambda, freeze, and, or, if(already in expression form), function application
   returning a let -> apply return transform to let body
 */
-
-const optimize = ast =>
-  // $.asJsBool($.asShenBool(X)) -> X
-  ast.type === 'CallExpression'
-    && ast.callee.type === 'MemberExpression'
-    && ast.callee.object.type === 'Identifier'
-    && ast.callee.object.name === '$'
-    && ast.callee.property.type === 'Identifier'
-    && ast.callee.property.name === 'asJsBool'
-    && ast.arguments.length === 1
-    && ast.arguments[0].type === 'CallExpression'
-    && ast.arguments[0].callee.type === 'MemberExpression'
-    && ast.arguments[0].callee.object.type === 'Identifier'
-    && ast.arguments[0].callee.object.name === '$'
-    && ast.arguments[0].callee.property.type === 'Identifier'
-    && ast.arguments[0].callee.property.name === 'asShenBool'
-    && ast.arguments[0].arguments.length === 1
-    ? optimize(ast.arguments[0].arguments[0]) :
-  // $.asShenBool($.asJsBool(X)) -> X
-  ast.type === 'CallExpression'
-    && ast.callee.type === 'MemberExpression'
-    && ast.callee.object.type === 'Identifier'
-    && ast.callee.object.name === '$'
-    && ast.callee.property.type === 'Identifier'
-    && ast.callee.property.name === 'asJsBool'
-    && ast.arguments.length === 1
-    && ast.arguments[0].type === 'CallExpression'
-    && ast.arguments[0].callee.type === 'MemberExpression'
-    && ast.arguments[0].callee.object.type === 'Identifier'
-    && ast.arguments[0].callee.object.name === '$'
-    && ast.arguments[0].callee.property.type === 'Identifier'
-    && ast.arguments[0].callee.property.name === 'asShenBool'
-    && ast.arguments[0].arguments.length === 1
-    ? optimize(ast.arguments[0].arguments[0]) :
-  // navigate sub-expressions
-  ast.type === 'ArrayExpression'
-    ? { ...ast, elements: ast.elements.map(optimize) } :
-  ast.type === 'AwaitExpression'
-    ? { ...ast, argument: optimize(ast.argument) } :
-  ast.type === 'AssignmentExpression'
-    ? { ...ast, right: optimize(ast.right) } :
-  ast.type === 'SequenceExpression'
-    ? { ...ast, expressions: ast.expressions.map(optimize) } :
-  ast.type === 'ArrowFunctionExpression'
-    ? { ...ast, body: optimize(ast.body) } :
-  ast.type === 'CallExpression'
-    ? { ...ast, callee: optimize(ast.callee), arguments: ast.arguments.map(optimize) } :
-  ast.type === 'ConditionalExpression'
-    ? { ...ast, test: optimize(ast.test), consequent: optimize(ast.consequent), alternate: optimize(ast.alternate) } :
-  ast.type === 'LogicalExpression'
-    ? { ...ast, left: optimize(ast.left), right: optimize(ast.right) } :
-  ast.type === 'UnaryExpression'
-    ? { ...ast, argument: optimize(ast.argument) } :
-  ast.type === 'BinaryExpression'
-    ? { ...ast, left: optimize(ast.left), right: optimize(ast.right) } :
-  ast.type === 'MemberExpression'
-    ? { ...ast, object: optimize(ast.object), property: optimize(ast.property) } :
-  ast;
 
 // TODO: need to be able to provide definition for (y-or-n?) maybe in frontend?
 module.exports = (options = {}) => {
@@ -422,7 +367,7 @@ module.exports = (options = {}) => {
   const valueOf = s => symbols.hasOwnProperty(s) ? symbols[s] : raise(`global "${s}" is not defined`);
   const functions = {};
   const context = new Context({ async: options.async, head: true, locals: new Set() });
-  const compile = expr => optimize(build(context, expr));
+  const compile = expr => uncasted(build(context, expr));
   const $ = {
     cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree,
     asJsBool, asShenBool, asNzNumber, asNeString, asDefined,

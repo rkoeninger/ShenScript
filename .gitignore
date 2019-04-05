@@ -1,3 +1,3 @@
-dist/
-kernel/
+/dist/
+/kernel/
 node_modules/

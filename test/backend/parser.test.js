@@ -1,5 +1,5 @@
 const { equal } = require('assert');
-const { parse } = require('../../parser');
+const { parse } = require('../../build/parser');
 
 const s = x => Symbol.for(typeof x === 'string' ? x : x[0]);
 const parse1 = s => parse(s)[0];

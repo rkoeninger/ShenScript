@@ -1,5 +1,5 @@
 const { equal, ok, throws } = require('assert');
-const { parse } = require('../../parser');
+const { parse } = require('../../build/parser');
 const backend = require('../../src/backend');
 const { asString, cons, isCons, evalKl, f, s, equal: eq } = backend();
 const isShenBool = x => x === s`true` || x === s`false`;

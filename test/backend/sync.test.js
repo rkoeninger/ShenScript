@@ -1,5 +1,5 @@
 const { equal, ok, throws } = require('assert');
-const { parse } = require('../../parser');
+const { parse } = require('../../build/parser');
 const backend = require('../../src/backend');
 const { cons, evalKl, f, s, settle, valueOf } = backend();
 const parse1 = s => parse(s)[0];

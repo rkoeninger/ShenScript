@@ -2,7 +2,7 @@ const async = process.argv.includes('async');
 
 const fs = require('fs');
 const { generate } = require('astring');
-const backend = require('./src/backend');
+const backend = require('../src/backend');
 const { parse } = require('./parser');
 const { compile, symbolOf } = backend({ async });
 

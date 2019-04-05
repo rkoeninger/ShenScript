@@ -8,7 +8,7 @@ const closureCompiler = new Compiler({
   //warning_level: 'VERBOSE'
 });
 
-const files = ['./src/backend.js', './dist/kernel_sync.js'];
+const files = ['../src/backend.js', '../dist/kernel_sync.js'];
 const loadedFiles = files.map(f => ({ path: f, src: fs.readFileSync(f, 'utf-8') }));
 
 const closureProcess = closureCompiler.run(loadedFiles, (exitCode, stdout, stderr) => {

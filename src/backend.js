@@ -216,28 +216,40 @@ const build = (context, expr) =>
           context.async)) :
     isForm(expr, 'lambda', 3) ? lambda(context, 'lambda', [expr[1]], expr[2]) :
     isForm(expr, 'freeze', 2) ? lambda(context, 'freeze', [], expr[1]) :
-    isForm(expr, 'defun', 4) ? (
+    isForm(expr, 'defun', 4) ?
       sequential([
         assign(globalFunction(expr[1]), lambda(context.clear(), nameOf(expr[1]), expr[2], expr[3])),
-        idle(expr[1])])) :
+        idle(expr[1])]) :
     isConsForm(expr, 8) ?
       ofDataType('Cons',
         invokeEnv('consFromArray',
           [array(produce(x => isForm(x, 'cons', 3), x => uncasted(build(context.now(), x[1])), x => x[2], expr))])) :
     isSymbol(expr[0]) && context.primitives.hasOwnProperty(nameOf(expr[0]))
-                      && context.primitives[nameOf(expr[0])].length === expr.length ?
+                      && context.primitives[nameOf(expr[0])].length === expr.length - 1 ?
       context.primitives[nameOf(expr[0])](...expr.slice(1).map(x => build(context.now(), x))) :
+    isForm(expr, '=', 3) ?
+      ofDataType('JsBool',
+        isArray(expr[1]) && expr[1].length === 0 ?
+          binary('===', literal(null), uncasted(build(context.now(), expr[2]))) :
+        isArray(expr[2]) && expr[2].length === 0 ?
+          binary('===', literal(null), uncasted(build(context.now(), expr[1]))) :
+        isNumber(expr[1]) || isString(expr[1]) ?
+          binary('===', literal(expr[1]), uncasted(build(context.now(), expr[2]))) :
+        isNumber(expr[2]) || isString(expr[2]) ?
+          binary('===', literal(expr[2]), uncasted(build(context.now(), expr[1]))) :
+        invokeEnv('equal', [uncasted(build(context.now(), expr[1])), uncasted(build(context.now(), expr[2]))])) :
     isForm(expr, 'set', 3) ?
       assign(access(accessEnv('symbols'), symbolKey(context, expr[1])), uncasted(build(context.now(), expr[2]))) :
     isForm(expr, 'value', 2) ?
       invokeEnv('valueOf', [symbolKey(context, expr[1])]) :
-    completeOrBounce(
-      context,
-      context.has(expr[0]) ? escapeIdentifier(expr[0]) :
-      isArray(expr[0])     ? uncasted(build(context.now(), expr[0])) :
-      isSymbol(expr[0])    ? globalFunction(expr[0]) :
-      raise('not a valid application form'),
-      expr.slice(1).map(arg => uncasted(build(context.now(), arg))))
+    ofDataType(isSymbol(expr[0]) ? context.dataTypes[nameOf(expr[0])] : undefined,
+      completeOrBounce(
+        context,
+        context.has(expr[0]) ? escapeIdentifier(expr[0]) :
+        isArray(expr[0])     ? uncasted(build(context.now(), expr[0])) :
+        isSymbol(expr[0])    ? globalFunction(expr[0]) :
+        raise('not a valid application form'),
+        expr.slice(1).map(arg => uncasted(build(context.now(), arg)))))
   ) : raise('not a valid form');
 
 // TODO: need to be able to provide definition for (y-or-n?) maybe in frontend?
@@ -285,16 +297,9 @@ module.exports = (options = {}) => {
     '*home-directory*': options.homeDirectory  || ''
   };
   const primitives = {
-    '=': (x, y) =>
-      ofDataType('JsBool',
-        isArray(x) && x.length === 0 ? binary('===', literal(null), uncasted(y)) :
-        isArray(y) && y.length === 0 ? binary('===', literal(null), uncasted(x)) :
-        isNumber(x) || isString(x) || isSymbol(x) ? binary('===', literal(x), uncasted(y)) :
-        isNumber(y) || isString(y) || isSymbol(y) ? binary('===', literal(y), uncasted(x)) :
-        invokeEnv('equal', [uncasted(x), uncasted(y)])),
     'not':             x => ofDataType('JsBool', unary('!', cast('JsBool', x))),
-    'and':        (x, y) => ofDataType('JsBool', logical('&&', x, y)),
-    'or':         (x, y) => ofDataType('JsBool', logical('||', x, y)),
+    'and':        (x, y) => ofDataType('JsBool', logical('&&', cast('JsBool', x), cast('JsBool', y))),
+    'or':         (x, y) => ofDataType('JsBool', logical('||', cast('JsBool', x), cast('JsBool', y))),
     '+':          (x, y) => ofDataType('Number', binary('+',  cast('Number', x), cast('Number', y))),
     '-':          (x, y) => ofDataType('Number', binary('-',  cast('Number', x), cast('Number', y))),
     '*':          (x, y) => ofDataType('Number', binary('*',  cast('Number', x), cast('Number', y))),
@@ -314,17 +319,20 @@ module.exports = (options = {}) => {
     'hd':              x => access(cast('Cons', x), identifier('head')),
     'tl':              x => access(cast('Cons', x), identifier('tail')),
     'error-to-string': x => ofDataType('String', access(cast('Error', x), identifier('message'))),
-    'simple-error':    x => invokeEnv('raise', [cast('String', x)]),
-    'read-byte':       x => ofDataType('Number', invoke(globalFunction(symbolOf('read-byte')),  [uncasted(x)])),
-    'write-byte': (x, y) => ofDataType('Number', invoke(globalFunction(symbolOf('write-byte')), [uncasted(x), uncasted(y)])),
-    'string->n':       x => ofDataType('Number', invoke(globalFunction(symbolOf('string->n')),  [uncasted(x)])),
-    'n->string':       x => ofDataType('String', invoke(globalFunction(symbolOf('n->string')),  [uncasted(x)])),
-    'tlstr':           x => ofDataType('String', invoke(globalFunction(symbolOf('tlstr')),      [uncasted(x)])),
-    'pos':        (x, y) => ofDataType('String', invoke(globalFunction(symbolOf('pos')),        [uncasted(x), uncasted(y)]))
+    'simple-error':    x => invokeEnv('raise', [cast('String', x)])
+  };
+  const dataTypes = {
+    'read-byte':  'Number',
+    'write-byte': 'Number',
+    'string->n':  'Number',
+    'n->string':  'String',
+    'tlstr':      'String',
+    'pos':        'String',
+    'get-time':   'Number'
   };
   const valueOf = s => symbols.hasOwnProperty(s) ? symbols[s] : raise(`global "${s}" is not defined`);
   const functions = {};
-  const context = new Context({ async: options.async, head: true, locals: new Set(), primitives });
+  const context = new Context({ async: options.async, head: true, locals: new Set(), primitives, dataTypes });
   const compile = expr => uncasted(build(context, expr));
   const $ = {
     cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree,
@@ -338,28 +346,53 @@ module.exports = (options = {}) => {
   $.evalKl = expr => Func('$', generate(answer(compile(valueToArrayTree(expr)))))($);
   [
     ['if',        (b, x, y) => asJsBool(b) ? x : y],
+    ['and',          (x, y) => asShenBool(asJsBool(x) && asJsBool(y))],
+    ['or',           (x, y) => asShenBool(asJsBool(x) || asJsBool(y))],
     ['open',         (p, m) => open(asString(p), nameOf(asSymbol(m)))],
-    ['close',             s => asStream(s).close()],
-    ['read-byte',         s => asInStream(s).read()],
-    ['write-byte',   (b, s) => (asOutStream(s).write(asNumber(b)), b)],
-    ['tlstr',             s => asNeString(s).substring(1)],
-    ['string->n',         s => asNeString(s).charCodeAt(0)],
+    ['close',             x => asStream(x).close()],
+    ['read-byte',         x => asInStream(x).read()],
+    ['write-byte',   (b, x) => (asOutStream(x).write(asNumber(b)), b)],
+    ['number?',           x => asShenBool(isNumber(x))],
+    ['string?',           x => asShenBool(isString(x))],
+    ['absvector?',        x => asShenBool(isArray(x))],
+    ['cons?',             x => asShenBool(isCons(x))],
+    ['hd',                c => asCons(c).head],
+    ['tl',                c => asCons(c).tail],
+    ['cons',                   cons],
+    ['tlstr',             x => asNeString(x).substring(1)],
+    ['cn',           (x, y) => asString(x) + asString(y)],
+    ['string->n',         x => asNeString(x).charCodeAt(0)],
     ['n->string',         n => String.fromCharCode(asNumber(n))],
-    ['pos',          (s, i) => asString(s)[asIndex(i, s)]],
+    ['pos',          (x, i) => asString(x)[asIndex(i, x)]],
+    ['str',                    show],
     ['absvector',         n => new Array(asNumber(n)).fill(null)],
     ['<-address',    (a, i) => asArray(a)[asIndex(i, a)]],
     ['address->', (a, i, x) => (asArray(a)[asIndex(i, a)] = x, a)],
+    ['+',            (x, y) => asNumber(x) + asNumber(y)],
+    ['-',            (x, y) => asNumber(x) - asNumber(y)],
+    ['*',            (x, y) => asNumber(x) * asNumber(y)],
+    ['/',            (x, y) => asNumber(x) / asNzNumber(y)],
+    ['>',            (x, y) => asShenBool(asNumber(x) >  asNumber(y))],
+    ['<',            (x, y) => asShenBool(asNumber(x) <  asNumber(y))],
+    ['>=',           (x, y) => asShenBool(asNumber(x) >= asNumber(y))],
+    ['<=',           (x, y) => asShenBool(asNumber(x) <= asNumber(y))],
     ['=',            (x, y) => asShenBool(equal(x, y))],
-    ['get-time',          m => getTime(nameOf(asSymbol(m)))],
-    ['set',          (s, x) => symbols[nameOf(asSymbol(s))] = x],
-    ['value',             s => valueOf(nameOf(asSymbol(s)))],
+    ['intern',            x => symbolOf(asString(x))],
+    ['get-time',          x => getTime(nameOf(asSymbol(x)))],
+    ['simple-error',      x => raise(asString(x))],
+    ['error-to-string',   x => asError(x).message],
+    ['set',          (x, y) => symbols[nameOf(asSymbol(x))] = y],
+    ['value',             x => valueOf(nameOf(asSymbol(x)))],
     ['type',         (x, _) => x],
     ['eval-kl',                $.evalKl]
   ].forEach(([id, f]) => functions[id] = fun(f));
-  ['string->n', 'n->string', 'not', 'and', 'or', '+', '-', '*', '/', '<', '>', '<=', '>=', 'cn', 'str', 'intern', 'number?', 'string?', 'cons?', 'absvector?', 'hd', 'tl', 'cons', 'simple-error', 'error-to-string'].forEach(id => {
-    const make = primitives[id];
-    const ps = ['A', 'B', 'C'].slice(0, make.length);
-    functions[id] = fun(Function(...ps, generate(answer(uncasted(make(...ps.map(identifier)))))));
-  });
+  // TODO: generate primitve functions from primitive ast inliners?
+  // Object.keys(primitives).forEach(id => {
+  //   if (!functions.hasOwnProperty(id)) {
+  //     const make = primitives[id];
+  //     const ps = ['A', 'B', 'C'].slice(0, make.length);
+  //     functions[id] = fun(Function(...ps, generate(answer(uncasted(make(...ps.map(identifier)))))));
+  //   }
+  // });
   return $;
 };

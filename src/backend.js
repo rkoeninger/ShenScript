@@ -242,14 +242,17 @@ const build = (context, expr) =>
       assign(access(accessEnv('symbols'), symbolKey(context, expr[1])), uncasted(build(context.now(), expr[2]))) :
     isForm(expr, 'value', 2) ?
       invokeEnv('valueOf', [symbolKey(context, expr[1])]) :
-    ofDataType(isSymbol(expr[0]) ? context.dataTypes[nameOf(expr[0])] : undefined,
-      completeOrBounce(
-        context,
-        context.has(expr[0]) ? escapeIdentifier(expr[0]) :
-        isArray(expr[0])     ? uncasted(build(context.now(), expr[0])) :
-        isSymbol(expr[0])    ? globalFunction(expr[0]) :
-        raise('not a valid application form'),
-        expr.slice(1).map(arg => uncasted(build(context.now(), arg)))))
+    isSymbol(expr[0]) && context.dataTypes.hasOwnProperty(nameOf(expr[0]))
+      ? ofDataType(
+          context.dataTypes[nameOf(expr[0])],
+          globalFunction(expr[0]))
+      : completeOrBounce(
+          context,
+          context.has(expr[0]) ? escapeIdentifier(expr[0]) :
+          isArray(expr[0])     ? uncasted(build(context.now(), expr[0])) :
+          isSymbol(expr[0])    ? globalFunction(expr[0]) :
+          raise('not a valid application form'),
+          expr.slice(1).map(arg => uncasted(build(context.now(), arg))))
   ) : raise('not a valid form');
 
 // TODO: need to be able to provide definition for (y-or-n?) maybe in frontend?

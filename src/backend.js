@@ -261,7 +261,7 @@ module.exports = (options = {}) => {
   const asOutStream = x => isOutStream(x) ? x : raise('output stream expected');
   const isStream = x => isInStream(x) || isOutStream(x);
   const asStream = x => isStream(x) ? x : raise('stream expected');
-  const clock = options.clock || (() => new Date().getTime());
+  const clock = options.clock || (() => Date.now() / 1000);
   const startTime = clock();
   const getTime = mode =>
     mode === 'unix' ? clock() :

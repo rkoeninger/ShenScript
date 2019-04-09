@@ -7,13 +7,13 @@ const Binary = (operator, left, right) => ({ type: 'BinaryExpression', operator,
 const Block = body => ({ type: 'BlockStatement', body });
 const Call = (callee, args) => ({ type: 'CallExpression', callee, arguments: args });
 const Catch = (param, body) => ({ type: 'CatchClause', param, body });
-const Conditional = (test, consequent, alternate) => ({ type: 'ConditionalExpression', test, consequent, alternate });
+const Do = expressions => ({ type: 'SequenceExpression', expressions });
 const Identifier = name => ({ type: 'Identifier', name });
+const If = (test, consequent, alternate) => ({ type: 'ConditionalExpression', test, consequent, alternate });
 const Literal = value => ({ type: 'Literal', value });
 const Member = (object, property) => ({ type: 'MemberExpression', object, property, computed: property.type !== 'Identifier' });
 const Program = body => ({ type: 'Program', body });
 const Return = argument => ({ type: 'ReturnStatement', argument });
-const Sequence = expressions => ({ type: 'SequenceExpression', expressions });
 const Statement = expression => ({ type: 'ExpressionStatement', expression });
 const TaggedTemplate = (tag, quasi) => ({ type: 'TaggedTemplateExpression', tag, quasi });
 const TemplateElement = raw => ({ type: 'TemplateElement', value: { raw } });
@@ -26,7 +26,7 @@ const adorn = (tag, raw) => TaggedTemplate(tag, TemplateLiteral([TemplateElement
 const ann = (dataType, ast) => Object.assign(ast, { dataType });
 
 module.exports = {
-  Arrow, Assign, Await, Binary, Block, Call, Catch, Conditional, Identifier, Literal, Member, Program,
-  Return, Sequence, Statement, TaggedTemplate, TemplateElement, TemplateLiteral, Try, Unary, Vector,
+  Arrow, Assign, Await, Binary, Block, Call, Catch, Do, Identifier, If, Literal, Member, Program,
+  Return, Statement, TaggedTemplate, TemplateElement, TemplateLiteral, Try, Unary, Vector,
   adorn, ann, generate
 };

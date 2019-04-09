@@ -245,7 +245,10 @@ const build = (context, expr) =>
     isSymbol(expr[0]) && context.dataTypes.hasOwnProperty(nameOf(expr[0]))
       ? ofDataType(
           context.dataTypes[nameOf(expr[0])],
-          globalFunction(expr[0]))
+          invoke(
+            globalFunction(expr[0]),
+            expr.slice(1).map(arg => uncasted(build(context.now(), arg))),
+            context.async))
       : completeOrBounce(
           context,
           context.has(expr[0]) ? escapeIdentifier(expr[0]) :

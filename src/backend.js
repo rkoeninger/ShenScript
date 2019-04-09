@@ -233,20 +233,13 @@ const build = (context, expr) =>
       Assign(access(accessEnv('symbols'), symbolKey(context, expr[1])), uncasted(build(context.now(), expr[2]))) :
     isForm(expr, 'value', 2) ?
       invokeEnv('valueOf', [symbolKey(context, expr[1])]) :
-    isSymbol(expr[0]) && context.dataTypes.hasOwnProperty(nameOf(expr[0]))
-      ? ann(
-          context.dataTypes[nameOf(expr[0])],
-          invoke(
-            globalFunction(expr[0]),
-            expr.slice(1).map(arg => uncasted(build(context.now(), arg))),
-            context.async))
-      : completeOrBounce(
-          context,
-          context.has(expr[0]) ? escapeIdentifier(expr[0]) :
-          isArray(expr[0])     ? uncasted(build(context.now(), expr[0])) :
-          isSymbol(expr[0])    ? globalFunction(expr[0]) :
-          raise('not a valid application form'),
-          expr.slice(1).map(arg => uncasted(build(context.now(), arg))))
+    completeOrBounce(
+      context,
+      context.has(expr[0]) ? escapeIdentifier(expr[0]) :
+      isArray(expr[0])     ? uncasted(build(context.now(), expr[0])) :
+      isSymbol(expr[0])    ? globalFunction(expr[0]) :
+      raise('not a valid application form'),
+      expr.slice(1).map(arg => uncasted(build(context.now(), arg))))
   ) : raise('not a valid form');
 
 // TODO: need to be able to provide definition for (y-or-n?) maybe in frontend?
@@ -316,20 +309,18 @@ module.exports = (options = {}) => {
     'hd':              x => access(cast('Cons', x), Identifier('head')),
     'tl':              x => access(cast('Cons', x), Identifier('tail')),
     'error-to-string': x => ann('String', access(cast('Error', x), Identifier('message'))),
-    'simple-error':    x => invokeEnv('raise', [cast('String', x)])
-  };
-  const dataTypes = {
-    'read-byte':  'Number',
-    'write-byte': 'Number',
-    'string->n':  'Number',
-    'n->string':  'String',
-    'tlstr':      'String',
-    'pos':        'String',
-    'get-time':   'Number'
+    'simple-error':    x => invokeEnv('raise', [cast('String', x)]),
+    'read-byte':       x => ann('Number', invoke(globalFunction(symbolOf('read-byte')), [uncasted(x)])),
+    'write-byte': (x, y) => ann('Number', invoke(globalFunction(symbolOf('write-byte')), [x, y].map(uncasted))),
+    'get-time':   (x, y) => ann('Number', invoke(globalFunction(symbolOf('get-time')), [x, y].map(uncasted))),
+    'string->n':       x => ann('Number', invoke(globalFunction(symbolOf('string->n')), [uncasted(x)])),
+    'n->string':       x => ann('String', invoke(globalFunction(symbolOf('n->string')), [uncasted(x)])),
+    'tlstr':           x => ann('String', invoke(globalFunction(symbolOf('tlstr')), [uncasted(x)])),
+    'pos':        (x, y) => ann('String', invoke(globalFunction(symbolOf('pos')), [x, y].map(uncasted)))
   };
   const valueOf = s => symbols.hasOwnProperty(s) ? symbols[s] : raise(`global "${s}" is not defined`);
   const functions = {};
-  const context = new Context({ async: options.async, head: true, locals: new Set(), primitives, dataTypes });
+  const context = new Context({ async: options.async, head: true, locals: new Set(), primitives });
   const compile = expr => uncasted(build(context, expr));
   const $ = {
     cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree,
@@ -383,13 +374,5 @@ module.exports = (options = {}) => {
     ['type',         (x, _) => x],
     ['eval-kl',                $.evalKl]
   ].forEach(([id, f]) => functions[id] = fun(f));
-  // TODO: generate primitve functions from primitive ast inliners?
-  // Object.keys(primitives).forEach(id => {
-  //   if (!functions.hasOwnProperty(id)) {
-  //     const make = primitives[id];
-  //     const ps = ['A', 'B', 'C'].slice(0, make.length);
-  //     functions[id] = fun(Function(...ps, generate(Return(uncasted(make(...ps.map(identifier)))))));
-  //   }
-  // });
   return $;
 };

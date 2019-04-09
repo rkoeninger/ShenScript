@@ -138,7 +138,6 @@ const conditional = (test, consequent, alternate) => ({ type: 'ConditionalExpres
 const block = body => ({ type: 'BlockStatement', body });
 const attempt = (block, handler) => ({ type: 'TryStatement', block, handler });
 const handle = (param, body) => ({ type: 'CatchClause', param, body });
-const logical = (operator, left, right) => ({ type: 'LogicalExpression', operator, left, right });
 const unary = (operator, argument, prefix = true) => ({ type: 'UnaryExpression', operator, argument, prefix });
 const binary = (operator, left, right) => ({ type: 'BinaryExpression', operator, left, right });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
@@ -304,8 +303,8 @@ module.exports = (options = {}) => {
   };
   const primitives = {
     'not':             x => ofDataType('JsBool', unary('!', cast('JsBool', x))),
-    'and':        (x, y) => ofDataType('JsBool', logical('&&', cast('JsBool', x), cast('JsBool', y))),
-    'or':         (x, y) => ofDataType('JsBool', logical('||', cast('JsBool', x), cast('JsBool', y))),
+    'and':        (x, y) => ofDataType('JsBool', binary('&&', cast('JsBool', x), cast('JsBool', y))),
+    'or':         (x, y) => ofDataType('JsBool', binary('||', cast('JsBool', x), cast('JsBool', y))),
     '+':          (x, y) => ofDataType('Number', binary('+',  cast('Number', x), cast('Number', y))),
     '-':          (x, y) => ofDataType('Number', binary('-',  cast('Number', x), cast('Number', y))),
     '*':          (x, y) => ofDataType('Number', binary('*',  cast('Number', x), cast('Number', y))),

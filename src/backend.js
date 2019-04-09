@@ -1,4 +1,4 @@
-const { generate } = require('astring');
+const { adorn, ann, generate, Assign, Await, Identifier, Literal, Return, Vector } = require('./ast');
 
 const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
 
@@ -125,15 +125,9 @@ const future = async x => {
   }
 };
 
-const literal = value => ({ type: 'Literal', value });
-const array = elements => ({ type: 'ArrayExpression', elements });
-const identifier = name => ({ type: 'Identifier', name });
-const wait = argument => ({ type: 'AwaitExpression', argument });
-const assign = (left, right, operator = '=') => ({ type: 'AssignmentExpression', left, right, operator });
-const answer = argument => ({ type: 'ReturnStatement', argument });
 const sequential = expressions => ({ type: 'SequenceExpression', expressions, dataType: expressions[expressions.length - 1].dataType });
 const arrow = (params, body, async = false) => ({ type: 'ArrowFunctionExpression', async, params, body, });
-const invoke = (callee, args, async = false) => (async ? wait : identity)({ type: 'CallExpression', callee, arguments: args });
+const invoke = (callee, args, async = false) => (async ? Await : identity)({ type: 'CallExpression', callee, arguments: args });
 const conditional = (test, consequent, alternate) => ({ type: 'ConditionalExpression', test, consequent, alternate });
 const block = body => ({ type: 'BlockStatement', body });
 const attempt = (block, handler) => ({ type: 'TryStatement', block, handler });
@@ -141,11 +135,9 @@ const handle = (param, body) => ({ type: 'CatchClause', param, body });
 const unary = (operator, argument, prefix = true) => ({ type: 'UnaryExpression', operator, argument, prefix });
 const binary = (operator, left, right) => ({ type: 'BinaryExpression', operator, left, right });
 const access = (object, property) => ({ type: 'MemberExpression', computed: property.type !== 'Identifier', object, property });
-const template = (tag, raw) => ({ type: 'TaggedTemplateExpression', tag, quasi: { type: 'TemplateLiteral', expressions: [], quasis: [{ type: 'TemplateElement', value: { raw } }] } });
 const iife = (body, async = false) => invoke(arrow([], body, async), [], async);
-const accessEnv = name => access(identifier('$'), identifier(name));
+const accessEnv = name => access(Identifier('$'), Identifier(name));
 const invokeEnv = (name, args, async = false) => invoke(accessEnv(name), args, async);
-const ofDataType = (dataType, ast) => Object.assign(ast, { dataType });
 const cast = (dataType, ast) => dataType !== ast.dataType ? Object.assign(invokeEnv('as' + dataType, [ast]), { dataType }) : ast;
 const uncasted = ast => ast.dataType === 'JsBool' ? cast('ShenBool', ast) : ast;
 const isForm = (expr, lead, length) => isArray(expr) && expr.length > 0 && expr[0] === symbolOf(lead) && (!length || expr.length === length);
@@ -155,30 +147,30 @@ const validCharacterRegex = /^[_A-Za-z0-9]$/;
 const validCharactersRegex = /^[_A-Za-z][_A-Za-z0-9]*$/;
 const validIdentifier = id => validCharactersRegex.test(nameOf(id));
 const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '_' : `$${hex(ch)}`;
-const escapeIdentifier = id => identifier(nameOf(id).split('').map(escapeCharacter).join(''));
-const idle = id => ofDataType('Symbol', template(accessEnv('s'), nameOf(id)));
-const globalFunction = id => access(accessEnv('f'), (validIdentifier(id) ? identifier : literal)(nameOf(id)));
+const escapeIdentifier = id => Identifier(nameOf(id).split('').map(escapeCharacter).join(''));
+const idle = id => ann('Symbol', adorn(accessEnv('s'), nameOf(id)));
+const globalFunction = id => access(accessEnv('f'), (validIdentifier(id) ? Identifier : Literal)(nameOf(id)));
 const complete = (context, ast) => invokeEnv(context.async ? 'future' : 'settle', [ast], context.async);
 const completeOrReturn = (context, ast) => context.head ? complete(context, ast) : ast;
 const completeOrBounce = (context, fAst, argsAsts) =>
-  context.head ? complete(context, invoke(fAst, argsAsts)) : invokeEnv('bounce', [fAst, array(argsAsts)]);
+  context.head ? complete(context, invoke(fAst, argsAsts)) : invokeEnv('bounce', [fAst, Vector(argsAsts)]);
 const symbolKey = (context, expr) =>
   isSymbol(expr) && !context.has(expr)
-    ? literal(nameOf(expr))
+    ? Literal(nameOf(expr))
     : invokeEnv('nameOf', [cast('Symbol', build(context.now(), expr))]);
 const lambda = (context, name, params, body) =>
-  ofDataType('Function',
+  ann('Function',
     invokeEnv('fun', [
       arrow(
         params.map(escapeIdentifier),
         uncasted(build(context.later().add(params.map(asSymbol)), body)),
         context.async)]));
 const build = (context, expr) =>
-  isNumber(expr) ? ofDataType('Number', literal(expr)) :
-  isString(expr) ? ofDataType('String', literal(expr)) :
+  isNumber(expr) ? ann('Number', Literal(expr)) :
+  isString(expr) ? ann('String', Literal(expr)) :
   isSymbol(expr) ? (context.has(expr) ? escapeIdentifier : idle)(expr) :
   isArray(expr) ? (
-    expr.length === 0 ? literal(null) :
+    expr.length === 0 ? Literal(null) :
     isForm(expr, 'if', 4) ? (
       expr[1] === shenTrue ? uncasted(build(context, expr[2])) :
       conditional(
@@ -204,45 +196,45 @@ const build = (context, expr) =>
         context,
         iife(block([
           attempt(
-            block([answer(uncasted(build(context.now(), expr[1])))]),
+            block([Return(uncasted(build(context.now(), expr[1])))]),
             isForm(expr[2], 'lambda', 3)
               ? handle(
                   escapeIdentifier(expr[2][1]),
-                  block([answer(uncasted(build(context.later().add([asSymbol(expr[2][1])]), expr[2][2])))]))
+                  block([Return(uncasted(build(context.later().add([asSymbol(expr[2][1])]), expr[2][2])))]))
               : handle(
-                  identifier('e$'),
-                  block([answer(invoke(uncasted(build(context.later(), expr[2])), [identifier('e$')]))])))]),
+                  Identifier('e$'),
+                  block([Return(invoke(uncasted(build(context.later(), expr[2])), [Identifier('e$')]))])))]),
           context.async)) :
     isForm(expr, 'lambda', 3) ? lambda(context, 'lambda', [expr[1]], expr[2]) :
     isForm(expr, 'freeze', 2) ? lambda(context, 'freeze', [], expr[1]) :
     isForm(expr, 'defun', 4) ?
       sequential([
-        assign(globalFunction(expr[1]), lambda(context.clear(), nameOf(expr[1]), expr[2], expr[3])),
+        Assign(globalFunction(expr[1]), lambda(context.clear(), nameOf(expr[1]), expr[2], expr[3])),
         idle(expr[1])]) :
     isConsForm(expr, 8) ?
-      ofDataType('Cons',
+      ann('Cons',
         invokeEnv('consFromArray',
-          [array(produce(x => isForm(x, 'cons', 3), x => uncasted(build(context.now(), x[1])), x => x[2], expr))])) :
+          [Vector(produce(x => isForm(x, 'cons', 3), x => uncasted(build(context.now(), x[1])), x => x[2], expr))])) :
     isSymbol(expr[0]) && context.primitives.hasOwnProperty(nameOf(expr[0]))
                       && context.primitives[nameOf(expr[0])].length === expr.length - 1 ?
       context.primitives[nameOf(expr[0])](...expr.slice(1).map(x => build(context.now(), x))) :
     isForm(expr, '=', 3) ?
-      ofDataType('JsBool',
+      ann('JsBool',
         isArray(expr[1]) && expr[1].length === 0 ?
-          binary('===', literal(null), uncasted(build(context.now(), expr[2]))) :
+          binary('===', Literal(null), uncasted(build(context.now(), expr[2]))) :
         isArray(expr[2]) && expr[2].length === 0 ?
-          binary('===', literal(null), uncasted(build(context.now(), expr[1]))) :
+          binary('===', Literal(null), uncasted(build(context.now(), expr[1]))) :
         isNumber(expr[1]) || isString(expr[1]) ?
-          binary('===', literal(expr[1]), uncasted(build(context.now(), expr[2]))) :
+          binary('===', Literal(expr[1]), uncasted(build(context.now(), expr[2]))) :
         isNumber(expr[2]) || isString(expr[2]) ?
-          binary('===', literal(expr[2]), uncasted(build(context.now(), expr[1]))) :
+          binary('===', Literal(expr[2]), uncasted(build(context.now(), expr[1]))) :
         invokeEnv('equal', [uncasted(build(context.now(), expr[1])), uncasted(build(context.now(), expr[2]))])) :
     isForm(expr, 'set', 3) ?
-      assign(access(accessEnv('symbols'), symbolKey(context, expr[1])), uncasted(build(context.now(), expr[2]))) :
+      Assign(access(accessEnv('symbols'), symbolKey(context, expr[1])), uncasted(build(context.now(), expr[2]))) :
     isForm(expr, 'value', 2) ?
       invokeEnv('valueOf', [symbolKey(context, expr[1])]) :
     isSymbol(expr[0]) && context.dataTypes.hasOwnProperty(nameOf(expr[0]))
-      ? ofDataType(
+      ? ann(
           context.dataTypes[nameOf(expr[0])],
           invoke(
             globalFunction(expr[0]),
@@ -302,28 +294,28 @@ module.exports = (options = {}) => {
     '*home-directory*': options.homeDirectory  || ''
   };
   const primitives = {
-    'not':             x => ofDataType('JsBool', unary('!', cast('JsBool', x))),
-    'and':        (x, y) => ofDataType('JsBool', binary('&&', cast('JsBool', x), cast('JsBool', y))),
-    'or':         (x, y) => ofDataType('JsBool', binary('||', cast('JsBool', x), cast('JsBool', y))),
-    '+':          (x, y) => ofDataType('Number', binary('+',  cast('Number', x), cast('Number', y))),
-    '-':          (x, y) => ofDataType('Number', binary('-',  cast('Number', x), cast('Number', y))),
-    '*':          (x, y) => ofDataType('Number', binary('*',  cast('Number', x), cast('Number', y))),
-    '/':          (x, y) => ofDataType('Number', binary('/',  cast('Number', x), cast('NzNumber', y))),
-    '<':          (x, y) => ofDataType('JsBool', binary('<',  cast('Number', x), cast('Number', y))),
-    '>':          (x, y) => ofDataType('JsBool', binary('>',  cast('Number', x), cast('Number', y))),
-    '<=':         (x, y) => ofDataType('JsBool', binary('<=', cast('Number', x), cast('Number', y))),
-    '>=':         (x, y) => ofDataType('JsBool', binary('>=', cast('Number', x), cast('Number', y))),
-    'cn':         (x, y) => ofDataType('String', binary('+',  cast('String', x), cast('String', y))),
-    'str':             x => ofDataType('String', invokeEnv('show',     [uncasted(x)])),
-    'intern':          x => ofDataType('Symbol', invokeEnv('symbolOf', [cast('String', x)])),
-    'number?':         x => ofDataType('JsBool', invokeEnv('isNumber', [uncasted(x)])),
-    'string?':         x => ofDataType('JsBool', invokeEnv('isString', [uncasted(x)])),
-    'cons?':           x => ofDataType('JsBool', invokeEnv('isCons',   [uncasted(x)])),
-    'absvector?':      x => ofDataType('JsBool', invokeEnv('isArray',  [uncasted(x)])),
-    'cons':       (x, y) => ofDataType('Cons',   invokeEnv('cons',     [uncasted(x), uncasted(y)])),
-    'hd':              x => access(cast('Cons', x), identifier('head')),
-    'tl':              x => access(cast('Cons', x), identifier('tail')),
-    'error-to-string': x => ofDataType('String', access(cast('Error', x), identifier('message'))),
+    'not':             x => ann('JsBool', unary('!', cast('JsBool', x))),
+    'and':        (x, y) => ann('JsBool', binary('&&', cast('JsBool', x), cast('JsBool', y))),
+    'or':         (x, y) => ann('JsBool', binary('||', cast('JsBool', x), cast('JsBool', y))),
+    '+':          (x, y) => ann('Number', binary('+',  cast('Number', x), cast('Number', y))),
+    '-':          (x, y) => ann('Number', binary('-',  cast('Number', x), cast('Number', y))),
+    '*':          (x, y) => ann('Number', binary('*',  cast('Number', x), cast('Number', y))),
+    '/':          (x, y) => ann('Number', binary('/',  cast('Number', x), cast('NzNumber', y))),
+    '<':          (x, y) => ann('JsBool', binary('<',  cast('Number', x), cast('Number', y))),
+    '>':          (x, y) => ann('JsBool', binary('>',  cast('Number', x), cast('Number', y))),
+    '<=':         (x, y) => ann('JsBool', binary('<=', cast('Number', x), cast('Number', y))),
+    '>=':         (x, y) => ann('JsBool', binary('>=', cast('Number', x), cast('Number', y))),
+    'cn':         (x, y) => ann('String', binary('+',  cast('String', x), cast('String', y))),
+    'str':             x => ann('String', invokeEnv('show',     [uncasted(x)])),
+    'intern':          x => ann('Symbol', invokeEnv('symbolOf', [cast('String', x)])),
+    'number?':         x => ann('JsBool', invokeEnv('isNumber', [uncasted(x)])),
+    'string?':         x => ann('JsBool', invokeEnv('isString', [uncasted(x)])),
+    'cons?':           x => ann('JsBool', invokeEnv('isCons',   [uncasted(x)])),
+    'absvector?':      x => ann('JsBool', invokeEnv('isArray',  [uncasted(x)])),
+    'cons':       (x, y) => ann('Cons',   invokeEnv('cons',     [uncasted(x), uncasted(y)])),
+    'hd':              x => access(cast('Cons', x), Identifier('head')),
+    'tl':              x => access(cast('Cons', x), Identifier('tail')),
+    'error-to-string': x => ann('String', access(cast('Error', x), Identifier('message'))),
     'simple-error':    x => invokeEnv('raise', [cast('String', x)])
   };
   const dataTypes = {
@@ -348,7 +340,7 @@ module.exports = (options = {}) => {
     compile, f: functions, s: x => symbolOf(isArray(x) ? x[0] : x)
   };
   const Func = context.async ? AsyncFunction : Function;
-  $.evalKl = expr => Func('$', generate(answer(compile(valueToArrayTree(expr)))))($);
+  $.evalKl = expr => Func('$', generate(Return(compile(valueToArrayTree(expr)))))($);
   [
     ['if',        (b, x, y) => asJsBool(b) ? x : y],
     ['and',          (x, y) => asShenBool(asJsBool(x) && asJsBool(y))],
@@ -396,7 +388,7 @@ module.exports = (options = {}) => {
   //   if (!functions.hasOwnProperty(id)) {
   //     const make = primitives[id];
   //     const ps = ['A', 'B', 'C'].slice(0, make.length);
-  //     functions[id] = fun(Function(...ps, generate(answer(uncasted(make(...ps.map(identifier)))))));
+  //     functions[id] = fun(Function(...ps, generate(Return(uncasted(make(...ps.map(identifier)))))));
   //   }
   // });
   return $;

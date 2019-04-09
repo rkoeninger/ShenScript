@@ -165,7 +165,7 @@ const build = (context, expr) =>
   isString(expr) ? ann('String', Literal(expr)) :
   isSymbol(expr) ? (context.has(expr) ? escapeIdentifier : idle)(expr) :
   isArray(expr) ? (
-    expr.length === 0 ? Literal(null) :
+    expr.length === 0 ? ann('Null', Literal(null)) :
     isForm(expr, 'if', 4) ? (
       expr[1] === shenTrue
         ? uncast(build(context, expr[2]))
@@ -210,17 +210,6 @@ const build = (context, expr) =>
     isSymbol(expr[0]) && context.primitives.hasOwnProperty(nameOf(expr[0]))
                       && context.primitives[nameOf(expr[0])].length === expr.length - 1 ?
       context.primitives[nameOf(expr[0])](...expr.slice(1).map(x => build(context.now(), x))) :
-    isForm(expr, '=', 3) ?
-      ann('JsBool',
-        isArray(expr[1]) && expr[1].length === 0 ?
-          Binary('===', Literal(null), uncast(build(context.now(), expr[2]))) :
-        isArray(expr[2]) && expr[2].length === 0 ?
-          Binary('===', Literal(null), uncast(build(context.now(), expr[1]))) :
-        isNumber(expr[1]) || isString(expr[1]) ?
-          Binary('===', Literal(expr[1]), uncast(build(context.now(), expr[2]))) :
-        isNumber(expr[2]) || isString(expr[2]) ?
-          Binary('===', Literal(expr[2]), uncast(build(context.now(), expr[1]))) :
-        invokeEnv('equal', [uncast(build(context.now(), expr[1])), uncast(build(context.now(), expr[2]))])) :
     isForm(expr, 'set', 3) ?
       Assign(Member(accessEnv('symbols'), symbolKey(context, expr[1])), uncast(build(context.now(), expr[2]))) :
     isForm(expr, 'value', 2) ?
@@ -278,7 +267,13 @@ module.exports = (options = {}) => {
     '*sterror*':        options.sterror || out || (() => raise('standard output not supported')),
     '*home-directory*': options.homeDirectory  || ''
   };
+  const atomicTypes = ['Number', 'String', 'Symbol', 'Stream', 'Null'];
   const primitives = {
+    '=': (x, y) =>
+      ann('JsBool',
+        atomicTypes.includes(x.dataType) ? Binary('===', x, uncast(y)) :
+        atomicTypes.includes(y.dataType) ? Binary('===', y, uncast(x)) :
+        invokeEnv('equal', [x, y].map(uncast))),
     'not':             x => ann('JsBool', Unary('!', cast('JsBool', x))),
     'and':        (x, y) => ann('JsBool', Binary('&&', cast('JsBool', x), cast('JsBool', y))),
     'or':         (x, y) => ann('JsBool', Binary('||', cast('JsBool', x), cast('JsBool', y))),
@@ -329,7 +324,7 @@ module.exports = (options = {}) => {
     ['and',          (x, y) => asShenBool(asJsBool(x) && asJsBool(y))],
     ['or',           (x, y) => asShenBool(asJsBool(x) || asJsBool(y))],
     ['open',         (p, m) => open(asString(p), nameOf(asSymbol(m)))],
-    ['close',             x => asStream(x).close()],
+    ['close',             x => (asStream(x).close(), null)],
     ['read-byte',         x => asInStream(x).read()],
     ['write-byte',   (b, x) => (asOutStream(x).write(asNumber(b)), b)],
     ['number?',           x => asShenBool(isNumber(x))],

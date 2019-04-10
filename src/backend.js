@@ -131,15 +131,16 @@ const future = async x => {
   }
 };
 
-const Member$ = name => Member(RawIdentifier('$'), Identifier(name));
+const Member$ = name => Member(RawIdentifier('$'), RawIdentifier(name));
+const Member$f = name => Member(Member$('f'), Literal(name));
 const Call$ = (name, args, async = false) => Call(Member$(name), args, async);
+const Call$f = (name, args) => Call(Member$f(name), args);
 const cast = (dataType, ast) => dataType !== ast.dataType ? Object.assign(Call$('as' + dataType, [ast]), { dataType }) : ast;
 const uncast = ast => ast.dataType === 'JsBool' ? cast('ShenBool', ast) : ast;
 const isForm = (expr, lead, length) => isNeArray(expr) && expr[0] === symbolOf(lead) && (!length || expr.length === length);
 const isConsForm = (expr, depth) => depth === 0 || isForm(expr, 'cons', 3) && isConsForm(expr[2], depth - 1);
 const isPrimitiveApplication = (context, expr) => isNeArray(expr) && isSymbol(expr[0]) && context.primitives.hasOwnProperty(nameOf(expr[0])) && context.primitives[nameOf(expr[0])].length === expr.length - 1;
 const idle = id => ann('Symbol', adorn(Member$('s'), nameOf(id)));
-const globalFunction = id => Member(Member$('f'), Literal(nameOf(id)));
 const complete = (context, ast) => Call$(context.async ? 'u' : 't', [ast], context.async);
 const completeOrReturn = (context, ast) => context.head ? complete(context, ast) : ast;
 const completeOrBounce = (context, fAst, argsAsts) =>
@@ -193,7 +194,7 @@ const build = (context, expr) =>
   isForm(expr, 'lambda', 3) ? lambda(context, 'lambda', [expr[1]], expr[2]) :
   isForm(expr, 'freeze', 2) ? lambda(context, 'freeze', [], expr[1]) :
   isForm(expr, 'defun', 4) ?
-    Do(Assign(globalFunction(expr[1]), lambda(context.clear(), nameOf(expr[1]), expr[2], expr[3])), idle(expr[1])) :
+    Do(Assign(Member$f(nameOf(expr[1])), lambda(context.clear(), nameOf(expr[1]), expr[2], expr[3])), idle(expr[1])) :
   isConsForm(expr, 8) ?
     ann('Cons', Call$('consFromArray',
       [Vector(produce(x => isForm(x, 'cons', 3), x => uncast(build(context.now(), x[1])), x => x[2], expr))])) :
@@ -208,7 +209,7 @@ const build = (context, expr) =>
       context,
       context.has(expr[0]) ? Identifier(nameOf(expr[0])) :
       isArray(expr[0])     ? uncast(build(context.now(), expr[0])) :
-      isSymbol(expr[0])    ? globalFunction(expr[0]) :
+      isSymbol(expr[0])    ? Member$f(nameOf(expr[0])) :
       raise('not a valid application form'),
       expr.slice(1).map(arg => uncast(build(context.now(), arg)))) :
   raise('not a valid form');
@@ -276,24 +277,24 @@ module.exports = (options = {}) => {
     '<=':         (x, y) => ann('JsBool', Binary('<=', cast('Number', x), cast('Number', y))),
     '>=':         (x, y) => ann('JsBool', Binary('>=', cast('Number', x), cast('Number', y))),
     'cn':         (x, y) => ann('String', Binary('+',  cast('String', x), cast('String', y))),
-    'str':             x => ann('String', Call$('show',     [uncast(x)])),
+    'str':             x => ann('String', Call$('show',     [x].map(uncast))),
     'intern':          x => ann('Symbol', Call$('symbolOf', [cast('String', x)])),
-    'number?':         x => ann('JsBool', Call$('isNumber', [uncast(x)])),
-    'string?':         x => ann('JsBool', Call$('isString', [uncast(x)])),
-    'cons?':           x => ann('JsBool', Call$('isCons',   [uncast(x)])),
-    'absvector?':      x => ann('JsBool', Call$('isArray',  [uncast(x)])),
+    'number?':         x => ann('JsBool', Call$('isNumber', [x].map(uncast))),
+    'string?':         x => ann('JsBool', Call$('isString', [x].map(uncast))),
+    'cons?':           x => ann('JsBool', Call$('isCons',   [x].map(uncast))),
+    'absvector?':      x => ann('JsBool', Call$('isArray',  [x].map(uncast))),
     'cons':       (x, y) => ann('Cons',   Call$('cons',     [x, y].map(uncast))),
     'hd':              x => Member(cast('Cons', x), Identifier('head')),
     'tl':              x => Member(cast('Cons', x), Identifier('tail')),
     'error-to-string': x => ann('String', Member(cast('Error', x), Identifier('message'))),
     'simple-error':    x => Call$('raise', [cast('String', x)]),
-    'read-byte':       x => ann('Number', Call(globalFunction(s`read-byte`), [uncast(x)])),
-    'write-byte': (x, y) => ann('Number', Call(globalFunction(s`write-byte`), [x, y].map(uncast))),
-    'get-time':   (x, y) => ann('Number', Call(globalFunction(s`get-time`), [x, y].map(uncast))),
-    'string->n':       x => ann('Number', Call(globalFunction(s`string->n`), [uncast(x)])),
-    'n->string':       x => ann('String', Call(globalFunction(s`n->string`), [uncast(x)])),
-    'tlstr':           x => ann('String', Call(globalFunction(s`tlstr`), [uncast(x)])),
-    'pos':        (x, y) => ann('String', Call(globalFunction(s`pos`), [x, y].map(uncast)))
+    'read-byte':       x => ann('Number', Call$f('read-byte',  [x].map(uncast))),
+    'write-byte': (x, y) => ann('Number', Call$f('write-byte', [x, y].map(uncast))),
+    'get-time':   (x, y) => ann('Number', Call$f('get-time',   [x, y].map(uncast))),
+    'string->n':       x => ann('Number', Call$f('string->n',  [x].map(uncast))),
+    'n->string':       x => ann('String', Call$f('n->string',  [x].map(uncast))),
+    'tlstr':           x => ann('String', Call$f('tlstr',      [x].map(uncast))),
+    'pos':        (x, y) => ann('String', Call$f('pos',        [x, y].map(uncast)))
   };
   const valueOf = x => symbols.hasOwnProperty(x) ? symbols[x] : raise(`global "${x}" is not defined`);
   const functions = {};

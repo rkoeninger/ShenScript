@@ -15,7 +15,7 @@ const Binary = (operator, left, right) => ({ type: 'BinaryExpression', operator,
 const Block = (...body) => ({ type: 'BlockStatement', body });
 const Call = (callee, args, async = false) => (async ? Await : id)({ type: 'CallExpression', callee, arguments: args });
 const Catch = (param, body) => ({ type: 'CatchClause', param, body });
-const Do = expressions => ({ type: 'SequenceExpression', expressions });
+const Do = (...expressions) => ({ type: 'SequenceExpression', expressions });
 const Identifier = name => ({ type: 'Identifier', name: escapeName(name) });
 const If = (test, consequent, alternate) => ({ type: 'ConditionalExpression', test, consequent, alternate });
 const Iife = (body, async = false) => Call(Arrow([], body, async), [], async);

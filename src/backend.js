@@ -168,7 +168,7 @@ const build = (context, expr) =>
     uncast(build(context, expr.slice(1).reduceRight(
       (alternate, [test, consequent]) => [s`if`, test, consequent, alternate],
       [s`simple-error`, 'no condition was true']))) :
-  isForm(expr, 'do', 3) ? Do([build(context.now(), expr[1]), uncast(build(context, expr[2]))]) :
+  isForm(expr, 'do', 3) ? Do(build(context.now(), expr[1]), uncast(build(context, expr[2]))) :
   isForm(expr, 'let', 4) ?
     Call(
       Arrow(
@@ -193,9 +193,7 @@ const build = (context, expr) =>
   isForm(expr, 'lambda', 3) ? lambda(context, 'lambda', [expr[1]], expr[2]) :
   isForm(expr, 'freeze', 2) ? lambda(context, 'freeze', [], expr[1]) :
   isForm(expr, 'defun', 4) ?
-    Do([
-      Assign(globalFunction(expr[1]), lambda(context.clear(), nameOf(expr[1]), expr[2], expr[3])),
-      idle(expr[1])]) :
+    Do(Assign(globalFunction(expr[1]), lambda(context.clear(), nameOf(expr[1]), expr[2], expr[3])), idle(expr[1])) :
   isConsForm(expr, 8) ?
     ann('Cons', Call$('consFromArray',
       [Vector(produce(x => isForm(x, 'cons', 3), x => uncast(build(context.now(), x[1])), x => x[2], expr))])) :

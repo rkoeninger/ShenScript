@@ -198,5 +198,8 @@ describe('sync', () => {
     it('curried application', () => {
       equal(13, exec('((lambda X (lambda Y (+ X Y))) 6 7)'));
     });
+    it('should raise error if too many arguments are applied', () => {
+      throws(() => exec('(+ 1 2 3)'));
+    });
   });
 });

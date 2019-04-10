@@ -203,5 +203,8 @@ describe('async', () => {
     it('curried application', async () => {
       equal(13, await exec('((lambda X (lambda Y (+ X Y))) 6 7)'));
     });
+    it('should raise error if too many arguments are applied', async () => {
+      await rejects(exec('(+ 1 2 3)'));
+    });
   });
 });

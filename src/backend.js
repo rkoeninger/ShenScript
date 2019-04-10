@@ -52,6 +52,8 @@ const isNeString = x => isString(x) && x.length > 0;
 const isSymbol   = x => typeof x === 'symbol';
 const isFunction = x => typeof x === 'function';
 const isArray    = x => Array.isArray(x);
+const isEArray   = x => isArray(x) && x.length === 0;
+const isNeArray  = x => isArray(x) && x.length > 0;
 const isError    = x => x instanceof Error;
 const isCons     = x => x instanceof Cons;
 const asDefined  = x => isDefined(x)  ? x : raise('defined value expected');
@@ -90,12 +92,12 @@ const consToArrayTree  = c => produce(isCons, c => valueToArrayTree(c.head), c =
 const valueToArray     = x => isCons(x) ? consToArray(x)     : x === null ? [] : x;
 const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x === null ? [] : x;
 
+const equalType = (x, y) => x.constructor === y.constructor && equal(Object.keys(x), Object.keys(y));
 const equal = (x, y) =>
   x === y
   || isCons(x)   && isCons(y)   && equal(x.head, y.head) && equal(x.tail, y.tail)
   || isArray(x)  && isArray(y)  && x.length === y.length && x.every((v, i) => equal(v, y[i]))
-  || isObject(x) && isObject(y) && x.constructor === y.constructor
-    && equal(Object.keys(x), Object.keys(y)) && Object.keys(x).every(k => equal(x[k], y[k]));
+  || isObject(x) && isObject(y) && equalType(x, y)       && Object.keys(x).every(k => equal(x[k], y[k]));
 
 const funSync = (f, arity) =>
   (...args) =>
@@ -129,27 +131,28 @@ const future = async x => {
   }
 };
 
-const accessEnv = name => Member(RawIdentifier('$'), Identifier(name));
-const invokeEnv = (name, args, async = false) => Call(accessEnv(name), args, async);
-const cast = (dataType, ast) => dataType !== ast.dataType ? Object.assign(invokeEnv('as' + dataType, [ast]), { dataType }) : ast;
+const Member$ = name => Member(RawIdentifier('$'), Identifier(name));
+const Call$ = (name, args, async = false) => Call(Member$(name), args, async);
+const cast = (dataType, ast) => dataType !== ast.dataType ? Object.assign(Call$('as' + dataType, [ast]), { dataType }) : ast;
 const uncast = ast => ast.dataType === 'JsBool' ? cast('ShenBool', ast) : ast;
-const isForm = (expr, lead, length) => isArray(expr) && expr.length > 0 && expr[0] === symbolOf(lead) && (!length || expr.length === length);
+const isForm = (expr, lead, length) => isNeArray(expr) && expr[0] === symbolOf(lead) && (!length || expr.length === length);
 const isConsForm = (expr, depth) => depth === 0 || isForm(expr, 'cons', 3) && isConsForm(expr[2], depth - 1);
+const isPrimitiveApplication = (context, expr) => isNeArray(expr) && isSymbol(expr[0]) && context.primitives.hasOwnProperty(nameOf(expr[0])) && context.primitives[nameOf(expr[0])].length === expr.length - 1;
 const validCharactersRegex = /^[_A-Za-z][_A-Za-z0-9]*$/;
 const validIdentifier = id => validCharactersRegex.test(nameOf(id));
-const idle = id => ann('Symbol', adorn(accessEnv('s'), nameOf(id)));
-const globalFunction = id => Member(accessEnv('f'), (validIdentifier(id) ? Identifier : Literal)(nameOf(id)));
-const complete = (context, ast) => invokeEnv(context.async ? 'u' : 't', [ast], context.async);
+const idle = id => ann('Symbol', adorn(Member$('s'), nameOf(id)));
+const globalFunction = id => Member(Member$('f'), (validIdentifier(id) ? Identifier : Literal)(nameOf(id)));
+const complete = (context, ast) => Call$(context.async ? 'u' : 't', [ast], context.async);
 const completeOrReturn = (context, ast) => context.head ? complete(context, ast) : ast;
 const completeOrBounce = (context, fAst, argsAsts) =>
-  context.head ? complete(context, Call(fAst, argsAsts)) : invokeEnv('b', [fAst, ...argsAsts]);
+  context.head ? complete(context, Call(fAst, argsAsts)) : Call$('b', [fAst, ...argsAsts]);
 const symbolKey = (context, expr) =>
   isSymbol(expr) && !context.has(expr)
     ? Literal(nameOf(expr))
-    : invokeEnv('nameOf', [cast('Symbol', build(context.now(), expr))]);
+    : Call$('nameOf', [cast('Symbol', build(context.now(), expr))]);
 const lambda = (context, name, params, body) =>
   ann('Function',
-    invokeEnv('fun', [
+    Call$('fun', [
       Arrow(
         params.map(x => Identifier(nameOf(x))),
         uncast(build(context.later().add(params.map(asSymbol)), body)),
@@ -157,65 +160,62 @@ const lambda = (context, name, params, body) =>
 const build = (context, expr) =>
   isNumber(expr) ? ann('Number', Literal(expr)) :
   isString(expr) ? ann('String', Literal(expr)) :
+  isEArray(expr) ? ann('Null',   Literal(null)) :
   isSymbol(expr) ? (context.has(expr) ? Identifier(nameOf(expr)) : idle(expr)) :
-  isArray(expr) ? (
-    expr.length === 0 ? ann('Null', Literal(null)) :
-    isForm(expr, 'if', 4) ? (
-      expr[1] === shenTrue
-        ? uncast(build(context, expr[2]))
-        : If(cast('JsBool', build(context.now(), expr[1])), ...expr.slice(2).map(x => uncast(build(context, x))))) :
-    isForm(expr, 'cond') ?
-      uncast(build(context, expr.slice(1).reduceRight(
-        (alternate, [test, consequent]) => [s`if`, test, consequent, alternate],
-        [s`simple-error`, 'no condition was true']))) :
-    isForm(expr, 'do', 3) ? Do([build(context.now(), expr[1]), uncast(build(context, expr[2]))]) :
-    isForm(expr, 'let', 4) ?
-      Call(
-        Arrow(
-          [Identifier(nameOf(expr[1]))],
-          uncast(build(context.add([asSymbol(expr[1])]), expr[3])),
-          context.async),
-        [uncast(build(context.now(), expr[2]))],
-        context.async) :
-    isForm(expr, 'trap-error', 3) ?
-      completeOrReturn(
-        context,
-        Iife(Block([
-          Try(
-            Block([Return(uncast(build(context.now(), expr[1])))]),
-            isForm(expr[2], 'lambda', 3)
-              ? Catch(
-                  Identifier(nameOf(expr[2][1])),
-                  Block([Return(uncast(build(context.later().add([asSymbol(expr[2][1])]), expr[2][2])))]))
-              : Catch(
-                  RawIdentifier('e$'),
-                  Block([Return(Call(uncast(build(context.later(), expr[2])), [RawIdentifier('e$')]))])))]),
-          context.async)) :
-    isForm(expr, 'lambda', 3) ? lambda(context, 'lambda', [expr[1]], expr[2]) :
-    isForm(expr, 'freeze', 2) ? lambda(context, 'freeze', [], expr[1]) :
-    isForm(expr, 'defun', 4) ?
-      Do([
-        Assign(globalFunction(expr[1]), lambda(context.clear(), nameOf(expr[1]), expr[2], expr[3])),
-        idle(expr[1])]) :
-    isConsForm(expr, 8) ?
-      ann('Cons',
-        invokeEnv('consFromArray',
-          [Vector(produce(x => isForm(x, 'cons', 3), x => uncast(build(context.now(), x[1])), x => x[2], expr))])) :
-    isSymbol(expr[0]) && context.primitives.hasOwnProperty(nameOf(expr[0]))
-                      && context.primitives[nameOf(expr[0])].length === expr.length - 1 ?
-      context.primitives[nameOf(expr[0])](...expr.slice(1).map(x => build(context.now(), x))) :
-    isForm(expr, 'set', 3) ?
-      Assign(Member(accessEnv('symbols'), symbolKey(context, expr[1])), uncast(build(context.now(), expr[2]))) :
-    isForm(expr, 'value', 2) ?
-      invokeEnv('valueOf', [symbolKey(context, expr[1])]) :
+  isForm(expr, 'if', 4) ? (
+    expr[1] === shenTrue
+      ? uncast(build(context, expr[2]))
+      : If(cast('JsBool', build(context.now(), expr[1])), ...expr.slice(2).map(x => uncast(build(context, x))))) :
+  isForm(expr, 'cond') ?
+    uncast(build(context, expr.slice(1).reduceRight(
+      (alternate, [test, consequent]) => [s`if`, test, consequent, alternate],
+      [s`simple-error`, 'no condition was true']))) :
+  isForm(expr, 'do', 3) ? Do([build(context.now(), expr[1]), uncast(build(context, expr[2]))]) :
+  isForm(expr, 'let', 4) ?
+    Call(
+      Arrow(
+        [Identifier(nameOf(expr[1]))],
+        uncast(build(context.add([asSymbol(expr[1])]), expr[3])),
+        context.async),
+      [uncast(build(context.now(), expr[2]))],
+      context.async) :
+  isForm(expr, 'trap-error', 3) ?
+    completeOrReturn(
+      context,
+      Iife(Block(
+        Try(
+          Block(Return(uncast(build(context.now(), expr[1])))),
+          Catch(
+            isForm(expr[2], 'lambda', 3) ? Identifier(nameOf(expr[2][1])) : RawIdentifier('e$'),
+            Block(Return(
+              isForm(expr[2], 'lambda', 3)
+                ? uncast(build(context.later().add([asSymbol(expr[2][1])]), expr[2][2]))
+                : Call(uncast(build(context.later(), expr[2])), [RawIdentifier('e$')])))))),
+      context.async)) :
+  isForm(expr, 'lambda', 3) ? lambda(context, 'lambda', [expr[1]], expr[2]) :
+  isForm(expr, 'freeze', 2) ? lambda(context, 'freeze', [], expr[1]) :
+  isForm(expr, 'defun', 4) ?
+    Do([
+      Assign(globalFunction(expr[1]), lambda(context.clear(), nameOf(expr[1]), expr[2], expr[3])),
+      idle(expr[1])]) :
+  isConsForm(expr, 8) ?
+    ann('Cons', Call$('consFromArray',
+      [Vector(produce(x => isForm(x, 'cons', 3), x => uncast(build(context.now(), x[1])), x => x[2], expr))])) :
+  isForm(expr, 'set', 3) ?
+    Assign(Member(Member$('symbols'), symbolKey(context, expr[1])), uncast(build(context.now(), expr[2]))) :
+  isForm(expr, 'value', 2) ?
+    Call$('valueOf', [symbolKey(context, expr[1])]) :
+  isPrimitiveApplication(context, expr) ?
+    context.primitives[nameOf(expr[0])](...expr.slice(1).map(x => build(context.now(), x))) :
+  isArray(expr) ?
     completeOrBounce(
       context,
       context.has(expr[0]) ? Identifier(nameOf(expr[0])) :
       isArray(expr[0])     ? uncast(build(context.now(), expr[0])) :
       isSymbol(expr[0])    ? globalFunction(expr[0]) :
       raise('not a valid application form'),
-      expr.slice(1).map(arg => uncast(build(context.now(), arg))))
-  ) : raise('not a valid form');
+      expr.slice(1).map(arg => uncast(build(context.now(), arg)))) :
+  raise('not a valid form');
 
 // TODO: need to be able to provide definition for (y-or-n?) maybe in frontend?
 module.exports = (options = {}) => {
@@ -267,7 +267,7 @@ module.exports = (options = {}) => {
       ann('JsBool',
         atomicTypes.includes(x.dataType) ? Binary('===', x, uncast(y)) :
         atomicTypes.includes(y.dataType) ? Binary('===', y, uncast(x)) :
-        invokeEnv('equal', [x, y].map(uncast))),
+        Call$('equal', [x, y].map(uncast))),
     'not':             x => ann('JsBool', Unary('!', cast('JsBool', x))),
     'and':        (x, y) => ann('JsBool', Binary('&&', cast('JsBool', x), cast('JsBool', y))),
     'or':         (x, y) => ann('JsBool', Binary('||', cast('JsBool', x), cast('JsBool', y))),
@@ -280,17 +280,17 @@ module.exports = (options = {}) => {
     '<=':         (x, y) => ann('JsBool', Binary('<=', cast('Number', x), cast('Number', y))),
     '>=':         (x, y) => ann('JsBool', Binary('>=', cast('Number', x), cast('Number', y))),
     'cn':         (x, y) => ann('String', Binary('+',  cast('String', x), cast('String', y))),
-    'str':             x => ann('String', invokeEnv('show',     [uncast(x)])),
-    'intern':          x => ann('Symbol', invokeEnv('symbolOf', [cast('String', x)])),
-    'number?':         x => ann('JsBool', invokeEnv('isNumber', [uncast(x)])),
-    'string?':         x => ann('JsBool', invokeEnv('isString', [uncast(x)])),
-    'cons?':           x => ann('JsBool', invokeEnv('isCons',   [uncast(x)])),
-    'absvector?':      x => ann('JsBool', invokeEnv('isArray',  [uncast(x)])),
-    'cons':       (x, y) => ann('Cons',   invokeEnv('cons',     [x, y].map(uncast))),
+    'str':             x => ann('String', Call$('show',     [uncast(x)])),
+    'intern':          x => ann('Symbol', Call$('symbolOf', [cast('String', x)])),
+    'number?':         x => ann('JsBool', Call$('isNumber', [uncast(x)])),
+    'string?':         x => ann('JsBool', Call$('isString', [uncast(x)])),
+    'cons?':           x => ann('JsBool', Call$('isCons',   [uncast(x)])),
+    'absvector?':      x => ann('JsBool', Call$('isArray',  [uncast(x)])),
+    'cons':       (x, y) => ann('Cons',   Call$('cons',     [x, y].map(uncast))),
     'hd':              x => Member(cast('Cons', x), Identifier('head')),
     'tl':              x => Member(cast('Cons', x), Identifier('tail')),
     'error-to-string': x => ann('String', Member(cast('Error', x), Identifier('message'))),
-    'simple-error':    x => invokeEnv('raise', [cast('String', x)]),
+    'simple-error':    x => Call$('raise', [cast('String', x)]),
     'read-byte':       x => ann('Number', Call(globalFunction(s`read-byte`), [uncast(x)])),
     'write-byte': (x, y) => ann('Number', Call(globalFunction(s`write-byte`), [x, y].map(uncast))),
     'get-time':   (x, y) => ann('Number', Call(globalFunction(s`get-time`), [x, y].map(uncast))),

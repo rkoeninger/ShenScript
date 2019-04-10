@@ -29,10 +29,10 @@ const syntax =
     Member(Identifier('module'), Identifier('exports')),
     Arrow(
       [RawIdentifier('$')],
-      Block([
+      Block(
         ...defuns.map(x => Statement(compile(x).expressions[0])),
         ...statements.map(x => Statement(compile(x))),
-        Return(RawIdentifier('$'))]),
+        Return(RawIdentifier('$'))),
       async)))]));
 
 console.log(`${syntax.length} chars`);

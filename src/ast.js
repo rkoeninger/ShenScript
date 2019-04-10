@@ -10,7 +10,7 @@ const Arrow = (params, body, async = false) => ({ type: 'ArrowFunctionExpression
 const Assign = (left, right) => ({ type: 'AssignmentExpression', operator: '=', left, right });
 const Await = argument => ({ type: 'AwaitExpression', argument });
 const Binary = (operator, left, right) => ({ type: 'BinaryExpression', operator, left, right });
-const Block = body => ({ type: 'BlockStatement', body });
+const Block = (...body) => ({ type: 'BlockStatement', body });
 const Call = (callee, args, async = false) => (async ? Await : id)({ type: 'CallExpression', callee, arguments: args });
 const Catch = (param, body) => ({ type: 'CatchClause', param, body });
 const Do = expressions => ({ type: 'SequenceExpression', expressions });

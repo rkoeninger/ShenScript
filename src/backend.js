@@ -1,6 +1,7 @@
 const {
   adorn, ann, generate,
-  Arrow, Assign, Await, Binary, Block, Call, Catch, Do, Identifier, If, Literal, Member, Return, Try, Unary, Vector
+  Arrow, Assign, Await, Binary, Block, Call, Catch, Do, Identifier, If, Iife,
+  Literal, Member, RawIdentifier, Return, Try, Unary, Vector
 } = require('./ast');
 
 const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
@@ -73,7 +74,6 @@ const asJsBool   = x =>
   x === shenFalse ? false :
   raise('Shen boolean expected');
 
-const identity = x => x;
 const produce = (proceed, render, next, state) => {
   const array = [];
   while (proceed(state)) {
@@ -129,26 +129,20 @@ const future = async x => {
   }
 };
 
-const invoke = (callee, args, async = false) => (async ? Await : identity)(Call(callee, args));
-const iife = (body, async = false) => invoke(Arrow([], body, async), [], async);
-const accessEnv = name => Member(Identifier('$'), Identifier(name));
-const invokeEnv = (name, args, async = false) => invoke(accessEnv(name), args, async);
+const accessEnv = name => Member(RawIdentifier('$'), Identifier(name));
+const invokeEnv = (name, args, async = false) => Call(accessEnv(name), args, async);
 const cast = (dataType, ast) => dataType !== ast.dataType ? Object.assign(invokeEnv('as' + dataType, [ast]), { dataType }) : ast;
 const uncast = ast => ast.dataType === 'JsBool' ? cast('ShenBool', ast) : ast;
 const isForm = (expr, lead, length) => isArray(expr) && expr.length > 0 && expr[0] === symbolOf(lead) && (!length || expr.length === length);
 const isConsForm = (expr, depth) => depth === 0 || isForm(expr, 'cons', 3) && isConsForm(expr[2], depth - 1);
-const hex = ch => ('0' + ch.charCodeAt(0).toString(16)).slice(-2);
-const validCharacterRegex = /^[_A-Za-z0-9]$/;
 const validCharactersRegex = /^[_A-Za-z][_A-Za-z0-9]*$/;
 const validIdentifier = id => validCharactersRegex.test(nameOf(id));
-const escapeCharacter = ch => validCharacterRegex.test(ch) ? ch : ch === '-' ? '_' : `$${hex(ch)}`;
-const escapeIdentifier = id => Identifier(nameOf(id).split('').map(escapeCharacter).join(''));
 const idle = id => ann('Symbol', adorn(accessEnv('s'), nameOf(id)));
 const globalFunction = id => Member(accessEnv('f'), (validIdentifier(id) ? Identifier : Literal)(nameOf(id)));
 const complete = (context, ast) => invokeEnv(context.async ? 'u' : 't', [ast], context.async);
 const completeOrReturn = (context, ast) => context.head ? complete(context, ast) : ast;
 const completeOrBounce = (context, fAst, argsAsts) =>
-  context.head ? complete(context, invoke(fAst, argsAsts)) : invokeEnv('b', [fAst, ...argsAsts]);
+  context.head ? complete(context, Call(fAst, argsAsts)) : invokeEnv('b', [fAst, ...argsAsts]);
 const symbolKey = (context, expr) =>
   isSymbol(expr) && !context.has(expr)
     ? Literal(nameOf(expr))
@@ -157,13 +151,13 @@ const lambda = (context, name, params, body) =>
   ann('Function',
     invokeEnv('fun', [
       Arrow(
-        params.map(escapeIdentifier),
+        params.map(x => Identifier(nameOf(x))),
         uncast(build(context.later().add(params.map(asSymbol)), body)),
         context.async)]));
 const build = (context, expr) =>
   isNumber(expr) ? ann('Number', Literal(expr)) :
   isString(expr) ? ann('String', Literal(expr)) :
-  isSymbol(expr) ? (context.has(expr) ? escapeIdentifier : idle)(expr) :
+  isSymbol(expr) ? (context.has(expr) ? Identifier(nameOf(expr)) : idle(expr)) :
   isArray(expr) ? (
     expr.length === 0 ? ann('Null', Literal(null)) :
     isForm(expr, 'if', 4) ? (
@@ -176,9 +170,9 @@ const build = (context, expr) =>
         [s`simple-error`, 'no condition was true']))) :
     isForm(expr, 'do', 3) ? Do([build(context.now(), expr[1]), uncast(build(context, expr[2]))]) :
     isForm(expr, 'let', 4) ?
-      invoke(
+      Call(
         Arrow(
-          [escapeIdentifier(expr[1])],
+          [Identifier(nameOf(expr[1]))],
           uncast(build(context.add([asSymbol(expr[1])]), expr[3])),
           context.async),
         [uncast(build(context.now(), expr[2]))],
@@ -186,16 +180,16 @@ const build = (context, expr) =>
     isForm(expr, 'trap-error', 3) ?
       completeOrReturn(
         context,
-        iife(Block([
+        Iife(Block([
           Try(
             Block([Return(uncast(build(context.now(), expr[1])))]),
             isForm(expr[2], 'lambda', 3)
               ? Catch(
-                  escapeIdentifier(expr[2][1]),
+                  Identifier(nameOf(expr[2][1])),
                   Block([Return(uncast(build(context.later().add([asSymbol(expr[2][1])]), expr[2][2])))]))
               : Catch(
-                  Identifier('e$'),
-                  Block([Return(invoke(uncast(build(context.later(), expr[2])), [Identifier('e$')]))])))]),
+                  RawIdentifier('e$'),
+                  Block([Return(Call(uncast(build(context.later(), expr[2])), [RawIdentifier('e$')]))])))]),
           context.async)) :
     isForm(expr, 'lambda', 3) ? lambda(context, 'lambda', [expr[1]], expr[2]) :
     isForm(expr, 'freeze', 2) ? lambda(context, 'freeze', [], expr[1]) :
@@ -216,7 +210,7 @@ const build = (context, expr) =>
       invokeEnv('valueOf', [symbolKey(context, expr[1])]) :
     completeOrBounce(
       context,
-      context.has(expr[0]) ? escapeIdentifier(expr[0]) :
+      context.has(expr[0]) ? Identifier(nameOf(expr[0])) :
       isArray(expr[0])     ? uncast(build(context.now(), expr[0])) :
       isSymbol(expr[0])    ? globalFunction(expr[0]) :
       raise('not a valid application form'),
@@ -297,13 +291,13 @@ module.exports = (options = {}) => {
     'tl':              x => Member(cast('Cons', x), Identifier('tail')),
     'error-to-string': x => ann('String', Member(cast('Error', x), Identifier('message'))),
     'simple-error':    x => invokeEnv('raise', [cast('String', x)]),
-    'read-byte':       x => ann('Number', invoke(globalFunction(s`read-byte`), [uncast(x)])),
-    'write-byte': (x, y) => ann('Number', invoke(globalFunction(s`write-byte`), [x, y].map(uncast))),
-    'get-time':   (x, y) => ann('Number', invoke(globalFunction(s`get-time`), [x, y].map(uncast))),
-    'string->n':       x => ann('Number', invoke(globalFunction(s`string->n`), [uncast(x)])),
-    'n->string':       x => ann('String', invoke(globalFunction(s`n->string`), [uncast(x)])),
-    'tlstr':           x => ann('String', invoke(globalFunction(s`tlstr`), [uncast(x)])),
-    'pos':        (x, y) => ann('String', invoke(globalFunction(s`pos`), [x, y].map(uncast)))
+    'read-byte':       x => ann('Number', Call(globalFunction(s`read-byte`), [uncast(x)])),
+    'write-byte': (x, y) => ann('Number', Call(globalFunction(s`write-byte`), [x, y].map(uncast))),
+    'get-time':   (x, y) => ann('Number', Call(globalFunction(s`get-time`), [x, y].map(uncast))),
+    'string->n':       x => ann('Number', Call(globalFunction(s`string->n`), [uncast(x)])),
+    'n->string':       x => ann('String', Call(globalFunction(s`n->string`), [uncast(x)])),
+    'tlstr':           x => ann('String', Call(globalFunction(s`tlstr`), [uncast(x)])),
+    'pos':        (x, y) => ann('String', Call(globalFunction(s`pos`), [x, y].map(uncast)))
   };
   const valueOf = x => symbols.hasOwnProperty(x) ? symbols[x] : raise(`global "${x}" is not defined`);
   const functions = {};

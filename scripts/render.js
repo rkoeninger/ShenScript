@@ -1,7 +1,10 @@
 const async = process.argv.includes('async');
 
 const fs = require('fs');
-const { Arrow, Assign, Block, Identifier, Member, Program, Return, Statement, generate } = require('../src/ast');
+const {
+  Arrow, Assign, Block, Identifier, Member, Program, RawIdentifier, Return, Statement,
+  generate
+} = require('../src/ast');
 const backend = require('../src/backend');
 const { parse } = require('./parser');
 const { compile, s } = backend({ async });
@@ -25,11 +28,11 @@ const syntax =
   generate(Program([Statement(Assign(
     Member(Identifier('module'), Identifier('exports')),
     Arrow(
-      [Identifier('$')],
+      [RawIdentifier('$')],
       Block([
         ...defuns.map(x => Statement(compile(x).expressions[0])),
         ...statements.map(x => Statement(compile(x))),
-        Return(Identifier('$'))]),
+        Return(RawIdentifier('$'))]),
       async)))]));
 
 console.log(`${syntax.length} chars`);

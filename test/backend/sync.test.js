@@ -94,6 +94,11 @@ describe('sync', () => {
         equal(12, exec('((three 2) 4)'));
       });
     });
+    describe('escaping', () => {
+      it('$ should be usable as a variable', () => {
+        equal(3, exec('(let $ 2 (+ 1 $))'));
+      });
+    });
   });
 
   describe('error handling', () => {

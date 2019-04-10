@@ -185,6 +185,11 @@ describe('async', () => {
         equal(s`Y`, await exec('(let F (freeze Y) (let Y 3 (F)))'));
       });
     });
+    describe('escaping', () => {
+      it('$ should be usable as a variable', async () => {
+        equal(3, await exec('(let $ 2 (+ 1 $))'));
+      });
+    });
   });
 
   describe('applications', () => {

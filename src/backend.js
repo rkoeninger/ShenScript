@@ -138,10 +138,8 @@ const uncast = ast => ast.dataType === 'JsBool' ? cast('ShenBool', ast) : ast;
 const isForm = (expr, lead, length) => isNeArray(expr) && expr[0] === symbolOf(lead) && (!length || expr.length === length);
 const isConsForm = (expr, depth) => depth === 0 || isForm(expr, 'cons', 3) && isConsForm(expr[2], depth - 1);
 const isPrimitiveApplication = (context, expr) => isNeArray(expr) && isSymbol(expr[0]) && context.primitives.hasOwnProperty(nameOf(expr[0])) && context.primitives[nameOf(expr[0])].length === expr.length - 1;
-const validCharactersRegex = /^[_A-Za-z][_A-Za-z0-9]*$/;
-const validIdentifier = id => validCharactersRegex.test(nameOf(id));
 const idle = id => ann('Symbol', adorn(Member$('s'), nameOf(id)));
-const globalFunction = id => Member(Member$('f'), (validIdentifier(id) ? Identifier : Literal)(nameOf(id)));
+const globalFunction = id => Member(Member$('f'), Literal(nameOf(id)));
 const complete = (context, ast) => Call$(context.async ? 'u' : 't', [ast], context.async);
 const completeOrReturn = (context, ast) => context.head ? complete(context, ast) : ast;
 const completeOrBounce = (context, fAst, argsAsts) =>

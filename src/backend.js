@@ -262,9 +262,9 @@ module.exports = (options = {}) => {
   const primitives = {
     '=': (x, y) =>
       ann('JsBool',
-        atomicTypes.includes(x.dataType) ? Binary('===', x, uncast(y)) :
-        atomicTypes.includes(y.dataType) ? Binary('===', y, uncast(x)) :
-        Call$('equal', [x, y].map(uncast))),
+        atomicTypes.includes(x.dataType) || atomicTypes.includes(y.dataType)
+          ? Binary('===', ...[x, y].map(uncast))
+          : Call$('equal',   [x, y].map(uncast))),
     'not':             x => ann('JsBool', Unary('!', cast('JsBool', x))),
     'and':        (x, y) => ann('JsBool', Binary('&&', cast('JsBool', x), cast('JsBool', y))),
     'or':         (x, y) => ann('JsBool', Binary('||', cast('JsBool', x), cast('JsBool', y))),

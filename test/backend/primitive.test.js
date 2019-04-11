@@ -198,6 +198,14 @@ describe('primitive', () => {
   });
 
   describe('equality', () => {
+    describe('=', () => {
+      it('should compare booleans', () => {
+        equal(s`true`,  evalKl([s`=`, s`true`, [s`and`, s`true`, s`true`]]));
+        equal(s`false`, evalKl([s`=`, s`true`, [s`and`, s`true`, s`false`]]));
+        equal(s`true`,  evalKl([s`=`, [s`number?`, 746], [s`number?`, 419]]));
+        equal(s`true`,  evalKl([s`=`, 25, [s`+`, 11, 14]]));
+      });
+    });
     describe('equal', () => {
       it('should handle Infinity', () => {
         ok(eq(Infinity, Infinity));

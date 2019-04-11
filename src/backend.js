@@ -216,7 +216,7 @@ const build = (context, expr) =>
 
 // TODO: need to be able to provide definition for (y-or-n?) maybe in frontend?
 module.exports = (options = {}) => {
-  // TODO: have shen-script.*instream-supported*, shen-script.*outstream-supported* flags?
+  // TODO: have shen-script.*instream-supported*, shen-script.*outstream-supported*, shen-script.*async* flags?
   const isInStream  = options.isInStream  || (() => false);
   const isOutStream = options.isOutStream || (() => false);
   const asInStream  = x => isInStream(x)  ? x : raise('input stream expected');
@@ -261,10 +261,9 @@ module.exports = (options = {}) => {
   const atomicTypes = ['Number', 'String', 'Symbol', 'Stream', 'Null'];
   const primitives = {
     '=': (x, y) =>
-      ann('JsBool',
-        atomicTypes.includes(x.dataType) || atomicTypes.includes(y.dataType)
-          ? Binary('===', ...[x, y].map(uncast))
-          : Call$('equal',   [x, y].map(uncast))),
+      atomicTypes.includes(x.dataType) || atomicTypes.includes(y.dataType)
+        ? ann('JsBool', Binary('===', ...[x, y].map(uncast)))
+        : ann('JsBool', Call$('equal',   [x, y].map(uncast))),
     'not':             x => ann('JsBool', Unary('!', cast('JsBool', x))),
     'and':        (x, y) => ann('JsBool', Binary('&&', cast('JsBool', x), cast('JsBool', y))),
     'or':         (x, y) => ann('JsBool', Binary('||', cast('JsBool', x), cast('JsBool', y))),
@@ -297,7 +296,48 @@ module.exports = (options = {}) => {
     'pos':        (x, y) => ann('String', Call$f('pos',        [x, y].map(uncast)))
   };
   const valueOf = x => symbols.hasOwnProperty(x) ? symbols[x] : raise(`global "${x}" is not defined`);
-  const functions = {};
+  const functions = {
+    'if':        (b, x, y) => asJsBool(b) ? x : y,
+    'and':          (x, y) => asShenBool(asJsBool(x) && asJsBool(y)),
+    'or':           (x, y) => asShenBool(asJsBool(x) || asJsBool(y)),
+    'open':         (p, m) => open(asString(p), nameOf(asSymbol(m))),
+    'close':             x => (asStream(x).close(), null),
+    'read-byte':         x => asInStream(x).read(),
+    'write-byte':   (b, x) => (asOutStream(x).write(asNumber(b)), b),
+    'number?':           x => asShenBool(isNumber(x)),
+    'string?':           x => asShenBool(isString(x)),
+    'absvector?':        x => asShenBool(isArray(x)),
+    'cons?':             x => asShenBool(isCons(x)),
+    'hd':                c => asCons(c).head,
+    'tl':                c => asCons(c).tail,
+    'cons':                   cons,
+    'tlstr':             x => asNeString(x).substring(1),
+    'cn':           (x, y) => asString(x) + asString(y),
+    'string->n':         x => asNeString(x).charCodeAt(0),
+    'n->string':         n => String.fromCharCode(asNumber(n)),
+    'pos':          (x, i) => asString(x)[asIndex(i, x)],
+    'str':                    show,
+    'absvector':         n => new Array(asNumber(n)).fill(null),
+    '<-address':    (a, i) => asArray(a)[asIndex(i, a)],
+    'address->': (a, i, x) => (asArray(a)[asIndex(i, a)] = x, a),
+    '+':            (x, y) => asNumber(x) + asNumber(y),
+    '-':            (x, y) => asNumber(x) - asNumber(y),
+    '*':            (x, y) => asNumber(x) * asNumber(y),
+    '/':            (x, y) => asNumber(x) / asNzNumber(y),
+    '>':            (x, y) => asShenBool(asNumber(x) >  asNumber(y)),
+    '<':            (x, y) => asShenBool(asNumber(x) <  asNumber(y)),
+    '>=':           (x, y) => asShenBool(asNumber(x) >= asNumber(y)),
+    '<=':           (x, y) => asShenBool(asNumber(x) <= asNumber(y)),
+    '=':            (x, y) => asShenBool(equal(x, y)),
+    'intern':            x => symbolOf(asString(x)),
+    'get-time':          x => getTime(nameOf(asSymbol(x))),
+    'simple-error':      x => raise(asString(x)),
+    'error-to-string':   x => asError(x).message,
+    'set':          (x, y) => symbols[nameOf(asSymbol(x))] = y,
+    'value':             x => valueOf(nameOf(asSymbol(x))),
+    'type':         (x, _) => x
+  };
+  Object.keys(functions).forEach(name => functions[name] = fun(functions[name]));
   const context = new Context({ async: options.async, head: true, locals: new Set(), primitives });
   const compile = expr => uncast(build(context, expr));
   const $ = {
@@ -309,48 +349,6 @@ module.exports = (options = {}) => {
     f: functions, s, b: bounce, t: settle, u: future
   };
   const Func = context.async ? AsyncFunction : Function;
-  $.evalKl = expr => Func('$', generate(Return(compile(valueToArrayTree(expr)))))($);
-  [
-    ['if',        (b, x, y) => asJsBool(b) ? x : y],
-    ['and',          (x, y) => asShenBool(asJsBool(x) && asJsBool(y))],
-    ['or',           (x, y) => asShenBool(asJsBool(x) || asJsBool(y))],
-    ['open',         (p, m) => open(asString(p), nameOf(asSymbol(m)))],
-    ['close',             x => (asStream(x).close(), null)],
-    ['read-byte',         x => asInStream(x).read()],
-    ['write-byte',   (b, x) => (asOutStream(x).write(asNumber(b)), b)],
-    ['number?',           x => asShenBool(isNumber(x))],
-    ['string?',           x => asShenBool(isString(x))],
-    ['absvector?',        x => asShenBool(isArray(x))],
-    ['cons?',             x => asShenBool(isCons(x))],
-    ['hd',                c => asCons(c).head],
-    ['tl',                c => asCons(c).tail],
-    ['cons',                   cons],
-    ['tlstr',             x => asNeString(x).substring(1)],
-    ['cn',           (x, y) => asString(x) + asString(y)],
-    ['string->n',         x => asNeString(x).charCodeAt(0)],
-    ['n->string',         n => String.fromCharCode(asNumber(n))],
-    ['pos',          (x, i) => asString(x)[asIndex(i, x)]],
-    ['str',                    show],
-    ['absvector',         n => new Array(asNumber(n)).fill(null)],
-    ['<-address',    (a, i) => asArray(a)[asIndex(i, a)]],
-    ['address->', (a, i, x) => (asArray(a)[asIndex(i, a)] = x, a)],
-    ['+',            (x, y) => asNumber(x) + asNumber(y)],
-    ['-',            (x, y) => asNumber(x) - asNumber(y)],
-    ['*',            (x, y) => asNumber(x) * asNumber(y)],
-    ['/',            (x, y) => asNumber(x) / asNzNumber(y)],
-    ['>',            (x, y) => asShenBool(asNumber(x) >  asNumber(y))],
-    ['<',            (x, y) => asShenBool(asNumber(x) <  asNumber(y))],
-    ['>=',           (x, y) => asShenBool(asNumber(x) >= asNumber(y))],
-    ['<=',           (x, y) => asShenBool(asNumber(x) <= asNumber(y))],
-    ['=',            (x, y) => asShenBool(equal(x, y))],
-    ['intern',            x => symbolOf(asString(x))],
-    ['get-time',          x => getTime(nameOf(asSymbol(x)))],
-    ['simple-error',      x => raise(asString(x))],
-    ['error-to-string',   x => asError(x).message],
-    ['set',          (x, y) => symbols[nameOf(asSymbol(x))] = y],
-    ['value',             x => valueOf(nameOf(asSymbol(x)))],
-    ['type',         (x, _) => x],
-    ['eval-kl',                $.evalKl]
-  ].forEach(([id, f]) => functions[id] = fun(f));
+  functions['eval-kl'] = fun($.evalKl = expr => Func('$', generate(Return(compile(valueToArrayTree(expr)))))($));
   return $;
 };

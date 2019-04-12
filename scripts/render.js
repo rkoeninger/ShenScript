@@ -37,7 +37,7 @@ const syntax =
 
 console.log(`${syntax.length} chars`);
 
-if (!fs.statSync('./dist/')) {
+if (!fs.existsSync('./dist/')) {
   fs.mkdirSync('./dist/');
 }
 

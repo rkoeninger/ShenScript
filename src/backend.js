@@ -56,7 +56,6 @@ const isEArray   = x => isArray(x) && x.length === 0;
 const isNeArray  = x => isArray(x) && x.length > 0;
 const isError    = x => x instanceof Error;
 const isCons     = x => x instanceof Cons;
-const asDefined  = x => isDefined(x)  ? x : raise('defined value expected');
 const asNumber   = x => isNumber(x)   ? x : raise('number expected');
 const asNzNumber = x => isNzNumber(x) ? x : raise('non-zero number expected');
 const asString   = x => isString(x)   ? x : raise('string expected');
@@ -76,19 +75,17 @@ const asJsBool   = x =>
   x === shenFalse ? false :
   raise('Shen boolean expected');
 
-const produce = (proceed, render, next, state) => {
-  const array = [];
-  while (proceed(state)) {
-    array.push(render(state));
-    state = next(state);
+const produce = (proceed, current, next, state, result = []) => {
+  for (; proceed(state); state = next(state)) {
+    result.push(current(state));
   }
-  return array;
+  return result;
 };
 
 const cons             = (h, t) => new Cons(h, t);
 const consFromArray    = a => a.reduceRight((t, h) => cons(h, t), null);
-const consToArray      = c => produce(isCons, c => c.head,                   c => c.tail, c);
-const consToArrayTree  = c => produce(isCons, c => valueToArrayTree(c.head), c => c.tail, c);
+const consToArray      = c => produce(isCons, c => c.head, c => c.tail, c);
+const consToArrayTree  = c => consToArray(c).map(valueToArrayTree);
 const valueToArray     = x => isCons(x) ? consToArray(x)     : x === null ? [] : x;
 const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x === null ? [] : x;
 
@@ -150,12 +147,11 @@ const symbolKey = (context, expr) =>
     ? Literal(nameOf(expr))
     : Call$('nameOf', [cast('Symbol', build(context.now(), expr))]);
 const lambda = (context, name, params, body) =>
-  ann('Function',
-    Call$('fun', [
-      Arrow(
-        params.map(x => Identifier(nameOf(x))),
-        uncast(build(context.later().add(params.map(asSymbol)), body)),
-        context.async)]));
+  Call$('fun', [
+    Arrow(
+      params.map(x => Identifier(nameOf(x))),
+      uncast(build(context.later().add(params.map(asSymbol)), body)),
+      context.async)]);
 const build = (context, expr) =>
   isNumber(expr) ? ann('Number', Literal(expr)) :
   isString(expr) ? ann('String', Literal(expr)) :
@@ -214,9 +210,7 @@ const build = (context, expr) =>
       expr.slice(1).map(arg => uncast(build(context.now(), arg)))) :
   raise('not a valid form');
 
-// TODO: need to be able to provide definition for (y-or-n?) maybe in frontend?
 module.exports = (options = {}) => {
-  // TODO: have shen-script.*instream-supported*, shen-script.*outstream-supported*, shen-script.*async* flags?
   const isInStream  = options.isInStream  || (() => false);
   const isOutStream = options.isOutStream || (() => false);
   const asInStream  = x => isInStream(x)  ? x : raise('input stream expected');
@@ -342,10 +336,10 @@ module.exports = (options = {}) => {
   const compile = expr => uncast(build(context, expr));
   const $ = {
     cons, consFromArray, consToArray, consToArrayTree, valueToArray, valueToArrayTree,
-    asJsBool, asShenBool, asNzNumber, asNeString, asDefined,
+    asJsBool, asShenBool, asNzNumber, asNeString, symbols, primitives, functions,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
-    symbolOf, nameOf, valueOf, show, equal, raise, fun, bounce, settle, future, symbols, functions, compile,
+    symbolOf, nameOf, valueOf, show, equal, raise, fun, bounce, settle, future, compile,
     f: functions, s, b: bounce, t: settle, u: future
   };
   const Func = context.async ? AsyncFunction : Function;

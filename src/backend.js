@@ -118,14 +118,10 @@ const settle = x => {
   return x;
 };
 const future = async x => {
-  while (true) {
-    const y = await x;
-    if (y instanceof Trampoline) {
-      x = y.run();
-    } else {
-      return y;
-    }
+  while (x = await x, x instanceof Trampoline) {
+    x = x.run();
   }
+  return x;
 };
 
 const Member$ = name => Member(RawIdentifier('$'), RawIdentifier(name));

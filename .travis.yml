@@ -3,3 +3,12 @@ notifications:
 language: node_js
 node_js:
   - "lts/*"
+install:
+  - npm install
+script:
+  - npm run test-backend
+  - npm run fetch-kernel
+  - npm run render-kernel
+  - npm run render-kernel async
+  - npm run test-kernel && true
+  - npm run test-kernel async

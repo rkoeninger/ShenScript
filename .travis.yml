@@ -1,6 +1,3 @@
-branches:
-  except:
-    - refactor
 notifications:
   email: false
 language: node_js

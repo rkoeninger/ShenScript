@@ -36,4 +36,9 @@ const syntax =
       async)))]));
 
 console.log(`${syntax.length} chars`);
+
+if (!fs.statSync('./dist/')) {
+  fs.mkdirSync('./dist/');
+}
+
 fs.writeFileSync(`./dist/kernel_${async ? 'async' : 'sync'}.js`, syntax, 'utf-8');

@@ -33,9 +33,8 @@ const $ = backend({
   stoutput,
   sterror: stoutput
 });
-const { evalKl, symbolOf, symbols, trap } = $;
+const { evalKl, symbols, s } = $;
 home = () => symbols['*home-directory*'];
-const s = parts => symbolOf(parts[0]);
 
 const files = [
   'toplevel', 'core',   'sys',          'dict',  'sequent',

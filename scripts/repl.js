@@ -4,7 +4,8 @@ const backend = require('../src/backend');
 const { parse } = require('../scripts/parser');
 
 const InStream = class {
-  constructor(stream) {
+  constructor(stream, name) {
+    this.name = name;
     this.stream = addAsyncFunctions(stream);
     this.buf = '';
     this.pos = 0;
@@ -20,7 +21,8 @@ const InStream = class {
 };
 
 const OutStream = class {
-  constructor(stream) {
+  constructor(stream, name) {
+    this.name = name;
     this.stream = stream;
   }
   write(b) { return this.stream.write(String.fromCharCode(b)); }
@@ -35,13 +37,13 @@ const $ = backend({
   os: process.platform,
   port: '0.1.0',
   porters: 'Robert Koeninger',
-  openRead: path => new InStream(fs.createReadStream(home() + path)),
-  openWrite: path => new OutStream(fs.createWriteStream(home() + path)),
+  openRead: path => new InStream(fs.createReadStream(home() + path), `filein=${path}`),
+  openWrite: path => new OutStream(fs.createWriteStream(home() + path), `fileout=${path}`),
   isInStream: x => x instanceof InStream,
   isOutStream: x => x instanceof OutStream,
-  stinput: new InStream(process.stdin),
-  stoutput: new OutStream(process.stdout),
-  sterror: new OutStream(process.stderr)
+  stinput: new InStream(process.stdin, 'stinput'),
+  stoutput: new OutStream(process.stdout, 'stoutput'),
+  sterror: new OutStream(process.stderr, 'sterror')
 });
 const { evalKl, symbols, s, fun, functions, asNumber } = $;
 home = () => symbols['*home-directory*'];

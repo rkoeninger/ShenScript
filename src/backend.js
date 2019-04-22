@@ -230,9 +230,9 @@ module.exports = (options = {}) => {
     isString(x)   ? `"${x}"` :
     isSymbol(x)   ? nameOf(x) :
     isCons(x)     ? `[${consToArray(x).map(show).join(' ')}]` :
-    isFunction(x) ? `<Function ${x.arity}>` :
+    isFunction(x) ? `<Function ${x}>` :
     isArray(x)    ? `<Vector ${x.length}>` :
-    isError(x)    ? `<Error "${x.toString() + x.stack}">` :
+    isError(x)    ? `<Error "${x.toString()}">` :
     isStream(x)   ? `<Stream ${x.name}>` :
     `${x}`;
   const out = options.stoutput;

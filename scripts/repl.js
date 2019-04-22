@@ -4,8 +4,8 @@ const backend = require('../src/backend');
 const { parse } = require('../scripts/parser');
 
 const InStream = class {
-  constructor() {
-    this.stream = addAsyncFunctions(process.stdin);
+  constructor(stream) {
+    this.stream = addAsyncFunctions(stream);
     this.buf = '';
     this.pos = 0;
   }
@@ -16,29 +16,16 @@ const InStream = class {
     const b = await this.stream.readAsync();
     return b === null ? -1 : (this.buf = b, this.pos = 0, this.read());
   }
-};
-
-const OutStream = class {
-  write(b) { return process.stdout.write(String.fromCharCode(b)); }
-};
-
-const InFileStream = class {
-  constructor(buf) {
-    this.buf = buf;
-    this.pos = 0;
-  }
-  read() { return this.pos >= this.buf.length ? -1 : this.buf[this.pos++]; }
-  close() {}
-};
-
-const OutFileStream = class {
-  constructor(stream) { this.stream = stream; }
-  write(b) { return this.stream.write(String.fromCharCode(b)); }
   close() { return this.stream.close(); }
 };
 
-const stinput = new InStream();
-const stoutput = new OutStream();
+const OutStream = class {
+  constructor(stream) {
+    this.stream = stream;
+  }
+  write(b) { return this.stream.write(String.fromCharCode(b)); }
+  close() { return this.stream.close(); }
+};
 
 let home = () => '';
 const $ = backend({
@@ -48,15 +35,15 @@ const $ = backend({
   os: process.platform,
   port: '0.1.0',
   porters: 'Robert Koeninger',
-  openRead: path => new InFileStream(fs.readFileSync(home() + path)),
-  openWrite: path => new OutFileStream(fs.createWriteStream(home() + path, { flags: 'w' })),
-  isInStream: x => x instanceof InStream || x instanceof InFileStream,
-  isOutStream: x => x instanceof OutStream || x instanceof OutFileStream,
-  stinput,
-  stoutput,
-  sterror: stoutput
+  openRead: path => new InStream(fs.createReadStream(home() + path)),
+  openWrite: path => new OutStream(fs.createWriteStream(home() + path)),
+  isInStream: x => x instanceof InStream,
+  isOutStream: x => x instanceof OutStream,
+  stinput: new InStream(process.stdin),
+  stoutput: new OutStream(process.stdout),
+  sterror: new OutStream(process.stderr)
 });
-const { evalKl, symbols, s } = $;
+const { evalKl, symbols, s, fun, functions, asNumber } = $;
 home = () => symbols['*home-directory*'];
 
 const files = [
@@ -92,6 +79,6 @@ const loadGroupAsync = async (name, exprs) => {
 (async () => {
   await loadGroupAsync('defuns', defuns);
   await loadGroupAsync('statements', statements);
-  $.f['shen-script.exit'] = $.fun(X => process.exit($.asNumber(X)));
+  functions['shen-script.exit'] = fun(X => process.exit(asNumber(X)));
   await evalKl([s`shen.shen`]);
 })();

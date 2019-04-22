@@ -21,7 +21,8 @@
     "tar": "^4.4.8"
   },
   "dependencies": {
-    "astring": "^1.3.1"
+    "astring": "^1.3.1",
+    "awaitify-stream": "^1.0.2"
   },
   "scripts": {
     "test": "npm run test-backend -- --reporter dot",
@@ -29,6 +30,7 @@
     "test-backend": "mocha test/backend/*.test.js",
     "test-kernel": "node test/kernel/load.js",
     "render-kernel": "node scripts/render.js",
+    "repl": "node scripts/repl.js",
     "bundle-kernel": "echo \"bundle-kernel not implemented\" && false"
   }
 }

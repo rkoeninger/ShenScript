@@ -1,8 +1,8 @@
 const async = process.argv.includes('async');
 
 const fs              = require('fs');
-const backend         = require('../src/backend');
 const { parseKernel } = require('./parser');
+const backend         = require('../src/backend');
 const {
   Arrow, Assign, Block, Identifier, Member, Program, RawIdentifier, Return, Statement,
   generate

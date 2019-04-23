@@ -1,8 +1,8 @@
 const fs                    = require('fs');
 const { addAsyncFunctions } = require('awaitify-stream');
 const config                = require('./config.node');
+const { parseKernel }       = require('./parser');
 const backend               = require('../src/backend');
-const { parseKernel }       = require('../scripts/parser');
 
 const InStream = class {
   constructor(stream, name) {

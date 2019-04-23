@@ -1,7 +1,6 @@
 const async = process.argv.includes('async');
 
 const fs              = require('fs');
-const { distPath }    = require('./config');
 const { parseKernel } = require('./parser');
 const backend         = require('../src/backend');
 const {
@@ -25,8 +24,8 @@ const syntax =
 
 console.log(`${syntax.length} chars`);
 
-if (!fs.existsSync(distPath)) {
-  fs.mkdirSync(distPath);
+if (!fs.existsSync('dist')) {
+  fs.mkdirSync('dist');
 }
 
-fs.writeFileSync(`${distPath}/kernel.${async ? 'async' : 'sync'}.js`, syntax);
+fs.writeFileSync(`dist/kernel.${async ? 'async' : 'sync'}.js`, syntax);

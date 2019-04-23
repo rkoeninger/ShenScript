@@ -1,14 +1,9 @@
-const { equal, ok } = require('assert'); // TODO: rejects does not exist?
-const { parseForm } = require('../../scripts/parser');
-const backend       = require('../../src/backend');
+const { equal, ok, rejects } = require('assert');
+const { parseForm }          = require('../../scripts/parser');
+const backend                = require('../../src/backend');
 
 const { cons, evalKl, f, future, s, valueOf } = backend({ async: true });
 const exec = s => future(evalKl(parseForm(s)));
-
-// TODO: shouldn't have to provide custom rejects function
-const rejects = p => new Promise((resolve, reject) =>
-  p.then(() => reject(new Error('exception expected')), e => resolve(e))
-);
 
 Array.prototype.forEachAsync = async f => {
   for (let i = 0; i < this.length; ++i) {

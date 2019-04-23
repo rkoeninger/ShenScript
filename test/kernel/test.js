@@ -1,9 +1,9 @@
 const async = process.argv.includes('async');
 
 const fs              = require('fs');
-const config          = require('./config.node');
 const backend         = require('../../src/backend');
 const { parseKernel } = require('../../scripts/parser');
+const config          = require('../../scripts/config.node');
 
 const InStream = class {
   constructor(buf) {

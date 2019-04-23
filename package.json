@@ -28,7 +28,7 @@
     "test": "npm run test-backend -- --reporter dot",
     "fetch-kernel": "node scripts/fetch.js",
     "test-backend": "mocha test/backend/test.*.js",
-    "test-kernel": "node test/kernel/test.js",
+    "test-kernel": "node test/kernel/test.kernel.js",
     "render-kernel": "node scripts/render.js",
     "repl": "node scripts/repl.js",
     "bundle-kernel": "echo \"bundle-kernel not implemented\" && false"

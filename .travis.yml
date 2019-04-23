@@ -10,5 +10,5 @@ script:
   - npm run fetch-kernel
   - npm run render-kernel
   - npm run render-kernel async
-  - npm run test-kernel && true
+  - npm run test-kernel && true # 1 test fails due to stack overflow in sync mode
   - npm run test-kernel async

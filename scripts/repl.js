@@ -1,8 +1,8 @@
 const fs                    = require('fs');
 const { addAsyncFunctions } = require('awaitify-stream');
 const config                = require('./config.node');
-const { parseKernel }       = require('./parser');
 const backend               = require('../src/backend');
+const kernel                = require('../dist/kernel.async');
 
 const InStream = class {
   constructor(stream, name) {
@@ -30,38 +30,18 @@ const OutStream = class {
   close() { return this.stream.close(); }
 };
 
-const { asNumber, evalKl, f, fun, s } = backend({
-  ...config,
-  async: true,
-  InStream,
-  OutStream,
-  openRead: path => new InStream(fs.createReadStream(path), `filein=${path}`),
-  openWrite: path => new OutStream(fs.createWriteStream(path), `fileout=${path}`),
-  stinput: new InStream(process.stdin, 'stinput'),
-  stoutput: new OutStream(process.stdout, 'stoutput'),
-  sterror: new OutStream(process.stderr, 'sterror')
-});
-
-const { defuns, statements } = parseKernel();
-
-const loadGroupAsync = async (name, exprs) => {
-  const start = Date.now();
-  let i = 0;
-  console.log(`${name}: loading...`);
-  for (let expr of exprs) {
-    try {
-      await evalKl(expr);
-    } catch (e) {
-      console.log(expr);
-      console.log(e);
-    }
-  }
-  console.log(`${name}: ${exprs.length} loaded in ${Date.now() - start}ms`);
-};
-
 (async () => {
-  await loadGroupAsync('defuns', defuns);
-  await loadGroupAsync('statements', statements);
+  const { asNumber, evalKl, f, fun, s } = await kernel(backend({
+    ...config,
+    async: true,
+    InStream,
+    OutStream,
+    openRead: path => new InStream(fs.createReadStream(path), `filein=${path}`),
+    openWrite: path => new OutStream(fs.createWriteStream(path), `fileout=${path}`),
+    stinput: new InStream(process.stdin, 'stinput'),
+    stoutput: new OutStream(process.stdout, 'stoutput'),
+    sterror: new OutStream(process.stderr, 'sterror')
+  }));
   f['shen-script.exit'] = fun(X => process.exit(asNumber(X)));
   await evalKl([s`shen.shen`]);
 })();

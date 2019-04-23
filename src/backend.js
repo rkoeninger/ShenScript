@@ -142,7 +142,7 @@ const symbolKey = (context, expr) =>
   isSymbol(expr) && !context.has(expr)
     ? Literal(nameOf(expr))
     : Call$('nameOf', [cast('Symbol', build(context.now(), expr))]);
-const lambda = (context, name, params, body) =>
+const lambda = (context, params, body) =>
   Call$('fun', [
     Arrow(
       params.map(x => Identifier(nameOf(x))),
@@ -183,10 +183,10 @@ const build = (context, expr) =>
                 ? uncast(build(context.later().add([asSymbol(expr[2][1])]), expr[2][2]))
                 : Call(uncast(build(context.later(), expr[2])), [RawIdentifier('e$')])))))),
       context.async)) :
-  isForm(expr, 'lambda', 3) ? lambda(context, 'lambda', [expr[1]], expr[2]) :
-  isForm(expr, 'freeze', 2) ? lambda(context, 'freeze', [], expr[1]) :
+  isForm(expr, 'lambda', 3) ? lambda(context, [expr[1]], expr[2]) :
+  isForm(expr, 'freeze', 2) ? lambda(context, [], expr[1]) :
   isForm(expr, 'defun', 4) ?
-    Do(Assign(Member$f(nameOf(expr[1])), lambda(context.clear(), nameOf(expr[1]), expr[2], expr[3])), idle(expr[1])) :
+    Do(Assign(Member$f(nameOf(expr[1])), lambda(context.clear(), expr[2], expr[3])), idle(expr[1])) :
   isConsForm(expr, 8) ?
     ann('Cons', Call$('consFromArray',
       [Vector(produce(x => isForm(x, 'cons', 3), x => uncast(build(context.now(), x[1])), x => x[2], expr))])) :

@@ -5,12 +5,6 @@ const backend                = require('../../src/backend');
 const { cons, evalKl, f, future, s, valueOf } = backend({ async: true });
 const exec = s => future(evalKl(parseForm(s)));
 
-Array.prototype.forEachAsync = async f => {
-  for (let i = 0; i < this.length; ++i) {
-    await f(x, i, this);
-  }
-};
-
 describe('async', () => {
   describe('evaluation', () => {
     it('eval-kl', async () => {
@@ -112,7 +106,9 @@ describe('async', () => {
   describe('recursion', () => {
     it('functions should be able to call themselves', async () => {
       await exec('(defun fac (N) (if (= 0 N) 1 (* N (fac (- N 1)))))');
-      await [[0, 1], [5, 120], [7, 5040]].forEachAsync(([n, r]) => equal(r, future(f.fac(n))));
+      equal(1,    await future(f.fac(0)));
+      equal(120,  await future(f.fac(5)));
+      equal(5040, await future(f.fac(7)));
     });
     describe('tail recursion', () => {
       const countDown = async body => {

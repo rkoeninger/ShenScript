@@ -1,7 +1,8 @@
-const follow = require('follow-redirects');
-const fs     = require('fs');
-const rimraf = require('rimraf');
-const tar    = require('tar');
+const follow            = require('follow-redirects');
+const fs                = require('fs');
+const rimraf            = require('rimraf');
+const tar               = require('tar');
+const { kernelVersion } = require('./config');
 
 const request = url => new Promise((resolve, reject) => {
   follow[url.startsWith('https:') ? 'https' : 'http'].get(url, r => {
@@ -15,7 +16,6 @@ const request = url => new Promise((resolve, reject) => {
   }).on('error', e => reject(e));
 });
 
-const kernelVersion = '21.1';
 const kernelFolderName = `ShenOSKernel-${kernelVersion}`;
 const kernelArchiveName = `${kernelFolderName}.tar.gz`;
 const kernelArchiveUrlBase = 'https://github.com/Shen-Language/shen-sources/releases/download';

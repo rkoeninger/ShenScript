@@ -1,7 +1,8 @@
 const async = process.argv.includes('async');
 
-const fs = require('fs');
-const backend = require('../../src/backend');
+const fs              = require('fs');
+const config          = require('./config.node');
+const backend         = require('../../src/backend');
 const { parseKernel } = require('../../scripts/parser');
 
 const InStream = class {
@@ -21,12 +22,8 @@ const stoutput = new OutStream();
 
 let home = () => '';
 const $ = backend({
+  ...config,
   async,
-  implementation: 'node',
-  release: process.version.slice(1),
-  os: process.platform,
-  port: 'shen-script',
-  porters: 'Robert Koeninger',
   openRead: path => new InStream(fs.readFileSync(home() + path)),
   isInStream: x => x instanceof InStream,
   isOutStream: x => x instanceof OutStream,

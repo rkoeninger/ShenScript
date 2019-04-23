@@ -1,5 +1,6 @@
-const { equal } = require('assert');
+const { equal }     = require('assert');
 const { parseForm } = require('../../scripts/parser');
+
 const s = x => Symbol.for(typeof x === 'string' ? x : x[0]);
 
 describe('parsing', () => {

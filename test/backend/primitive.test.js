@@ -1,5 +1,6 @@
 const { equal, ok, throws } = require('assert');
-const backend = require('../../src/backend');
+const backend               = require('../../src/backend');
+
 const { asString, cons, isCons, evalKl, f, s, equal: eq } = backend();
 const isShenBool = x => x === s`true` || x === s`false`;
 const values = [12, null, undefined, 'abc', s`asd`, 0, Infinity, [], cons(1, 2)];

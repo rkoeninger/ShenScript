@@ -1,7 +1,8 @@
-const fs = require('fs');
+const fs                    = require('fs');
 const { addAsyncFunctions } = require('awaitify-stream');
-const backend = require('../src/backend');
-const { parseKernel } = require('../scripts/parser');
+const config                = require('./config.node');
+const backend               = require('../src/backend');
+const { parseKernel }       = require('../scripts/parser');
 
 const InStream = class {
   constructor(stream, name) {
@@ -31,12 +32,8 @@ const OutStream = class {
 
 let home = () => '';
 const $ = backend({
+  ...config,
   async: true,
-  implementation: 'Node.js',
-  release: process.version.slice(1),
-  os: process.platform,
-  port: '0.1.0',
-  porters: 'Robert Koeninger',
   openRead: path => new InStream(fs.createReadStream(home() + path), `filein=${path}`),
   openWrite: path => new OutStream(fs.createWriteStream(home() + path), `fileout=${path}`),
   isInStream: x => x instanceof InStream,

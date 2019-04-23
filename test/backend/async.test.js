@@ -1,6 +1,7 @@
 const { equal, ok } = require('assert'); // TODO: rejects does not exist?
 const { parseForm } = require('../../scripts/parser');
-const backend = require('../../src/backend');
+const backend       = require('../../src/backend');
+
 const { cons, evalKl, f, future, s, valueOf } = backend({ async: true });
 const exec = s => future(evalKl(parseForm(s)));
 

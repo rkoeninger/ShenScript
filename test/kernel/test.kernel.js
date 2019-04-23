@@ -15,23 +15,21 @@ const InStream = class {
 };
 
 const OutStream = class {
-  write(b) { return process.stdout.write(String.fromCharCode(b)); }
+  constructor(stream) {
+    this.stream = stream;
+  }
+  write(b) { return this.stream.write(String.fromCharCode(b)); }
 };
 
-const stoutput = new OutStream();
-
-let home = () => '';
-const $ = backend({
+const { evalKl, symbols, s } = backend({
   ...config,
   async,
-  openRead: path => new InStream(fs.readFileSync(home() + path)),
+  openRead: path => new InStream(fs.readFileSync(path)),
   isInStream: x => x instanceof InStream,
   isOutStream: x => x instanceof OutStream,
-  stoutput,
-  sterror: stoutput
+  stoutput: new OutStream(process.stdout),
+  sterror:  new OutStream(process.stderr)
 });
-const { evalKl, symbols, s } = $;
-home = () => symbols['*home-directory*'];
 
 const { defuns, statements } = parseKernel();
 
@@ -76,7 +74,7 @@ if (async) {
     const start = Date.now();
     await loadGroupAsync('defuns', defuns);
     await loadGroupAsync('statements', statements);
-    console.log(await evalKl([s`cd`, './kernel/tests']));
+    console.log(await evalKl([s`cd`, config.testsPath]));
     console.log(await evalKl([s`load`, 'README.shen']));
     console.log(await evalKl([s`load`, 'tests.shen']));
     console.log(`total time elapsed: ${formatDuration(Date.now() - start)}`);
@@ -85,7 +83,7 @@ if (async) {
   const start = Date.now();
   loadGroup('defuns', defuns);
   loadGroup('statements', statements);
-  console.log(evalKl([s`cd`, './kernel/tests']));
+  console.log(evalKl([s`cd`, config.testsPath]));
   console.log(evalKl([s`load`, 'README.shen']));
   console.log(evalKl([s`load`, 'tests.shen']));
   console.log(`total time elapsed: ${formatDuration(Date.now() - start)}`);

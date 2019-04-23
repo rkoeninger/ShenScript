@@ -30,20 +30,17 @@ const OutStream = class {
   close() { return this.stream.close(); }
 };
 
-let home = () => '';
-const $ = backend({
+const { evalKl, symbols, s, fun, functions, asNumber } = backend({
   ...config,
   async: true,
-  openRead: path => new InStream(fs.createReadStream(home() + path), `filein=${path}`),
-  openWrite: path => new OutStream(fs.createWriteStream(home() + path), `fileout=${path}`),
+  openRead: path => new InStream(fs.createReadStream(path), `filein=${path}`),
+  openWrite: path => new OutStream(fs.createWriteStream(path), `fileout=${path}`),
   isInStream: x => x instanceof InStream,
   isOutStream: x => x instanceof OutStream,
   stinput: new InStream(process.stdin, 'stinput'),
   stoutput: new OutStream(process.stdout, 'stoutput'),
   sterror: new OutStream(process.stderr, 'sterror')
 });
-const { evalKl, symbols, s, fun, functions, asNumber } = $;
-home = () => symbols['*home-directory*'];
 
 const { defuns, statements } = parseKernel();
 

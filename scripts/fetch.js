@@ -1,8 +1,8 @@
-const follow            = require('follow-redirects');
-const fs                = require('fs');
-const rimraf            = require('rimraf');
-const tar               = require('tar');
-const { kernelVersion } = require('./config');
+const follow                        = require('follow-redirects');
+const fs                            = require('fs');
+const rimraf                        = require('rimraf');
+const tar                           = require('tar');
+const { kernelVersion, kernelPath } = require('./config');
 
 const request = url => new Promise((resolve, reject) => {
   follow[url.startsWith('https:') ? 'https' : 'http'].get(url, r => {
@@ -20,17 +20,16 @@ const kernelFolderName = `ShenOSKernel-${kernelVersion}`;
 const kernelArchiveName = `${kernelFolderName}.tar.gz`;
 const kernelArchiveUrlBase = 'https://github.com/Shen-Language/shen-sources/releases/download';
 const kernelArchiveUrl = `${kernelArchiveUrlBase}/shen-${kernelVersion}/${kernelArchiveName}`;
-const targetFolderName = 'kernel';
 
 const fetch = async () => {
-  if (fs.existsSync(targetFolderName)) {
-    rimraf.sync(targetFolderName);
+  if (fs.existsSync(kernelPath)) {
+    rimraf.sync(kernelPath);
   }
 
   const data = await request(kernelArchiveUrl);
   fs.writeFileSync(kernelArchiveName, data);
   await tar.extract({ file: kernelArchiveName, unlink: true });
-  fs.renameSync(kernelFolderName, targetFolderName);
+  fs.renameSync(kernelFolderName, kernelPath);
   fs.unlinkSync(kernelArchiveName);
 };
 

@@ -1,6 +1,6 @@
 const fs                                      = require('fs');
 const { alt, createLanguage, regexp, string } = require('parsimmon');
-const { kernelFiles }                         = require('./config');
+const { klPath, klFiles, klExt }              = require('./config');
 
 const language = createLanguage({
   whitespace: _ => regexp(/\s*/m),
@@ -16,7 +16,7 @@ const parseForm = s => parseFile(s)[0];
 const parseKernel = () => {
   const defuns = [], statements = [];
 
-  kernelFiles.forEach(file => parseFile(fs.readFileSync(`./kernel/klambda/${file}.kl`, 'utf-8')).forEach(expr => {
+  klFiles.forEach(file => parseFile(fs.readFileSync(`${klPath}/${file}${klExt}`, 'utf-8')).forEach(expr => {
     if (Array.isArray(expr) && expr.length > 0) {
       (expr[0] === Symbol.for('defun') ? defuns : statements).push(expr);
     }

@@ -219,12 +219,6 @@ module.exports = (options = {}) => {
     mode === 'unix' ? clock() :
     mode === 'run'  ? clock() - startTime :
     raise(`get-time only accepts symbols unix or run, not ${mode}`);
-  const openRead  = options.openRead  || (() => raise('open(in) not supported'));
-  const openWrite = options.openWrite || (() => raise('open(out) not supported'));
-  const open = (path, mode) =>
-    mode === 'in'  ? openRead(path) :
-    mode === 'out' ? openWrite(path) :
-    raise(`open only accepts symbols in or out, not ${mode}`);
   const show = x =>
     x === null    ? '[]' :
     isString(x)   ? `"${x}"` :
@@ -286,6 +280,12 @@ module.exports = (options = {}) => {
     'pos':        (x, y) => ann('String', Call$f('pos',        [x, y].map(uncast)))
   };
   const valueOf = x => symbols.hasOwnProperty(x) ? symbols[x] : raise(`global "${x}" is not defined`);
+  const openRead  = options.openRead  || (() => raise('open(in) not supported'));
+  const openWrite = options.openWrite || (() => raise('open(out) not supported'));
+  const open = (path, mode) =>
+    mode === 'in'  ? openRead (asString(valueOf('*home-directory*')) + path) :
+    mode === 'out' ? openWrite(asString(valueOf('*home-directory*')) + path) :
+    raise(`open only accepts symbols in or out, not ${mode}`);
   const functions = {
     'if':        (b, x, y) => asJsBool(b) ? x : y,
     'and':          (x, y) => asShenBool(asJsBool(x) && asJsBool(y)),

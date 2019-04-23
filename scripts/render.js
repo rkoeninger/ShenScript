@@ -9,7 +9,7 @@ const {
 } = require('../src/ast');
 
 const { defuns, statements } = parseKernel();
-const { compile, s } = backend({ async });
+const { compile } = backend({ async });
 
 const syntax =
   generate(Program([Statement(Assign(
@@ -17,7 +17,7 @@ const syntax =
     Arrow(
       [RawIdentifier('$')],
       Block(
-        ...defuns.map(x => Statement(compile(x).expressions[0])),
+        ...defuns    .map(x => Statement(compile(x).expressions[0])),
         ...statements.map(x => Statement(compile(x))),
         Return(RawIdentifier('$'))),
       async)))]));
@@ -28,4 +28,4 @@ if (!fs.existsSync('./dist/')) {
   fs.mkdirSync('./dist/');
 }
 
-fs.writeFileSync(`./dist/kernel_${async ? 'async' : 'sync'}.js`, syntax, 'utf-8');
+fs.writeFileSync(`./dist/kernel.${async ? 'async' : 'sync'}.js`, syntax);

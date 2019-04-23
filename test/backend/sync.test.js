@@ -1,9 +1,8 @@
 const { equal, ok, throws } = require('assert');
-const { parse } = require('../../scripts/parser');
+const { parseForm } = require('../../scripts/parser');
 const backend = require('../../src/backend');
 const { cons, evalKl, f, s, settle, valueOf } = backend();
-const parse1 = s => parse(s)[0];
-const exec = s => settle(evalKl(parse1(s)));
+const exec = s => settle(evalKl(parseForm(s)));
 const values = [12, null, undefined, 'abc', s`asd`, 0, Infinity, [], cons(1, 2)];
 
 describe('sync', () => {
@@ -121,7 +120,7 @@ describe('sync', () => {
     });
     describe('tail recursion', () => {
       const countDown = body => {
-        evalKl([s`defun`, s`count-down`, [s`X`], parse1(body)]);
+        evalKl([s`defun`, s`count-down`, [s`X`], parseForm(body)]);
         ok(evalKl([s`count-down`, 20000]));
       };
       it('should be possible without overflow', () => {

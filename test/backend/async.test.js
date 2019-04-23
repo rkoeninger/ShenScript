@@ -1,9 +1,8 @@
 const { equal, ok } = require('assert'); // TODO: rejects does not exist?
-const { parse } = require('../../scripts/parser');
+const { parseForm } = require('../../scripts/parser');
 const backend = require('../../src/backend');
 const { cons, evalKl, f, future, s, valueOf } = backend({ async: true });
-const parse1 = s => parse(s)[0];
-const exec = s => future(evalKl(parse1(s)));
+const exec = s => future(evalKl(parseForm(s)));
 
 // TODO: shouldn't have to provide custom rejects function
 const rejects = p => new Promise((resolve, reject) =>
@@ -121,7 +120,7 @@ describe('async', () => {
     });
     describe('tail recursion', () => {
       const countDown = async body => {
-        await evalKl([s`defun`, s`count-down`, [s`X`], parse1(body)]);
+        await evalKl([s`defun`, s`count-down`, [s`X`], parseForm(body)]);
         ok(await evalKl([s`count-down`, 20000]));
       };
       it('should be possible without overflow', async () => {

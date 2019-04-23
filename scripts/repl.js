@@ -1,7 +1,7 @@
 const fs = require('fs');
 const { addAsyncFunctions } = require('awaitify-stream');
 const backend = require('../src/backend');
-const { parse } = require('../scripts/parser');
+const { parseKernel } = require('../scripts/parser');
 
 const InStream = class {
   constructor(stream, name) {
@@ -48,20 +48,7 @@ const $ = backend({
 const { evalKl, symbols, s, fun, functions, asNumber } = $;
 home = () => symbols['*home-directory*'];
 
-const files = [
-  'toplevel', 'core',   'sys',          'dict',  'sequent',
-  'yacc',     'reader', 'prolog',       'track', 'load',
-  'writer',   'macros', 'declarations', 'types', 't-star'
-];
-
-const defuns = [];
-const statements = [];
-
-files.forEach(file => parse(fs.readFileSync(`./kernel/klambda/${file}.kl`, 'utf-8')).forEach(expr => {
-  if (Array.isArray(expr) && expr.length > 0) {
-    (expr[0] === s`defun` ? defuns : statements).push(expr);
-  }
-}));
+const { defuns, statements } = parseKernel();
 
 const loadGroupAsync = async (name, exprs) => {
   const start = Date.now();

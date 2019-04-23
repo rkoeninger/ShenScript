@@ -6,23 +6,9 @@ const {
   generate
 } = require('../src/ast');
 const backend = require('../src/backend');
-const { parse } = require('./parser');
+const { parseKernel } = require('./parser');
 const { compile, s } = backend({ async });
-
-const files = [
-  'toplevel', 'core',   'sys',          'dict',  'sequent',
-  'yacc',     'reader', 'prolog',       'track', 'load',
-  'writer',   'macros', 'declarations', 'types', 't-star'
-];
-
-const defuns = [];
-const statements = [];
-
-files.forEach(file => parse(fs.readFileSync(`./kernel/klambda/${file}.kl`, 'utf-8')).forEach(expr => {
-  if (Array.isArray(expr) && expr.length > 0) {
-    (expr[0] === s`defun` ? defuns : statements).push(expr);
-  }
-}));
+const { defuns, statements } = parseKernel();
 
 const syntax =
   generate(Program([Statement(Assign(

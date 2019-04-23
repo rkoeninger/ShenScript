@@ -30,7 +30,7 @@ const OutStream = class {
   close() { return this.stream.close(); }
 };
 
-const { evalKl, symbols, s, fun, functions, asNumber } = backend({
+const { asNumber, evalKl, f, fun, s } = backend({
   ...config,
   async: true,
   openRead: path => new InStream(fs.createReadStream(path), `filein=${path}`),
@@ -62,6 +62,6 @@ const loadGroupAsync = async (name, exprs) => {
 (async () => {
   await loadGroupAsync('defuns', defuns);
   await loadGroupAsync('statements', statements);
-  functions['shen-script.exit'] = fun(X => process.exit(asNumber(X)));
+  f['shen-script.exit'] = fun(X => process.exit(asNumber(X)));
   await evalKl([s`shen.shen`]);
 })();

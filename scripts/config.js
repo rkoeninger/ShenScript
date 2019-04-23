@@ -11,5 +11,6 @@ module.exports = {
     'toplevel', 'core',   'sys',          'dict',  'sequent',
     'yacc',     'reader', 'prolog',       'track', 'load',
     'writer',   'macros', 'declarations', 'types', 't-star'
-  ]
+  ],
+  distPath: 'dist/'
 };

@@ -21,7 +21,7 @@ const OutStream = class {
   write(b) { return this.stream.write(String.fromCharCode(b)); }
 };
 
-const { evalKl, symbols, s } = backend({
+const { evalKl, s } = backend({
   ...config,
   async,
   openRead: path => new InStream(fs.readFileSync(path)),

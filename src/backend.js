@@ -336,7 +336,7 @@ module.exports = (options = {}) => {
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
     symbolOf, nameOf, valueOf, show, equal, raise, fun, bounce, settle, future, compile,
-    f: functions, s, b: bounce, t: settle, u: future
+    f: functions, s, b: bounce, t: settle, u: future, async: options.async
   };
   const Func = context.async ? AsyncFunction : Function;
   functions['eval-kl'] = fun($.evalKl = expr => Func('$', generate(Return(compile(valueToArrayTree(expr)))))($));

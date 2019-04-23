@@ -3,6 +3,7 @@ const { addAsyncFunctions } = require('awaitify-stream');
 const config                = require('./config.node');
 const backend               = require('../src/backend');
 const kernel                = require('../dist/kernel.async');
+const frontend              = require('../src/frontend.node');
 
 const InStream = class {
   constructor(stream, name) {
@@ -31,17 +32,16 @@ const OutStream = class {
 };
 
 (async () => {
-  const { asNumber, evalKl, f, fun, s } = await kernel(backend({
+  const { evalShen, s } = frontend(await kernel(backend({
     ...config,
     async: true,
     InStream,
     OutStream,
-    openRead: path => new InStream(fs.createReadStream(path), `filein=${path}`),
+    openRead:  path => new InStream(fs.createReadStream(path), `filein=${path}`),
     openWrite: path => new OutStream(fs.createWriteStream(path), `fileout=${path}`),
-    stinput: new InStream(process.stdin, 'stinput'),
+    stinput:  new InStream(process.stdin, 'stinput'),
     stoutput: new OutStream(process.stdout, 'stoutput'),
-    sterror: new OutStream(process.stderr, 'sterror')
-  }));
-  f['shen-script.exit'] = fun(X => process.exit(asNumber(X)));
-  await evalKl([s`shen.shen`]);
-})();
+    sterror:  new OutStream(process.stderr, 'sterror')
+  })));
+  await evalShen([s`shen.shen`]);
+})().then(console.log, console.error);

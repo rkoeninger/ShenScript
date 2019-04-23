@@ -24,6 +24,7 @@ const Member = (object, property) =>
   property.type === 'Literal' && validName(property.value)
     ? { type: 'MemberExpression', object, property: RawIdentifier(property.value) }
     : { type: 'MemberExpression', object, property, computed: property.type !== 'Identifier' };
+const New = (callee, args) => ({ type: 'NewExpression', callee, arguments: args });
 const Program = body => ({ type: 'Program', body });
 const RawIdentifier = name => ({ type: 'Identifier', name });
 const Return = argument => ({ type: 'ReturnStatement', argument });
@@ -39,7 +40,7 @@ const adorn = (tag, raw) => TaggedTemplate(tag, TemplateLiteral([TemplateElement
 const ann = (dataType, ast) => Object.assign(ast, { dataType });
 
 module.exports = {
-  Arrow, Assign, Await, Binary, Block, Call, Catch, Do, Identifier, If, Iife, Literal, Member, Program,
+  Arrow, Assign, Await, Binary, Block, Call, Catch, Do, Identifier, If, Iife, Literal, Member, New, Program,
   RawIdentifier, Return, Statement, TaggedTemplate, TemplateElement, TemplateLiteral, Try, Unary, Vector,
   adorn, ann, generate
 };

@@ -207,8 +207,8 @@ const build = (context, expr) =>
   raise('not a valid form');
 
 module.exports = (options = {}) => {
-  const isInStream  = options.isInStream  || (() => false);
-  const isOutStream = options.isOutStream || (() => false);
+  const isInStream  = options.isInStream  || (options.InStream  && (x => x instanceof options.InStream))  || (() => false);
+  const isOutStream = options.isOutStream || (options.OutStream && (x => x instanceof options.OutStream)) || (() => false);
   const asInStream  = x => isInStream(x)  ? x : raise('input stream expected');
   const asOutStream = x => isOutStream(x) ? x : raise('output stream expected');
   const isStream = x => isInStream(x) || isOutStream(x);

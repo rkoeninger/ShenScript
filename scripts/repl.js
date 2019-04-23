@@ -33,10 +33,10 @@ const OutStream = class {
 const { asNumber, evalKl, f, fun, s } = backend({
   ...config,
   async: true,
+  InStream,
+  OutStream,
   openRead: path => new InStream(fs.createReadStream(path), `filein=${path}`),
   openWrite: path => new OutStream(fs.createWriteStream(path), `fileout=${path}`),
-  isInStream: x => x instanceof InStream,
-  isOutStream: x => x instanceof OutStream,
   stinput: new InStream(process.stdin, 'stinput'),
   stoutput: new OutStream(process.stdout, 'stoutput'),
   sterror: new OutStream(process.stderr, 'sterror')

@@ -24,9 +24,9 @@ const OutStream = class {
 const { evalKl, s } = backend({
   ...config,
   async,
+  InStream,
+  OutStream,
   openRead: path => new InStream(fs.readFileSync(path)),
-  isInStream: x => x instanceof InStream,
-  isOutStream: x => x instanceof OutStream,
   stoutput: new OutStream(process.stdout),
   sterror:  new OutStream(process.stderr)
 });

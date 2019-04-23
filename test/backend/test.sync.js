@@ -1,4 +1,5 @@
 const { equal, ok, throws } = require('assert');
+const forEach               = require('mocha-each');
 const { parseForm }         = require('../../scripts/parser');
 const backend               = require('../../src/backend');
 
@@ -108,16 +109,16 @@ describe('sync', () => {
       });
     });
     describe('error-to-string', () => {
-      it('should raise error when given non-error', () => {
-        values.forEach(x => throws(() => f['error-to-string'](x)));
+      forEach(values).it('should raise error when given non-error', x => {
+        throws(() => f['error-to-string'](x));
       });
     });
   });
 
   describe('recursion', () => {
-    it('functions should be able to call themselves', () => {
+    forEach([[0, 1], [5, 120], [7, 5040]]).it('functions should be able to call themselves', (n, r) => {
       exec('(defun fac (N) (if (= 0 N) 1 (* N (fac (- N 1)))))');
-      [[0, 1], [5, 120], [7, 5040]].forEach(([n, r]) => equal(r, settle(f.fac(n))));
+      equal(r, settle(f.fac(n)));
     });
     describe('tail recursion', () => {
       const countDown = body => {

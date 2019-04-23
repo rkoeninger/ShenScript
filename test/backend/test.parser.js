@@ -1,34 +1,35 @@
 const { equal }     = require('assert');
+const forEach       = require('mocha-each');
 const { parseForm } = require('../../scripts/parser');
 
 const s = x => Symbol.for(typeof x === 'string' ? x : x[0]);
 
 describe('parsing', () => {
   describe('symbolic literals', () => {
-    it('should parse any non-whitespace, non-paren', () => {
-      ['abc', 'x\'{', '.<?/^'].forEach(x => equal(s(x), parseForm(x)));
+    forEach(['abc', 'x\'{', '.<?/^']).it('should parse any non-whitespace, non-paren', x => {
+      equal(s(x), parseForm(x));
     });
   });
   describe('string literals', () => {
     it('should parse empty strings', () => {
       equal('', parseForm('""'));
     });
-    it('should capture any whitespace', () => {
-      ['a\tb', 'a \n b', 'a   b', 'a\r\n\vb'].forEach(x => equal(x, parseForm(`"${x}"`)));
+    forEach(['a\tb', 'a \n b', 'a   b', 'a\r\n\vb']).it('should capture any whitespace', x => {
+      equal(x, parseForm(`"${x}"`));
     });
-    it('should capture all ascii characters', () => {
-      ['~!@#$%', '^&*()_+`\'<', '>,./?;:'].forEach(x => equal(x, parseForm(`"${x}"`)));
+    forEach(['~!@#$%', '^&*()_+`\'<', '>,./?;:']).it('should capture all ascii characters', x => {
+      equal(x, parseForm(`"${x}"`));
     });
   });
   describe('numberic literals', () => {
     it('should parse zero', () => {
       equal(0, parseForm('0'));
     });
-    it('should parse numbers', () => {
-      [[5, '5'], [287, '287'], [9456, '9456']].forEach(([n, x]) => equal(n, parseForm(x)));
+    forEach([[5, '5'], [287, '287'], [9456, '9456']]).it('should parse numbers', (n, x) => {
+      equal(n, parseForm(x));
     });
-    it('should parse negative numbers', () => {
-      [[-4, '-4'], [-143, '-143'], [-79, '-79']].forEach(([n, x]) => equal(n, parseForm(x)));
+    forEach([[-4, '-4'], [-143, '-143'], [-79, '-79']]).it('should parse negative numbers', (n, x) => {
+      equal(n, parseForm(x));
     });
   });
   describe('forms', () => {

@@ -16,6 +16,7 @@
   "devDependencies": {
     "follow-redirects": "^1.7.0",
     "mocha": "^5.2.0",
+    "mocha-each": "^1.2.0",
     "parsimmon": "^1.12.0",
     "rimraf": "^2.6.3",
     "tar": "^4.4.8"
@@ -28,8 +29,9 @@
     "test": "npm run test-backend -- --reporter dot",
     "fetch-kernel": "node scripts/fetch.js",
     "test-backend": "mocha test/backend/test.*.js",
-    "test-kernel": "node test/kernel/test.kernel.js",
     "render-kernel": "node scripts/render.js",
+    "test-kernel": "node test/kernel/test.kernel.js",
+    "test-frontend": "mocha test/frontend/test.*.js",
     "repl": "node scripts/repl.js",
     "bundle-kernel": "echo \"bundle-kernel not implemented\" && false"
   }

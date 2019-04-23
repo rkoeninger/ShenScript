@@ -1,106 +1,94 @@
 const { equal, ok, throws } = require('assert');
+const forEach               = require('mocha-each');
 const backend               = require('../../src/backend');
 
-const { asString, cons, isCons, evalKl, f, s, equal: eq } = backend();
+const { asString, cons, isCons, isString, evalKl, f, s, equal: eq } = backend();
 const isShenBool = x => x === s`true` || x === s`false`;
 const values = [12, null, undefined, 'abc', s`asd`, 0, Infinity, [], cons(1, 2)];
 
 describe('primitive', () => {
   describe('math', () => {
     describe('+', () => {
-      const add = f['+'];
-      it('should add numbers', () => {
-        equal(3,             add(1,           2));
-        equal(2150,          add(3400,        -1250));
-        equal(4024423313307, add(75848374834, 3948574938473));
+      forEach([[1, 2, 3], [3400, -1250, 2150], [4637436, 283484734, 288122170]]).it('should add numbers', (x, y, z) => {
+        equal(z, f['+'](x, y));
       });
-      it('should raise error for non-numbers', () => {
-        [[undefined, 55], [125, NaN], [-4, 'qwerty']].forEach(([x, y]) => throws(() => add(x, y)));
+      forEach([[undefined, 55], [125, NaN], [-4, 'qwerty']]).it('should raise error for non-numbers', () => {
+        throws(() => f['+'](x, y));
       });
     });
     describe('-', () => {
-      const sub = f['-'];
       it('should subtract numbers', () => {
-        equal(69, sub(142, 73));
+        equal(69, f['-'](142, 73));
       });
-      it('should raise error for non-numbers', () => {
-        [[undefined, 55], [125, NaN], [-4, 'qwerty']].forEach(([x, y]) => throws(() => sub(x, y)));
+      forEach([[undefined, 55], [125, NaN], [-4, 'qwerty']]).it('should raise error for non-numbers', (x, y) => {
+        throws(() => f['-'](x, y));
       });
     });
     describe('*', () => {
-      const mul = f['*'];
       it('should multiply numbers', () => {
-        equal(24, mul(4, 6));
+        equal(24, f['*'](4, 6));
       });
-      it('should raise error for non-numbers', () => {
-        [[undefined, 55], [125, NaN], [-4, 'qwerty']].forEach(([x, y]) => throws(() => mul(x, y)));
+      forEach([[undefined, 55], [125, NaN], [-4, 'qwerty']]).it('should raise error for non-numbers', (x, y) => {
+        throws(() => f['*'](x, y));
       });
-      it('should return zero when multiplying by zero', () => {
-        [34, -7, 449384736738485434.45945].forEach(x => equal(0, mul(0, x)));
+      forEach([34, -7, 449384736738485434.45945]).it('should return zero when multiplying by zero', x => {
+        equal(0, f['*'](0, x));
       });
     });
     describe('/', () => {
-      const div = f['/'];
       it('should divide numbers', () => {
-        equal(4, div(24, 6));
+        equal(4, f['/'](24, 6));
       });
-      it('should raise error for non-numbers', () => {
-        [[undefined, 55], [125, NaN], [-4, 'qwerty']].forEach(([x, y]) => throws(() => div(x, y)));
+      forEach([[undefined, 55], [125, NaN], [-4, 'qwerty']]).it('should raise error for non-numbers', (x, y) => {
+        throws(() => f['/'](x, y));
       });
-      it('should raise error when divisor is zero', () => {
-        [1, 0, -3].forEach(x => throws(() => div(x, 0)));
+      forEach([1, 0, -3]).it('should raise error when divisor is zero', x => {
+        throws(() => f['/'](x, 0));
       });
     });
-    describe('<, >, <=, >=, =', () => {
-      const ops = ['<', '>', '<=', '>=', '='].map(x => f[x]);
-      it('should return a Shen boolean', () => {
-        ops.forEach(op => {
-          [[3, 5], [0.0002, -123213], [-34, 234234]].forEach(([x, y]) => {
-            ok(isShenBool(op(x, y)));
-          });
-        });
+    forEach(['<', '>', '<=', '>=', '=']).describe('%s', op => {
+      forEach([[3, 5], [0.0002, -123213], [-34, 234234]]).it('should return a Shen boolean', (x, y) => {
+        ok(isShenBool(f[op](x, y)));
       });
     });
   });
 
   describe('strings', () => {
     describe('pos', () => {
-      it('should raise an error if index is out of range or not an integer', () => {
-        [-1, 3, 1.5, 'a', null].forEach(i => throws(() => f.pos('abc', i)));
+      forEach([-1, 3, 1.5, 'a', null]).it('should raise an error if index is out of range or not an integer', i => {
+        throws(() => f.pos('abc', i));
       });
     });
     describe('tlstr', () => {
-      it('should return all but first character of string', () => {
-        [['a', ''], ['12', '2'], ['#*%', '*%']].forEach(([x, y]) => equal(y, f.tlstr(x)));
+      forEach([['a', ''], ['12', '2'], ['#*%', '*%']]).it('should return all but first character of string', (x, y) => {
+        equal(y, f.tlstr(x));
       });
       it('should raise an error when given empty string', () => {
         throws(() => f.tlstr(''));
       });
     });
     describe('cn', () => {
-      it('should return non-empty argument when other is empty', () => {
-        ['', 'lorem ipsum', '&`#%^@*'].forEach(x => {
-          equal(x, f.cn('', x));
-          equal(x, f.cn(x, ''));
-        });
+      forEach(['', 'lorem ipsum', '&`#%^@*']).it('should return non-empty argument when other is empty', x => {
+        equal(x, f.cn('', x));
+        equal(x, f.cn(x, ''));
       });
     });
     describe('string->n', () => {
       it('should raise an error when given empty string', () => {
         throws(() => f['string->n'](''));
       });
-      it('should only return code point for first character', () => {
-        [[97, 'abc'], [63, '?12']].forEach(([n, x]) => equal(n, f['string->n'](x)));
+      forEach([[97, 'abc'], [63, '?12']]).it('should only return code point for first character', (n, x) => {
+        equal(n, f['string->n'](x));
       });
     });
     describe('n->string', () => {
-      it('should always return a string of length 1', () => {
-        [10, 45, 81, 76, 118].forEach(n => asString(f['n->string'](n)).length === 1);
+      forEach([10, 45, 81, 76, 118]).it('should always return a string of length 1', n => {
+        equal(1, asString(f['n->string'](n)).length);
       });
     });
     describe('str', () => {
-      it('should return a string for any argument', () => {
-        values.forEach(x => f.str(x));
+      forEach(values).it('should return a string for any argument', x => {
+        ok(isString(f.str(x)));
       });
     });
   });
@@ -136,24 +124,26 @@ describe('primitive', () => {
 
   describe('conses', () => {
     describe('cons', () => {
-      it('should accept values of any type', () => {
-        values.forEach(x => values.forEach(y => ok(isCons(f.cons(x, y)))));
+      forEach(values).describe('should accept values of any type', x => {
+        forEach(values).it('and any other type', y => {
+          ok(isCons(f.cons(x, y)));
+        });
       });
     });
     describe('hd', () => {
       it('should raise an error on empty list', () => {
         throws(() => f.hd(null));
       });
-      it('should retrieve head value of any cons', () => {
-        values.forEach(x => ok(eq(x, f.hd(f.cons(x, null)))));
+      forEach(values).it('should retrieve head value of any cons', x => {
+        ok(eq(x, f.hd(f.cons(x, null))));
       });
     });
     describe('tl', () => {
       it('should raise an error on empty list', () => {
         throws(() => f.tl(null));
       });
-      it('should retrieve head value of any cons', () => {
-        values.forEach(x => ok(eq(x, f.tl(f.cons(null, x)))));
+      forEach(values).it('should retrieve head value of any cons', x => {
+        ok(eq(x, f.tl(f.cons(null, x))));
       });
     });
   });
@@ -163,37 +153,35 @@ describe('primitive', () => {
       equal('hi', f['<-address'](f['address->'](f.absvector(16), 3, 'hi'), 3));
     });
     describe('absvector', () => {
-      it('should raise error when given non-positive-integer', () => {
-        [-1, 'a', null, undefined].forEach(n => throws(() => f.absvector(n)));
+      forEach([-1, 'a', null, undefined]).it('should raise error when given non-positive-integer', n => {
+        throws(() => f.absvector(n));
       });
-      it('should initialize all values to null', () => {
-        const a = f.absvector(5);
-        [0, 1, 2, 3, 4].forEach(i => equal(null, f['<-address'](a, i)));
+      forEach([0, 1, 2, 3, 4]).it('should initialize all values to null', i => {
+        equal(null, f['<-address'](f.absvector(5), i));
       });
     });
     describe('<-address', () => {
-      it('should raise error when given non-positive-integer', () => {
-        const a = f.absvector(5);
-        [-1, 'a', null, undefined].forEach(i => throws(() => f['<-address'](a, i)));
+      forEach([-1, 'a', null, undefined]).it('should raise error when given non-positive-integer', i => {
+        throws(() => f['<-address'](f.absvector(5), i));
       });
     });
     describe('address->', () => {
-      it('should raise error when given non-positive-integer', () => {
-        const a = f.absvector(5);
-        [-1, 'a', null, undefined].forEach(i => throws(() => f['address->'](a, i, null)));
+      forEach([-1, 'a', null, undefined]).it('should raise error when given non-positive-integer', i => {
+        throws(() => f['address->'](f.absvector(5), i, null));
       });
     });
     describe('absvector?', () => {
-      it('should return true for values returned by (absvector N)', () => {
-        [0, 12, 4835].forEach(n => equal(s`true`, f['absvector?'](f.absvector(n))));
+      forEach([0, 12, 4835]).it('should return true for values returned by (absvector N)', n => {
+        equal(s`true`, f['absvector?'](f.absvector(n)));
       });
     });
   });
 
   describe('recognisors', () => {
-    it('should return Shen booleans', () => {
-      const ops = ['cons?', 'number?', 'string?', 'absvector?'];
-      ops.forEach(op => values.forEach(x => ok(isShenBool(f[op](x)))));
+    forEach(['cons?', 'number?', 'string?', 'absvector?']).describe('%s', op => {
+      forEach(values).it('should return a Shen boolean', x => {
+        ok(isShenBool(f[op](x)));
+      });
     });
   });
 

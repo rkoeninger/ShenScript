@@ -1,4 +1,5 @@
 const { equal, ok, rejects } = require('assert');
+const forEach                = require('mocha-each');
 const { parseForm }          = require('../../scripts/parser');
 const backend                = require('../../src/backend');
 
@@ -104,11 +105,9 @@ describe('async', () => {
   });
 
   describe('recursion', () => {
-    it('functions should be able to call themselves', async () => {
+    forEach([[0, 1], [5, 120], [7, 5040]]).it('functions should be able to call themselves', async (n, r) => {
       await exec('(defun fac (N) (if (= 0 N) 1 (* N (fac (- N 1)))))');
-      equal(1,    await future(f.fac(0)));
-      equal(120,  await future(f.fac(5)));
-      equal(5040, await future(f.fac(7)));
+      equal(r, await future(f.fac(n)));
     });
     describe('tail recursion', () => {
       const countDown = async body => {

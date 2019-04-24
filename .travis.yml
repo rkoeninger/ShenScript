@@ -12,3 +12,4 @@ script:
   - npm run render-kernel async
   - npm run test-kernel && true # 1 test fails due to stack overflow in sync mode
   - npm run test-kernel async
+  - npm run test-frontend

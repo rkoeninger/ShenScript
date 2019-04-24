@@ -44,4 +44,4 @@ const OutStream = class {
     sterror:  new OutStream(process.stderr, 'sterror')
   })));
   await evalShen([s`shen.shen`]);
-})().then(console.log, console.error);
+})();

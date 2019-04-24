@@ -5,7 +5,7 @@ const kernel                 = require('../../dist/kernel.async');
 const frontend               = require('../../src/frontend');
 
 (async () => {
-  const { consFromArray, equal: eq, evalKl, exec, f, isArray, s, settle } = frontend(await kernel(backend({ async: true })));
+  const { caller, consFromArray, equal: eq, evalKl, exec, f, isArray, s, settle } = frontend(await kernel(backend({ async: true })));
 
   describe('async', () => {
     describe('interop', () => {
@@ -23,6 +23,12 @@ const frontend               = require('../../src/frontend');
         it('should work', async () => {
           equal(5, await exec('(+ 3 2)'));
           ok(eq(consFromArray([1, 2, 3]), await exec('[1 2 3]')));
+        });
+      });
+      describe('.', () => {
+        it('should bind property to object', async () => {
+          const dot = caller('.');
+          equal(3, await dot({ y: 3 }, s`y`));
         });
       });
     });

@@ -96,6 +96,7 @@ const equal = (x, y) =>
   || isArray(x)  && isArray(y)  && x.length === y.length && x.every((v, i) => equal(v, y[i]))
   || isObject(x) && isObject(y) && equalType(x, y)       && Object.keys(x).every(k => equal(x[k], y[k]));
 
+// TODO: use Function.bind for partial applications
 const funSync = (f, arity) =>
   (...args) =>
     args.length === arity ? f(...args) :

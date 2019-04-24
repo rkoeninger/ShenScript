@@ -4,7 +4,7 @@ const backend               = require('../../src/backend');
 const kernel                = require('../../dist/kernel.sync');
 const frontend              = require('../../src/frontend');
 
-const { consFromArray, equal: eq, evalKl, exec, f, isArray, s, settle } = frontend(kernel(backend()));
+const { caller, consFromArray, equal: eq, evalKl, exec, f, isArray, s, settle } = frontend(kernel(backend()));
 
 describe('sync', () => {
   describe('interop', () => {
@@ -22,6 +22,12 @@ describe('sync', () => {
       it('should work', () => {
         equal(5, exec('(+ 3 2)'));
         ok(eq(consFromArray([1, 2, 3]), exec('[1 2 3]')));
+      });
+    });
+    describe('.', () => {
+      it('should bind property to object', () => {
+        const dot = caller('.');
+        equal(3, dot({ y: 3 }, s`y`));
       });
     });
   });

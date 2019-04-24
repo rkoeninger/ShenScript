@@ -1,8 +1,7 @@
 const frontend = require('./frontend');
 
 module.exports = $ => {
-  $ = frontend($);
-  const { asNumber, f, fun } = $;
-  f['node.exit'] = fun(X => process.exit(asNumber(X)));
+  const { define } = $ = frontend($);
+  define('node.exit', x => process.exit(x));
   return $;
 };

@@ -3,8 +3,7 @@ const {
   Arrow, Assign, Await, Binary, Block, Call, Catch, Do, Identifier, If, Iife,
   Literal, Member, RawIdentifier, Return, Try, Unary, Vector
 } = require('./ast');
-
-const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
+const { AsyncFunction, produce, raise, s } = require('./utils');
 
 const Cons = class {
   constructor(head, tail) {
@@ -40,7 +39,6 @@ const Context = class {
 
 const nameOf     = Symbol.keyFor;
 const symbolOf   = Symbol.for;
-const s          = (x, y) => symbolOf(String.raw(x, y));
 const shenTrue   = s`true`;
 const shenFalse  = s`false`;
 const isObject   = x => typeof x === 'object' && x !== null;
@@ -75,13 +73,6 @@ const asJsBool   = x =>
   x === shenFalse ? false :
   raise('Shen boolean expected');
 
-const produce = (proceed, current, next, state, result = []) => {
-  for (; proceed(state); state = next(state)) {
-    result.push(current(state));
-  }
-  return result;
-};
-
 const cons             = (h, t) => new Cons(h, t);
 const consFromArray    = a => a.reduceRight((t, h) => cons(h, t), null);
 const consToArray      = c => produce(isCons, c => c.head, c => c.tail, c);
@@ -110,7 +101,6 @@ const funAsync = (f, arity) =>
 const fun = (f, arity = f.arity || f.length) =>
   Object.assign((f instanceof AsyncFunction ? funAsync : funSync)(f, arity), { arity });
 
-const raise = x => { throw new Error(x); };
 const bounce = (f, ...args) => new Trampoline(f, args);
 const settle = x => {
   while (x instanceof Trampoline) {

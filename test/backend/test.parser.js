@@ -1,13 +1,12 @@
 const { equal }     = require('assert');
 const forEach       = require('mocha-each');
+const { s }         = require('../../src/utils');
 const { parseForm } = require('../../scripts/parser');
-
-const s = x => Symbol.for(typeof x === 'string' ? x : x[0]);
 
 describe('parsing', () => {
   describe('symbolic literals', () => {
     forEach(['abc', 'x\'{', '.<?/^']).it('should parse any non-whitespace, non-paren', x => {
-      equal(s(x), parseForm(x));
+      equal(s`${x}`, parseForm(x));
     });
   });
   describe('string literals', () => {

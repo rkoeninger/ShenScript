@@ -231,7 +231,10 @@ module.exports = (options = {}) => {
     '*stinput*':        options.stinput        || (() => raise('standard input not supported')),
     '*stoutput*':       out                    || (() => raise('standard output not supported')),
     '*sterror*':        options.sterror || out || (() => raise('standard output not supported')),
-    '*home-directory*': options.homeDirectory  || ''
+    '*home-directory*': options.homeDirectory  || '',
+    'shen-script.*async*':               asShenBool(options.async),
+    'shen-script.*instream-supported*':  asShenBool(options.isInStream  || options.InStream),
+    'shen-script.*outstream-supported*': asShenBool(options.isOutStream || options.OutStream)
   };
   const atomicTypes = ['Number', 'String', 'Symbol', 'Stream', 'Null'];
   const primitives = {

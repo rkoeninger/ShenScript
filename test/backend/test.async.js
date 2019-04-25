@@ -1,7 +1,7 @@
 const { equal, ok, rejects } = require('assert');
 const forEach                = require('mocha-each');
 const { parseForm }          = require('../../scripts/parser');
-const backend                = require('../../src/backend');
+const backend                = require('../../lib/backend');
 
 const { cons, evalKl, f, future, s, valueOf } = backend({ async: true });
 const exec = s => future(evalKl(parseForm(s)));

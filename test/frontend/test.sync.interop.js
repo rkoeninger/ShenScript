@@ -1,8 +1,8 @@
 const { equal, ok, throws } = require('assert');
 const forEach               = require('mocha-each');
-const backend               = require('../../src/backend');
+const backend               = require('../../lib/backend');
 const kernel                = require('../../dist/kernel.sync');
-const frontend              = require('../../src/frontend');
+const frontend              = require('../../lib/frontend');
 
 describe('sync', () => {
   const $ = frontend(kernel(backend()));

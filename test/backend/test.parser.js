@@ -1,6 +1,6 @@
 const { equal }     = require('assert');
 const forEach       = require('mocha-each');
-const { s }         = require('../../src/utils');
+const { s }         = require('../../lib/utils');
 const { parseForm } = require('../../scripts/parser');
 
 describe('parsing', () => {

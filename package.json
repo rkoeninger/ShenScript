@@ -34,6 +34,7 @@
     "test-kernel": "node test/kernel/test.kernel.js",
     "test-frontend": "mocha test/frontend/test.*.js",
     "repl": "node scripts/repl.js",
-    "start": "parcel index.html"
+    "start": "parcel index.html",
+    "bundle": "parcel build index.html"
   }
 }

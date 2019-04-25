@@ -2,11 +2,11 @@ const async = process.argv.includes('async');
 
 const fs              = require('fs');
 const { parseKernel } = require('./parser');
-const backend         = require('../src/backend');
+const backend         = require('../lib/backend');
 const {
   Arrow, Assign, Block, Identifier, Member, Program, RawIdentifier, Return, Statement,
   generate
-} = require('../src/ast');
+} = require('../lib/ast');
 
 const { defuns, statements } = parseKernel();
 const { compile } = backend({ async });

@@ -1,7 +1,7 @@
 const { equal, ok, throws } = require('assert');
 const forEach               = require('mocha-each');
 const { parseForm }         = require('../../scripts/parser');
-const backend               = require('../../src/backend');
+const backend               = require('../../lib/backend');
 
 const { cons, evalKl, f, s, settle, valueOf } = backend();
 const exec = s => settle(evalKl(parseForm(s)));

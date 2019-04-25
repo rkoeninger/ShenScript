@@ -1,8 +1,8 @@
 const { equal, ok, rejects } = require('assert');
 const forEach                = require('mocha-each');
-const backend                = require('../../src/backend');
+const backend                = require('../../lib/backend');
 const kernel                 = require('../../dist/kernel.async');
-const frontend               = require('../../src/frontend');
+const frontend               = require('../../lib/frontend');
 
 describe('async', async () => {
   const $ = frontend(await kernel(backend({ async: true })));

@@ -17,7 +17,7 @@ const boundAccess = (x, name) => {
 };
 
 module.exports = $ => {
-  const { asCons, asSymbol, async, consToArray, f, fun, future, nameOf, primitives, settle } = $;
+  const { asCons, asSymbol, async, consToArray, f, fun, future, nameOf, primitives, raise, settle } = $;
   const run = async ? future : settle;
   const parse = source => run(f['read-from-string'](source));
   const caller = name => (...args) => run(f[name](...args));
@@ -31,12 +31,17 @@ module.exports = $ => {
     :       source => last(execEach(source));
   const inline = (name, fn) => primitives[name] = fn;
   define('js.new', (className, args) => new (top[nameOf(asSymbol(className))])(...consToArray(asCons(args))));
-  define('js.obj', pairs =>
-    consToArray(asCons(pairs)).reduce((obj, pair) => {
-      const [name, value] = consToArray(asCons(pair));
-      obj[name] = value;
-      return obj;
-    }, {}));
+  define('js.obj', values => {
+    const array = consToArray(asCons(values));
+    if (array.length % 2 !== 0) {
+      raise('js.obj must take an even-length key-value list');
+    }
+    const pairs = [];
+    for (let i = 0; i < array.length; i += 2) {
+      pairs.push(array.slice(i, i + 2));
+    }
+    return pairs.reduce((obj, [name, value]) => (obj[name] = value, obj), {});
+  });
   const dot = (object, property) => boundAccess(object, nameOf(asSymbol(property)));
   define('.', dot);
   define('..', (object, properties) => consToArray(properties).reduce(dot, object));

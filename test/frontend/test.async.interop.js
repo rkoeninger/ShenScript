@@ -5,7 +5,8 @@ const kernel                 = require('../../dist/kernel.async');
 const frontend               = require('../../src/frontend');
 
 (async () => {
-  const { caller, consFromArray, equal: eq, evalKl, exec, f, isArray, s, settle } = frontend(await kernel(backend({ async: true })));
+  const $ = frontend(await kernel(backend({ async: true })));
+  const { caller, consFromArray, equate, evalKl, exec, f, isArray, s, settle } = $;
 
   describe('async', () => {
     describe('interop', () => {
@@ -16,13 +17,13 @@ const frontend               = require('../../src/frontend');
       });
       describe('js.obj', () => {
         it('should construct js object from series of key-value pairs', async () => {
-          ok(eq({ a: 1, b: 2 }, await exec('(js.obj [["a" 1] ["b" 2]])')));
+          ok(equate({ a: 1, b: 2 }, await exec('(js.obj ["a" 1 "b" 2])')));
         });
       });
       describe('exec', () => {
         it('should work', async () => {
           equal(5, await exec('(+ 3 2)'));
-          ok(eq(consFromArray([1, 2, 3]), await exec('[1 2 3]')));
+          ok(equate(consFromArray([1, 2, 3]), await exec('[1 2 3]')));
         });
       });
       describe('.', () => {

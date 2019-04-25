@@ -2,7 +2,7 @@ const { equal, ok, throws } = require('assert');
 const forEach               = require('mocha-each');
 const backend               = require('../../src/backend');
 
-const { asString, cons, isCons, isString, evalKl, f, s, equal: eq } = backend();
+const { asString, cons, isCons, isString, evalKl, f, s, equate } = backend();
 const isShenBool = x => x === s`true` || x === s`false`;
 const values = [12, null, undefined, 'abc', s`asd`, 0, Infinity, [], cons(1, 2)];
 
@@ -135,7 +135,7 @@ describe('primitive', () => {
         throws(() => f.hd(null));
       });
       forEach(values).it('should retrieve head value of any cons', x => {
-        ok(eq(x, f.hd(f.cons(x, null))));
+        ok(equate(x, f.hd(f.cons(x, null))));
       });
     });
     describe('tl', () => {
@@ -143,7 +143,7 @@ describe('primitive', () => {
         throws(() => f.tl(null));
       });
       forEach(values).it('should retrieve head value of any cons', x => {
-        ok(eq(x, f.tl(f.cons(null, x))));
+        ok(equate(x, f.tl(f.cons(null, x))));
       });
     });
   });
@@ -196,22 +196,22 @@ describe('primitive', () => {
     });
     describe('equal', () => {
       it('should handle Infinity', () => {
-        ok(eq(Infinity, Infinity));
-        ok(eq(-Infinity, -Infinity));
-        ok(!eq(-Infinity, Infinity));
+        ok(equate(Infinity, Infinity));
+        ok(equate(-Infinity, -Infinity));
+        ok(!equate(-Infinity, Infinity));
       });
       it('should compare functions based on reference equality', () => {
         const f = evalKl([s`lambda`, s`X`, 0]);
         const g = evalKl([s`lambda`, s`X`, 0]);
-        ok(eq(f, f));
-        ok(!eq(f, g));
+        ok(equate(f, f));
+        ok(!equate(f, g));
       });
       it('should be able to compare objects', () => {
-        ok(eq({}, {}));
-        ok(!eq({}, null));
-        ok(eq({ a: 45, b: s`sym` }, { a: 45, b: s`sym` }));
-        ok(eq({ ['key']: [{ a: 'abc', b: false }] }, { ['key']: [{ a: 'abc', b: false }] }));
-        ok(!eq({ ['key']: [{ a: 'abc', b: false }] }, { ['key']: [{ a: 'abc', b: null }] }));
+        ok(equate({}, {}));
+        ok(!equate({}, null));
+        ok(equate({ a: 45, b: s`sym` }, { a: 45, b: s`sym` }));
+        ok(equate({ ['key']: [{ a: 'abc', b: false }] }, { ['key']: [{ a: 'abc', b: false }] }));
+        ok(!equate({ ['key']: [{ a: 'abc', b: false }] }, { ['key']: [{ a: 'abc', b: null }] }));
       });
     });
   });

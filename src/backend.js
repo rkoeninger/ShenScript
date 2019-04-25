@@ -89,12 +89,12 @@ const consToArrayTree  = c => consToArray(c).map(valueToArrayTree);
 const valueToArray     = x => isCons(x) ? consToArray(x)     : x === null ? [] : x;
 const valueToArrayTree = x => isCons(x) ? consToArrayTree(x) : x === null ? [] : x;
 
-const equalType = (x, y) => x.constructor === y.constructor && equal(Object.keys(x), Object.keys(y));
-const equal = (x, y) =>
+const equateType = (x, y) => x.constructor === y.constructor && equate(Object.keys(x), Object.keys(y));
+const equate = (x, y) =>
   x === y
-  || isCons(x)   && isCons(y)   && equal(x.head, y.head) && equal(x.tail, y.tail)
-  || isArray(x)  && isArray(y)  && x.length === y.length && x.every((v, i) => equal(v, y[i]))
-  || isObject(x) && isObject(y) && equalType(x, y)       && Object.keys(x).every(k => equal(x[k], y[k]));
+  || isCons(x)   && isCons(y)   && equate(x.head, y.head) && equate(x.tail, y.tail)
+  || isArray(x)  && isArray(y)  && x.length === y.length  && x.every((v, i) => equate(v, y[i]))
+  || isObject(x) && isObject(y) && equateType(x, y)       && Object.keys(x).every(k => equate(x[k], y[k]));
 
 // TODO: use Function.bind for partial applications
 const funSync = (f, arity) =>
@@ -248,7 +248,7 @@ module.exports = (options = {}) => {
     '=': (x, y) =>
       atomicTypes.includes(x.dataType) || atomicTypes.includes(y.dataType)
         ? ann('JsBool', Binary('===', ...[x, y].map(uncast)))
-        : ann('JsBool', Call$('equal',   [x, y].map(uncast))),
+        : ann('JsBool', Call$('equate',   [x, y].map(uncast))),
     'not':             x => ann('JsBool', Unary('!', cast('JsBool', x))),
     'and':        (x, y) => ann('JsBool', Binary('&&', cast('JsBool', x), cast('JsBool', y))),
     'or':         (x, y) => ann('JsBool', Binary('||', cast('JsBool', x), cast('JsBool', y))),
@@ -319,7 +319,7 @@ module.exports = (options = {}) => {
     '<':            (x, y) => asShenBool(asNumber(x) <  asNumber(y)),
     '>=':           (x, y) => asShenBool(asNumber(x) >= asNumber(y)),
     '<=':           (x, y) => asShenBool(asNumber(x) <= asNumber(y)),
-    '=':            (x, y) => asShenBool(equal(x, y)),
+    '=':            (x, y) => asShenBool(equate(x, y)),
     'intern':            x => symbolOf(asString(x)),
     'get-time':          x => getTime(nameOf(asSymbol(x))),
     'simple-error':      x => raise(asString(x)),
@@ -336,7 +336,7 @@ module.exports = (options = {}) => {
     asJsBool, asShenBool, asNzNumber, asNeString, symbols, primitives, functions,
     isStream, isInStream, isOutStream, isNumber, isString, isSymbol, isCons, isArray, isError, isFunction,
     asStream, asInStream, asOutStream, asNumber, asString, asSymbol, asCons, asArray, asError, asFunction,
-    symbolOf, nameOf, valueOf, show, equal, raise, fun, bounce, settle, future, compile,
+    symbolOf, nameOf, valueOf, show, equate, raise, fun, bounce, settle, future, compile,
     f: functions, s, b: bounce, t: settle, u: future, async: options.async
   };
   const Func = context.async ? AsyncFunction : Function;

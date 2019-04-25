@@ -1,3 +1,4 @@
-/dist/
-/kernel/
-node_modules/
+/kernel
+dist
+node_modules
+.cache

@@ -17,6 +17,7 @@
     "follow-redirects": "^1.7.0",
     "mocha": "^5.2.0",
     "mocha-each": "^1.2.0",
+    "parcel": "^1.12.3",
     "parsimmon": "^1.12.0",
     "rimraf": "^2.6.3",
     "tar": "^4.4.8"
@@ -33,6 +34,6 @@
     "test-kernel": "node test/kernel/test.kernel.js",
     "test-frontend": "mocha test/frontend/test.*.js",
     "repl": "node scripts/repl.js",
-    "bundle-kernel": "echo \"bundle-kernel not implemented\" && false"
+    "start": "parcel index.html"
   }
 }

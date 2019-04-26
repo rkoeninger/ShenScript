@@ -1,7 +1,14 @@
+const { top }  = require('./lib/utils');
 const backend  = require('./lib/backend');
-const kernel   = require('./dist/kernel.async');
+const kernel   = require('./dist/kernel.sync');
 const frontend = require('./lib/frontend.web');
 
-const shen = async (options = {}) => frontend(await kernel(backend(options)));
+const options = {
 
-module.exports = { shen };
+};
+
+(async () => {
+  console.log('creating shen environment...');
+  top.shen = frontend(await kernel(backend(options)));
+  console.log('environment created.');
+})();

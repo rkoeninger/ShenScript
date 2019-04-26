@@ -4,9 +4,10 @@ const backend               = require('../../lib/backend');
 const kernel                = require('../../dist/kernel.sync');
 const frontend              = require('../../lib/frontend');
 
+const $ = frontend(kernel(backend()));
+const { caller, consFromArray, equate, evalKl, exec, f, isArray, s, settle } = $;
+
 describe('sync', () => {
-  const $ = frontend(kernel(backend()));
-  const { caller, consFromArray, equate, evalKl, exec, f, isArray, s, settle } = $;
   describe('interop', () => {
     describe('js.new', () => {
       it('should be able to construct globally referrable constructors', () => {

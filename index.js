@@ -1,5 +1,5 @@
 const { top }  = require('./lib/utils');
-const config   = require('./scripts/config.web');
+const config   = require('./lib/config.web');
 const backend  = require('./lib/backend');
 const kernel   = require('./dist/kernel.sync');
 const frontend = require('./lib/frontend.web');

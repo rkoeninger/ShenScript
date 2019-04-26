@@ -1,6 +1,6 @@
 const fs                                      = require('fs');
 const { alt, createLanguage, regexp, string } = require('parsimmon');
-const { klPath, klFiles, klExt }              = require('./config');
+const { klPath, klFiles, klExt }              = require('../lib/config');
 
 const language = createLanguage({
   whitespace: _ => regexp(/\s*/m),

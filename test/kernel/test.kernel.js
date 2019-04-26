@@ -1,8 +1,8 @@
 const async = process.argv.includes('async');
 
 const fs      = require('fs');
+const config  = require('../../lib/config.node');
 const backend = require('../../lib/backend');
-const config  = require('../../scripts/config.node');
 const kernel  = require(`../../dist/kernel.${async ? 'async' : 'sync'}`);
 
 const InStream = class {

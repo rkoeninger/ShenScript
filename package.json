@@ -18,7 +18,6 @@
     "http-server": "^0.11.1",
     "mocha": "^5.2.0",
     "mocha-each": "^1.2.0",
-    "parcel": "^1.12.3",
     "parsimmon": "^1.12.0",
     "rimraf": "^2.6.3",
     "tar": "^4.4.8"

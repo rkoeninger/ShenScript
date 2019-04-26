@@ -27,8 +27,13 @@ const frontend               = require('../../lib/frontend');
         });
       });
       describe('.', () => {
-        it('should bind property to object', async () => {
-          equal(3, await caller('.')({ y: 3 }, s`y`));
+        it('should access property on object', async () => {
+          equal(3, await caller('.')({ y: 3 }, 'y'));
+        });
+      });
+      describe('..', () => {
+        it('should access chain of properties on object', async () => {
+          equal(3, await exec('(.. (js.obj ["x" (js.obj ["y" (js.obj ["z" 3])])]) ["x" "y" "z"])'));
         });
       });
     });

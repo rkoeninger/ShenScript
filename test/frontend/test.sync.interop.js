@@ -26,8 +26,13 @@ describe('sync', () => {
       });
     });
     describe('.', () => {
-      it('should bind property to object', () => {
-        equal(3, caller('.')({ y: 3 }, s`y`));
+      it('should access property on object', () => {
+        equal(3, caller('.')({ y: 3 }, 'y'));
+      });
+    });
+    describe('..', () => {
+      it('should access chain of properties on object', () => {
+        equal(3, exec('(.. (js.obj ["x" (js.obj ["y" (js.obj ["z" 3])])]) ["x" "y" "z"])'));
       });
     });
   });

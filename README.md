@@ -3,7 +3,7 @@
 
 # Shen for JavaScript
 
-An implementation of the [Shen Language](http://www.shenlanguage.org) by [Mark Tarver](http://marktarver.com/) for JavaScript. Built for modern browsers using the [latest features](https://github.com/lukehoban/es6features) of the ES6 standard.
+An implementation of the [Shen Language](http://www.shenlanguage.org) by [Mark Tarver](http://marktarver.com/) for JavaScript. Built for modern browsers and recent versions of Node, requiring the [latest features](https://github.com/lukehoban/es6features) of the ECMAScript standard.
 
 ## Project State
 
@@ -16,7 +16,7 @@ Despite being only 90% of the way to completion, I think ShenScript can still be
 ## Project Goals
 
   * Generate straight-forward JavaScript that is as idiomatic as possible.
-  * Make the most use of ES6 features.
+  * Make the most use of ES6+ features.
   * Render a small npm release package (current minified bundle is about \~570KB).
   * Make interop with JavaScript easy, especially in the browser.
   * Make REPL work in node.
@@ -29,22 +29,8 @@ Requires recent version (10+) of [Node](https://nodejs.org/en/download/).
 
 ## Building and Testing
 
-Run `npm install` to download all dependencies.
-
-The primitive backend environment can be tested with `npm run test-backend`.
-
-The Shen kernel sources can be retrieved with `npm run fetch`. Shen Kernel version can be updated in `fetch.js`.
-
-Running `npm run test-kernel` will load the kernel sources and run the kernel test suite. Passing `async` will generate async code for the kernel.
-
-Running `npm run render` will render the KL files to JavaScript and output `dist/kernel_sync.js` or `dist/kernel_async.js` based on optional `async` argument.
-
-`dist/shenscript.js` bundle can be built with `npm run bundle`.
+Refer to [`.travis.yml`](.travis.yml) for typical build/test process. `test-*` commands are optional.
 
 ## Running
 
-TODO: update this
-
-`index.html` contains a basic KL/Shen test bed. There, one can experiment with parsing, translating and running Shen code. It will not be able to mount files to the virtual file system unless it is loaded through a web server like `http-server`.
-
-`dist/bundle.js` must be built for `index.html` to work.
+Run `npm start` to host a simple demo page.

@@ -5,6 +5,20 @@
 
 An implementation of the [Shen Language](http://www.shenlanguage.org) by [Mark Tarver](http://marktarver.com/) for JavaScript. Built for modern browsers and recent versions of Node, requiring the [latest features](https://github.com/lukehoban/es6features) of the ECMAScript standard.
 
+## Features
+
+  * Allows integration with arbitrary I/O.
+  * Async operations are transparent to executed Shen code.
+  * Easy interop: JS can be called from Shen, Shen can be called from JS.
+  * REPL works on command line in Node.js.
+  * Fairly small deployable (current gzipped bundle is \~100kb).
+
+Still in progress:
+
+  * Speed up web load time (currently 30-60s). Pre-generate environment state (?).
+  * Pre-supply async I/O primitives.
+  * Smaller deployable package (?).
+
 ## Project State
 
 This implementation is not complete. It can almost run the Shen test suite, but fails on some of the more intensive tests with a stack overflow. ShenScript uses trampolines for tail recursion, but it's still not enough. Only Safari has implemented tail calls natively at this point. ShenScript also can't simulate synchronous I/O, which the `read-byte` primitive is designed for. So the built-in `(shen)` REPL won't work.
@@ -13,19 +27,9 @@ ShenScript was an attempt to improve on the existing [shen-js](https://github.co
 
 Despite being only 90% of the way to completion, I think ShenScript can still be useful so long as you don't want to run the REPL or your computation doesn't push the limits of recursion or performance. Typical JS development should be doable, but only beta testing will show for sure.
 
-## Project Goals
-
-  * Generate straight-forward JavaScript that is as idiomatic as possible.
-  * Make the most use of ES6+ features.
-  * Render a small npm release package (current minified bundle is about \~570KB).
-  * Make interop with JavaScript easy, especially in the browser.
-  * Make REPL work in node.
-  * Try running environment for REPL in service worker in browser.
-  * Implemented async I/O in a way that is transparent to executed Shen code.
-
 ## Prerequisites
 
-Requires recent version (10+) of [Node](https://nodejs.org/en/download/).
+Requires recent version (10+) of [Node.js and npm](https://nodejs.org/en/download/).
 
 ## Building and Testing
 

@@ -1,11 +1,10 @@
-const { equal, ok, throws } = require('assert');
-const forEach               = require('mocha-each');
-const backend               = require('../../lib/backend');
-const kernel                = require('../../dist/kernel.sync');
-const frontend              = require('../../lib/frontend');
+const { equal, ok } = require('assert');
+const backend       = require('../../lib/backend');
+const kernel        = require('../../dist/kernel.sync');
+const frontend      = require('../../lib/frontend');
 
 const $ = frontend(kernel(backend()));
-const { caller, consFromArray, equate, evalKl, exec, f, isArray, s, settle } = $;
+const { caller, consFromArray, equate, exec, isArray } = $;
 
 describe('sync', () => {
   describe('interop', () => {

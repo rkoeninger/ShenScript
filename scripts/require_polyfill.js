@@ -22,7 +22,7 @@ function normalizeArray(parts, allowAboveRoot) {
   }
 
   return parts;
-};
+}
 
 function pathNormalize(path) {
   var isAbsolute = path.charAt(0) === '/';
@@ -41,7 +41,7 @@ function pathNormalize(path) {
   }
 
   return (isAbsolute ? '/' : '') + path;
-};
+}
 
 var globalEval = eval;
 var currentScript = document.currentScript;
@@ -127,6 +127,6 @@ ${request.responseText}
 return module.exports})\n//@ sourceURL=${scriptPath}`;
   var module = {exports: {}};
   return globalEval(moduleText)(module, module.exports, modulesCache, packageJsonMainCache, nodeModulesDir);
-};
+}
 
 loadScript(currentScript.dataset.main)

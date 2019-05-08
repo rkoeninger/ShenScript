@@ -14,6 +14,7 @@
   },
   "homepage": "https://github.com/rkoeninger/ShenScript",
   "devDependencies": {
+    "eslint": "^5.16.0",
     "follow-redirects": "^1.7.0",
     "http-server": "^0.11.1",
     "mocha": "^5.2.0",
@@ -27,6 +28,7 @@
     "awaitify-stream": "^1.0.2"
   },
   "scripts": {
+    "lint": "eslint index.js lib/**/*.js scripts/**/*.js test/**/*.js",
     "test": "npm run test-backend -- --reporter dot",
     "fetch-kernel": "node scripts/fetch.js",
     "test-backend": "mocha test/backend/test.*.js",

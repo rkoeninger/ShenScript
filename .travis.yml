@@ -6,6 +6,7 @@ node_js:
 install:
   - npm install
 script:
+  - npm run lint && true # informational only, ignore errors
   - npm run test-backend
   - npm run fetch-kernel
   - npm run render-kernel

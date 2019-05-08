@@ -1,12 +1,11 @@
-const { equal, ok, rejects } = require('assert');
-const forEach                = require('mocha-each');
-const backend                = require('../../lib/backend');
-const kernel                 = require('../../dist/kernel.async');
-const frontend               = require('../../lib/frontend');
+const { equal, ok } = require('assert');
+const backend       = require('../../lib/backend');
+const kernel        = require('../../dist/kernel.async');
+const frontend      = require('../../lib/frontend');
 
 (async () => {
   const $ = frontend(await kernel(backend({ async: true })));
-  const { caller, consFromArray, equate, evalKl, exec, f, isArray, s, settle } = $;
+  const { caller, consFromArray, equate, exec, isArray } = $;
 
   describe('async', () => {
     describe('interop', () => {

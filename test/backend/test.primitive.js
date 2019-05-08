@@ -12,7 +12,7 @@ describe('primitive', () => {
       forEach([[1, 2, 3], [3400, -1250, 2150], [4637436, 283484734, 288122170]]).it('should add numbers', (x, y, z) => {
         equal(z, f['+'](x, y));
       });
-      forEach([[undefined, 55], [125, NaN], [-4, 'qwerty']]).it('should raise error for non-numbers', () => {
+      forEach([[undefined, 55], [125, NaN], [-4, 'qwerty']]).it('should raise error for non-numbers', (x, y) => {
         throws(() => f['+'](x, y));
       });
     });

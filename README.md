@@ -34,4 +34,4 @@ Run `npm start` to host a simple demo page.
 
 ## Prior Art
 
-This library is attempt to improve on the existing [shen-js](https://github.com/gravicappa/shen-js) project by [Ramil Farkhshatov](https://github.com/gravicappa). shen-js implements its own KLVM on top of JS, allowing it to handle deep recursion without stack overflow and simulate synchronous I/O. It outputs in a large deployable (\~12MB uncompressed). ShenScript is intended to instead be a lighter-weight solution making better use of newer JS features and output a smaller deployable.
+This library is attempt to improve on the existing [shen-js](https://github.com/gravicappa/shen-js) project by [Ramil Farkhshatov](https://github.com/gravicappa). shen-js implements its own KLVM on top of JS, allowing it to handle deep recursion without stack overflow and simulate synchronous I/O. It outputs in a large deployable (\~12MB uncompressed). ShenScript is intended to instead be a lighter-weight solution built on more recent JS features and output a smaller deployable.

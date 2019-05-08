@@ -11,7 +11,7 @@ An implementation of the [Shen Language](http://www.shenlanguage.org) by [Mark T
   * Async operations are transparent to executed Shen code.
   * Easy interop: JS can be called from Shen, Shen can be called from JS.
   * REPL works on command line in Node.js.
-  * Fairly small deployable (current gzipped bundle is \~100kb).
+  * Fairly small deployable (\~100KB uncompressed).
 
 Still in progress:
 
@@ -19,14 +19,6 @@ Still in progress:
   * Speed up web load time (currently 30-60s). Pre-generate environment state (?).
   * Pre-supply async I/O primitives.
   * Smaller deployable package (?).
-
-## Prior Art
-
-This library is attempt to improve on the existing [shen-js](https://github.com/gravicappa/shen-js) project by [Ramil Farkhshatov](https://github.com/gravicappa). shen-js implements its own KLVM on top of JS, allowing it to handle deep recursion without stack overflow and simulate synchronous I/O.
-
-> more complicated, generates inscrutible code and outputs a large .js file (\~12MB uncompressed). On the other hand, shen-js actually works.
-
-> Despite being only 90% of the way to completion, I think ShenScript can still be useful so long as you don't want to run the REPL or your computation doesn't push the limits of recursion or performance. Typical JS development should be doable, but only beta testing will show for sure.
 
 ## Prerequisites
 
@@ -39,3 +31,7 @@ Refer to [`.travis.yml`](.travis.yml) for typical build/test process. `test-*` c
 ## Running
 
 Run `npm start` to host a simple demo page.
+
+## Prior Art
+
+This library is attempt to improve on the existing [shen-js](https://github.com/gravicappa/shen-js) project by [Ramil Farkhshatov](https://github.com/gravicappa). shen-js implements its own KLVM on top of JS, allowing it to handle deep recursion without stack overflow and simulate synchronous I/O. It outputs in a large deployable (\~12MB uncompressed). ShenScript is intended to instead be a lighter-weight solution making better use of newer JS features and output a smaller deployable.

@@ -7,19 +7,16 @@
     "mocha": true
   },
   "extends": "eslint:recommended",
-  "globals": {
-    "Atomics": "readonly",
-    "SharedArrayBuffer": "readonly"
-  },
   "parserOptions": {
     "ecmaVersion": 2018
   },
   "rules": {
+    "no-console": "off",
     "no-unused-vars": [
       "error", {
-        "argsIgnorePattern": "_",
-        "caughtErrorsIgnorePattern": "_",
-        "varsIgnorePattern": "_"
+        "argsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
       }
     ]
   }

@@ -1,3 +1,5 @@
+// Taken from https://github.com/chenglou/require-polyfill
+
 function normalizeArray(parts, allowAboveRoot) {
   // if the path tries to go above the root, `up` ends up > 0
   var up = 0;
@@ -24,7 +26,7 @@ function normalizeArray(parts, allowAboveRoot) {
   return parts;
 }
 
-function pathNormalize(path) {
+function _pathNormalize(path) {
   var isAbsolute = path.charAt(0) === '/';
   var trailingSlash = path.substr(-1) === '/';
 
@@ -54,7 +56,7 @@ var nodeModulesDir = projectRoot + '/node_modules/';
 var modulesCache = {};
 var packageJsonMainCache = {};
 
-var ensureEndsWithJs = function(path) {
+var _ensureEndsWithJs = function(path) {
   if (path.endsWith('.js')) {
     return path;
   } else {
@@ -76,10 +78,10 @@ function loadScript(scriptPath) {
     var resolvedPath;
     if (path.startsWith('.')) {
       // require('./foo/bar')
-      resolvedPath = ensureEndsWithJs(__dirname + path);
+      resolvedPath = _ensureEndsWithJs(__dirname + path);
     } else if (path.indexOf('/') === -1) {
       // require('react')
-      var packageJson = pathNormalize(nodeModulesDir + path + '/package.json');
+      var packageJson = _pathNormalize(nodeModulesDir + path + '/package.json');
       if (packageJsonMainCache[packageJson] == null) {
         var jsonRequest = new XMLHttpRequest();
         jsonRequest.open("GET", packageJson, false);
@@ -98,9 +100,9 @@ function loadScript(scriptPath) {
       resolvedPath = packageJsonMainCache[packageJson];
     } else {
       // require('react/bar')
-      resolvedPath = ensureEndsWithJs(nodeModulesDir + path);
+      resolvedPath = _ensureEndsWithJs(nodeModulesDir + path);
     };
-    resolvedPath = pathNormalize(resolvedPath);
+    resolvedPath = _pathNormalize(resolvedPath);
     if (modulesCache[resolvedPath] != null) {
       return modulesCache[resolvedPath];
     };
@@ -129,4 +131,4 @@ return module.exports})\n//@ sourceURL=${scriptPath}`;
   return globalEval(moduleText)(module, module.exports, modulesCache, packageJsonMainCache, nodeModulesDir);
 }
 
-loadScript(currentScript.dataset.main)
+loadScript(currentScript.dataset.main);

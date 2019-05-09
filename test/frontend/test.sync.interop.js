@@ -17,6 +17,9 @@ describe('sync', () => {
       it('should construct js object from series of key-value pairs', () => {
         ok(equate({ a: 1, b: 2 }, exec('(js.new-obj ["a" 1 "b" 2])')));
       });
+      it('should work with ({ ... }) macro', () => {
+        ok(equate({ a: 1, b: 2 }, exec('({ "a" 1 "b" 2 })')));
+      });
     });
     describe('exec', () => {
       it('should work', () => {

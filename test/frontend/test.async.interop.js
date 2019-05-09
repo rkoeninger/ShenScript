@@ -18,6 +18,9 @@ const frontend      = require('../../lib/frontend');
         it('should construct js object from series of key-value pairs', async () => {
           ok(equate({ a: 1, b: 2 }, await exec('(js.new-obj ["a" 1 "b" 2])')));
         });
+        it('should work with ({ ... }) macro', async () => {
+          ok(equate({ a: 1, b: 2 }, await exec('({ "a" 1 "b" 2 })')));
+        });
       });
       describe('exec', () => {
         it('should work', async () => {

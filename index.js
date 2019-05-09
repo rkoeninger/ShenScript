@@ -1,6 +1,5 @@
 const async = true;
 
-const { top }  = require('./lib/utils');
 const config   = require('./lib/config.web');
 const backend  = require('./lib/backend');
 const kernel   = require(`./dist/kernel.${async ? 'async' : 'sync'}`);
@@ -12,7 +11,7 @@ const options = { ...config, async };
   try {
     const start = new Date().getTime();
     console.log('creating shen environment...');
-    top.shen = frontend(await kernel(backend(options)));
+    window.shen = frontend(await kernel(backend(options)));
     const end = new Date().getTime();
     console.log(`environment created in ${end - start}ms.`);
   } catch (e) {

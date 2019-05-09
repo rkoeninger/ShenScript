@@ -14,9 +14,9 @@ const frontend      = require('../../lib/frontend');
           ok(isArray(await exec('(js.new Array [5])')));
         });
       });
-      describe('js.obj', () => {
+      describe('js.new-obj', () => {
         it('should construct js object from series of key-value pairs', async () => {
-          ok(equate({ a: 1, b: 2 }, await exec('(js.obj ["a" 1 "b" 2])')));
+          ok(equate({ a: 1, b: 2 }, await exec('(js.new-obj ["a" 1 "b" 2])')));
         });
       });
       describe('exec', () => {
@@ -32,7 +32,7 @@ const frontend      = require('../../lib/frontend');
       });
       describe('..', () => {
         it('should access chain of properties on object', async () => {
-          equal(3, await exec('(.. (js.obj ["x" (js.obj ["y" (js.obj ["z" 3])])]) ["x" "y" "z"])'));
+          equal(3, await exec('(.. (js.new-obj ["x" (js.new-obj ["y" (js.new-obj ["z" 3])])]) ["x" "y" "z"])'));
         });
       });
     });

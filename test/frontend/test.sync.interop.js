@@ -13,9 +13,9 @@ describe('sync', () => {
         ok(isArray(exec('(js.new Array [5])')));
       });
     });
-    describe('js.obj', () => {
+    describe('js.new-obj', () => {
       it('should construct js object from series of key-value pairs', () => {
-        ok(equate({ a: 1, b: 2 }, exec('(js.obj ["a" 1 "b" 2])')));
+        ok(equate({ a: 1, b: 2 }, exec('(js.new-obj ["a" 1 "b" 2])')));
       });
     });
     describe('exec', () => {
@@ -31,7 +31,7 @@ describe('sync', () => {
     });
     describe('..', () => {
       it('should access chain of properties on object', () => {
-        equal(3, exec('(.. (js.obj ["x" (js.obj ["y" (js.obj ["z" 3])])]) ["x" "y" "z"])'));
+        equal(3, exec('(.. (js.new-obj ["x" (js.new-obj ["y" (js.new-obj ["z" 3])])]) ["x" "y" "z"])'));
       });
     });
   });

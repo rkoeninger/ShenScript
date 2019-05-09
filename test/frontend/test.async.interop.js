@@ -1,7 +1,7 @@
 const { equal, ok } = require('assert');
 const backend       = require('../../lib/backend');
 const kernel        = require('../../dist/kernel.async');
-const frontend      = require('../../lib/frontend');
+const frontend      = require('../../lib/frontend.node');
 
 (async () => {
   const $ = frontend(await kernel(backend({ async: true })));
@@ -11,7 +11,7 @@ const frontend      = require('../../lib/frontend');
     describe('interop', () => {
       describe('js.new', () => {
         it('should be able to construct globally referrable constructors', async () => {
-          ok(isArray(await exec('(js.new Array [5])')));
+          ok(isArray(await exec('(js.new (. (js.root) "Array") [5])')));
         });
       });
       describe('js.new-obj', () => {

@@ -1,7 +1,7 @@
 const { equal, ok } = require('assert');
 const backend       = require('../../lib/backend');
 const kernel        = require('../../dist/kernel.sync');
-const frontend      = require('../../lib/frontend');
+const frontend      = require('../../lib/frontend.node');
 
 const $ = frontend(kernel(backend()));
 const { caller, consFromArray, equate, exec, isArray } = $;
@@ -10,7 +10,7 @@ describe('sync', () => {
   describe('interop', () => {
     describe('js.new', () => {
       it('should be able to construct globally referrable constructors', () => {
-        ok(isArray(exec('(js.new Array [5])')));
+        ok(isArray(exec('(js.new (. (js.root) "Array") [5])')));
       });
     });
     describe('js.new-obj', () => {

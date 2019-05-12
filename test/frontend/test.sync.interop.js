@@ -10,7 +10,7 @@ describe('sync', () => {
   describe('interop', () => {
     describe('js.new', () => {
       it('should be able to construct globally referrable constructors', () => {
-        ok(isArray(exec('(js.new (. (js.root) "Array") [5])')));
+        ok(isArray(exec('(js.new (js.Array) [5])')));
       });
     });
     describe('js.new-obj', () => {

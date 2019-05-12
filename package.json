@@ -4,7 +4,7 @@
   "description": "Shen for JavaScript",
   "author": "Robert Koeninger",
   "license": "BSD-3-Clause",
-  "private": true,
+  "homepage": "https://github.com/rkoeninger/ShenScript",
   "repository": {
     "type": "git",
     "url": "https://github.com/rkoeninger/ShenScript.git"
@@ -12,7 +12,6 @@
   "bugs": {
     "url": "https://github.com/rkoeninger/ShenScript/issues"
   },
-  "homepage": "https://github.com/rkoeninger/ShenScript",
   "devDependencies": {
     "eslint": "^5.16.0",
     "follow-redirects": "^1.7.0",

@@ -29,12 +29,10 @@ describe('sync', () => {
     });
     describe('.', () => {
       it('should access property on object', () => {
-        equal(3, caller('.')({ y: 3 }, 'y'));
+        equal(3, caller('js.get')({ y: 3 }, 'y'));
       });
-    });
-    describe('..', () => {
       it('should access chain of properties on object', () => {
-        equal(3, exec('(.. (js.new-obj ["x" (js.new-obj ["y" (js.new-obj ["z" 3])])]) ["x" "y" "z"])'));
+        equal(3, exec('(. (js.new-obj ["x" (js.new-obj ["y" (js.new-obj ["z" 3])])]) "x" "y" "z")'));
       });
     });
   });

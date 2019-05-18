@@ -7,6 +7,11 @@
     "mocha": true
   },
   "extends": "eslint:recommended",
+  "globals": {
+    "Atomics": true,
+    "globalThis": true,
+    "SharedArrayBuffer": true
+  },
   "parserOptions": {
     "ecmaVersion": 2018
   },

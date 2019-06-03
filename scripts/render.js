@@ -17,6 +17,7 @@ const syntax =
     Arrow(
       [RawIdentifier('$')],
       Block(
+        // TODO: top-level defuns and statements all start in ignore situation
         ...defuns    .map(x => Statement(compile(x).expressions[0])),
         ...statements.map(x => Statement(compile(x))),
         Return(RawIdentifier('$'))),

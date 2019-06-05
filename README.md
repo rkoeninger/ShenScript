@@ -3,6 +3,8 @@
 
 # Shen for JavaScript
 
+![ShenScript Logo](https://raw.githubusercontent.com/rkoeninger/ShenScript/master/logo.png)
+
 An implementation of the [Shen Language](http://www.shenlanguage.org) by [Mark Tarver](http://marktarver.com/) for JavaScript. Built for modern browsers and recent versions of Node, requiring the [latest features](https://github.com/lukehoban/es6features) of the ECMAScript standard.
 
 ## Features

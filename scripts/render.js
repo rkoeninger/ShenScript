@@ -7,10 +7,12 @@ const {
   Arrow, Assign, Block, Identifier, Member, Program, RawIdentifier, Return, Statement,
   generate
 } = require('../lib/ast');
+const { flatMap } = require('../lib/utils');
 
 const { defuns, statements } = parseKernel();
 const { compile } = backend({ async });
 
+const toStatements = fab => [...fab.statements, Statement(fab.expression)];
 const syntax =
   generate(Program([Statement(Assign(
     Member(Identifier('module'), Identifier('exports')),
@@ -18,8 +20,7 @@ const syntax =
       [RawIdentifier('$')],
       Block(
         // TODO: top-level defuns and statements all start in ignore situation
-        ...defuns    .map(x => Statement(compile(x).expressions[0])),
-        ...statements.map(x => Statement(compile(x))),
+        ...flatMap([...defuns, ...statements], x => toStatements(compile(x))),
         Return(RawIdentifier('$'))),
       async)))]));
 

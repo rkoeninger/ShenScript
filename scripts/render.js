@@ -22,7 +22,7 @@ const syntax =
         // TODO: top-level defuns and statements all start in ignore situation
         ...flatMap([...defuns, ...statements], x => toStatements(compile(x))),
         Return(RawIdentifier('$'))),
-      async)))]));
+      async)))]), { indent: '  ' }); // TODO: try to render each expr on a single line if possible
 
 console.log(`${syntax.length} chars`);
 

@@ -74,6 +74,9 @@ describe('async', () => {
         equal(3, await exec('(let X 1 (let X 2 (let X 3 X)))'));
         equal(3, await exec('(let X 1 (if (> X 0) (let X 2 (+ X 1)) 5))'));
       });
+      it('should be able to initialize inner variable in terms of outer variable', async () => {
+        equal(2, await exec('(let X 1 (let X (+ X 1) X))'));
+      });
       it('should shadow outer lambda binding when nested', async () => {
         equal(8, await exec('((lambda X (let X 4 (+ X X))) 3)'));
       });

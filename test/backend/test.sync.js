@@ -75,6 +75,9 @@ describe('sync', () => {
         equal(3, exec('(let X 1 (let X 2 (let X 3 X)))'));
         equal(3, exec('(let X 1 (if (> X 0) (let X 2 (+ X 1)) 5))'));
       });
+      it('should be able to initialize inner variable in terms of outer variable', () => {
+        equal(2, exec('(let X 1 (let X (+ X 1) X))'));
+      });
       it('should shadow outer lambda binding when nested', () => {
         equal(8, exec('((lambda X (let X 4 (+ X X))) 3)'));
       });

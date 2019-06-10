@@ -28,7 +28,7 @@
   },
   "scripts": {
     "lint": "eslint index.js lib/**/*.js scripts/**/*.js test/**/*.js",
-    "test": "echo \"Run test-backend, test-kernel and test-frontend\"",
+    "test": "npm run test-backend && npm run test-frontend",
     "fetch-kernel": "node scripts/fetch.js",
     "test-backend": "mocha test/backend/test.*.js --reporter dot",
     "render-kernel": "node scripts/render.js",

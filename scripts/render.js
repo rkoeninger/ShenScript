@@ -1,12 +1,11 @@
 const fs              = require('fs');
 const { parseKernel } = require('./parser');
 const backend         = require('../lib/backend');
+const { flatMap }     = require('../lib/utils');
 const {
   Arrow, Assign, Block, Identifier, Member, Program, RawIdentifier, Return, Statement,
   generate
 } = require('../lib/ast');
-const { flatMap } = require('../lib/utils');
-
 const { defuns, statements } = parseKernel();
 
 const render = async => {

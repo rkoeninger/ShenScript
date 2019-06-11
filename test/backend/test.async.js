@@ -31,6 +31,14 @@ describe('async', () => {
         equal(1, await exec('(tl (cons (if (= 0 0) (set x 1) (set x 2)) (value x)))'));
         equal(2, await exec('(tl (cons (if (= 0 1) (set x 1) (set x 2)) (value x)))'));
       });
+      it('should evaluate side effects in nested ifs', async () => {
+        await exec('(if (trap-error (simple-error "fail") (lambda E (do (set x 1) true))) (set y 2) (set y 0))');
+        equal(1, valueOf('x'));
+        equal(2, valueOf('y'));
+        await exec('(if (trap-error (simple-error "fail") (lambda E (do (set x 3) false))) (set y 0) (set y 4))');
+        equal(3, valueOf('x'));
+        equal(4, valueOf('y'));
+      });
     });
     describe('and', () => {
       it('should return a Shen boolean', async () => {
@@ -74,6 +82,9 @@ describe('async', () => {
         equal(3, await exec('(let X 1 (let X 2 (let X 3 X)))'));
         equal(3, await exec('(let X 1 (if (> X 0) (let X 2 (+ X 1)) 5))'));
       });
+      it('should be able to initialize inner variable in terms of outer variable', async () => {
+        equal(2, await exec('(let X 1 (let X (+ X 1) X))'));
+      });
       it('should shadow outer lambda binding when nested', async () => {
         equal(8, await exec('((lambda X (let X 4 (+ X X))) 3)'));
       });
@@ -92,6 +103,16 @@ describe('async', () => {
       it('should shadow defun parameters in outer scope', async () => {
         await exec('(defun three (X) (lambda X (* 3 X)))');
         equal(12, await exec('((three 2) 4)'));
+      });
+    });
+    describe('set/value key optimization', () => {
+      it('should not try to optimize a variable that holds the key value in (value)', async () => {
+        await exec('(set z 31)');
+        equal(31, await exec('(let X z (value X))'));
+      });
+      it('should not try to optimize a variable that holds the key value in (set)', async () => {
+        await exec('(let X z (set X 37))');
+        equal(37, await exec('(value z)'));
       });
     });
   });

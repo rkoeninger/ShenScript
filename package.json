@@ -28,12 +28,12 @@
   },
   "scripts": {
     "lint": "eslint index.js lib/**/*.js scripts/**/*.js test/**/*.js",
-    "test": "npm run test-backend -- --reporter dot",
+    "test": "npm run test-backend && npm run test-frontend",
     "fetch-kernel": "node scripts/fetch.js",
-    "test-backend": "mocha test/backend/test.*.js",
+    "test-backend": "mocha test/backend/test.*.js --reporter dot",
     "render-kernel": "node scripts/render.js",
     "test-kernel": "node test/kernel/test.kernel.js",
-    "test-frontend": "mocha test/frontend/test.*.js",
+    "test-frontend": "mocha test/frontend/test.*.js --reporter dot",
     "repl": "node scripts/repl.js",
     "start": "http-server -p 8080"
   }

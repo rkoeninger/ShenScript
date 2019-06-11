@@ -32,6 +32,14 @@ describe('sync', () => {
         equal(1, exec('(tl (cons (if (= 0 0) (set x 1) (set x 2)) (value x)))'));
         equal(2, exec('(tl (cons (if (= 0 1) (set x 1) (set x 2)) (value x)))'));
       });
+      it('should evaluate side effects in nested ifs', () => {
+        exec('(if (trap-error (simple-error "fail") (lambda E (do (set x 1) true))) (set y 2) (set y 0))');
+        equal(1, valueOf('x'));
+        equal(2, valueOf('y'));
+        exec('(if (trap-error (simple-error "fail") (lambda E (do (set x 3) false))) (set y 0) (set y 4))');
+        equal(3, valueOf('x'));
+        equal(4, valueOf('y'));
+      });
     });
     describe('and', () => {
       it('should return a Shen boolean', () => {
@@ -101,6 +109,16 @@ describe('sync', () => {
     describe('escaping', () => {
       it('$ should be usable as a variable', () => {
         equal(3, exec('(let $ 2 (+ 1 $))'));
+      });
+    });
+    describe('set/value key optimization', () => {
+      it('should not try to optimize a variable that holds the key value in (value)', () => {
+        exec('(set z 31)');
+        equal(31, exec('(let X z (value X))'));
+      });
+      it('should not try to optimize a variable that holds the key value in (set)', () => {
+        exec('(let X z (set X 37))');
+        equal(37, exec('(value z)'));
       });
     });
   });

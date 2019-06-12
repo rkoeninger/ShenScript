@@ -23,7 +23,7 @@ const frontend      = require('../../lib/frontend.node');
           ok(equate({ a: 1, b: 2 }, await exec('({ "a" 1 "b" 2 })')));
         });
         it('should build nested objects with ({ ... }) macro', async () => {
-          equal(42, await exec('({ "x" ({ "y" ({ "z" 42 }) }) })').x.y.z);
+          equal(42, (await exec('({ "x" ({ "y" ({ "z" 42 }) }) })')).x.y.z);
         });
       });
       describe('exec', () => {

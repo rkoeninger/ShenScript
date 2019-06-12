@@ -11,6 +11,7 @@ describe('sync', () => {
     describe('js.new', () => {
       it('should be able to construct globally referrable constructors', () => {
         ok(isArray(exec('(js.new (js.Array) [5])')));
+        equal(123, exec('(js.new (js.Number) ["123"])'));
       });
     });
     describe('js.new-obj', () => {
@@ -19,6 +20,9 @@ describe('sync', () => {
       });
       it('should work with ({ ... }) macro', () => {
         ok(equate({ a: 1, b: 2 }, exec('({ "a" 1 "b" 2 })')));
+      });
+      it('should build nested objects with ({ ... }) macro', () => {
+        equal(42, exec('({ "x" ({ "y" ({ "z" 42 }) }) })').x.y.z);
       });
     });
     describe('exec', () => {

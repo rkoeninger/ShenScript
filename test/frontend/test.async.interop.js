@@ -12,6 +12,7 @@ const frontend      = require('../../lib/frontend.node');
       describe('js.new', () => {
         it('should be able to construct globally referrable constructors', async () => {
           ok(isArray(await exec('(js.new (js.Array) [5])')));
+          equal(123, await exec('(js.new (js.Number) ["123"])'));
         });
       });
       describe('js.new-obj', () => {
@@ -20,6 +21,9 @@ const frontend      = require('../../lib/frontend.node');
         });
         it('should work with ({ ... }) macro', async () => {
           ok(equate({ a: 1, b: 2 }, await exec('({ "a" 1 "b" 2 })')));
+        });
+        it('should build nested objects with ({ ... }) macro', async () => {
+          equal(42, await exec('({ "x" ({ "y" ({ "z" 42 }) }) })').x.y.z);
         });
       });
       describe('exec', () => {

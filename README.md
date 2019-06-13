@@ -17,7 +17,7 @@ An implementation of the [Shen Language](http://www.shenlanguage.org) by [Mark T
 
 Still in progress:
 
-  * Standard kernel test suite fails in 1 case with a stack overflow in sync mode.
+  * Standard kernel test suite fails in 2 cases with a stack overflow in sync mode.
   * Speed up web load time (currently 30-60s). Pre-generate environment state (?).
   * Pre-supply async I/O primitives.
   * Smaller deployable package (?).

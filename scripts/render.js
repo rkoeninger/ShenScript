@@ -14,7 +14,6 @@ const render = async => {
       Arrow(
         [Id('$')],
         Block(
-          // TODO: top-level defuns and statements all start in ignore situation
           ...flatMap(exprs.map(compile), fabr => [...fabr.statements, Statement(fabr.expression)]),
           Return(Id('$'))),
         async)))]),

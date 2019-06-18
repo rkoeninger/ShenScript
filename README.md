@@ -17,8 +17,9 @@ An implementation of the [Shen Language](http://www.shenlanguage.org) by [Mark T
 
 Still in progress:
 
-  * Speed up web load time (currently 30-60s). Pre-generate environment state (?).
-  * Pre-supply async I/O primitives.
+  * Speed up async performance (sync test suite time: \~25s, async: \~90s).
+  * Speed up web load time (current 3-6s). Pre-generate environment state (?).
+  * Pre-supply helpful async I/O primitives.
   * Smaller deployable package (?).
 
 ## Prerequisites

@@ -12,8 +12,7 @@ const render = async => {
       Arrow(
         [Id('$')],
         Block(...[...defuns, ...statements].map(compile).map(Statement), Return(Id('$'))),
-        async)))]),
-    { indent: '  ' }); // TODO: try to render each expr on a single line if possible
+        async)))]));
 
   console.log(`${async ? 'async' : 'sync '} kernel: ${syntax.length} chars`);
 

@@ -13,11 +13,10 @@ An implementation of the [Shen Language](http://www.shenlanguage.org) by [Mark T
   * Async operations are transparent to executed Shen code.
   * Easy interop: JS can be called from Shen, Shen can be called from JS.
   * REPL works on command line in Node.js.
-  * Fairly small deployable (\~100KB uncompressed).
+  * Fairly small deployable (\~800KB uncompressed, \~100KB compressed).
 
 Still in progress:
 
-  * Standard kernel test suite fails in 2 cases with a stack overflow in sync mode.
   * Speed up web load time (currently 30-60s). Pre-generate environment state (?).
   * Pre-supply async I/O primitives.
   * Smaller deployable package (?).
@@ -36,4 +35,4 @@ Run `npm start` to host a simple demo page.
 
 ## Prior Art
 
-This library is attempt to improve on the existing [shen-js](https://github.com/gravicappa/shen-js) project by [Ramil Farkhshatov](https://github.com/gravicappa). shen-js implements its own KLVM on top of JS, allowing it to handle deep recursion without stack overflow and simulate synchronous I/O. It outputs in a large deployable (\~12MB uncompressed). ShenScript is intended to instead be a lighter-weight solution built on more recent JS features and output a smaller deployable.
+This library is attempt to improve on the existing [shen-js](https://github.com/gravicappa/shen-js) project by [Ramil Farkhshatov](https://github.com/gravicappa). shen-js implements its own KLVM on top of JS, allowing it to handle deep recursion without stack overflow and make asynchronous I/O transparent to Shen code. It outputs in a large deployable (\~12MB uncompressed). ShenScript is intended to instead be a lighter-weight solution built on more recent JS features, output a smaller deployable and provide plentify facilities for web development.

@@ -10,6 +10,5 @@ script:
   - npm run test-backend
   - npm run fetch-kernel
   - npm run render-kernel
-  - npm run test-kernel || true # 2 tests fails due to stack overflow in sync mode
-  - npm run test-kernel async
+  - npm run test-kernel
   - npm run test-frontend

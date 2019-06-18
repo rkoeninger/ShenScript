@@ -1,9 +1,8 @@
-const async = process.argv.includes('async');
-
-const fs      = require('fs');
-const config  = require('../../lib/config.node');
-const backend = require('../../lib/backend');
-const kernel  = require(`../../dist/kernel.${async ? 'async' : 'sync'}`);
+const fs          = require('fs');
+const config      = require('../../lib/config.node');
+const backend     = require('../../lib/backend');
+const asyncKernel = require('../../dist/kernel.async');
+const syncKernel  = require('../../dist/kernel.sync');
 
 const InStream = class {
   constructor(buf) {
@@ -25,10 +24,10 @@ const formatDuration = x =>
     .map(([n, l]) => `${Math.floor(n)}${l}`)
     .join(', ');
 
-(async () => {
+const runTests = async async => {
   const start = Date.now();
   console.log('creating kernel...');
-  const { evalKl, s } = await kernel(backend({
+  const { evalKl, s } = await (async ? asyncKernel : syncKernel)(backend({
     ...config,
     async,
     InStream,
@@ -41,5 +40,20 @@ const formatDuration = x =>
   console.log(await evalKl([s`cd`, config.testsPath]));
   console.log(await evalKl([s`load`, 'README.shen']));
   console.log(await evalKl([s`load`, 'tests.shen']));
-  console.log(`total time elapsed: ${formatDuration(Date.now() - start)}`);
+  const duration = Date.now() - start;
+  console.log(`total time elapsed: ${formatDuration(duration)}`);
+  return duration;
+};
+
+const pad = (len, fill, s) => s + fill.repeat(len - s.length);
+
+(async () => {
+  const syncDuration = await runTests(false);
+  const asyncDuration = await runTests(true);
+  console.log();
+  console.log('--------------------------------');
+  console.log(`| sync  | ${pad(20, ' ', formatDuration(syncDuration))} |`);
+  console.log(`| async | ${pad(20, ' ', formatDuration(asyncDuration))} |`);
+  console.log(`| both  | ${pad(20, ' ', formatDuration(syncDuration + asyncDuration))} |`);
+  console.log('--------------------------------');
 })();

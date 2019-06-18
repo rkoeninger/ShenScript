@@ -1,10 +1,8 @@
 const fs              = require('fs');
 const { parseKernel } = require('./parser');
 const backend         = require('../lib/backend');
-const { flatMap }     = require('../lib/utils');
 const { Arrow, Assign, Block, Id, Member, Program, Return, Statement, generate } = require('../lib/ast');
 const { defuns, statements } = parseKernel();
-const exprs = [...defuns, ...statements];
 
 const render = async => {
   const { compile } = backend({ async });
@@ -13,9 +11,7 @@ const render = async => {
       Member(Id('module'), Id('exports')),
       Arrow(
         [Id('$')],
-        Block(
-          ...flatMap(exprs.map(compile), fabr => [...fabr.statements, Statement(fabr.expression)]),
-          Return(Id('$'))),
+        Block(...[...defuns, ...statements].map(compile).map(Statement), Return(Id('$'))),
         async)))]),
     { indent: '  ' }); // TODO: try to render each expr on a single line if possible
 

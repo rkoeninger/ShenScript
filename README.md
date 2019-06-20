@@ -10,15 +10,15 @@ An implementation of the [Shen Language](http://www.shenlanguage.org) by [Mark T
 ## Features
 
   * Allows integration with arbitrary I/O.
-  * Async operations are transparent to executed Shen code.
+  * Async operations are transparent to written Shen code.
   * Easy interop: JS can be called from Shen, Shen can be called from JS.
   * REPL works on command line in Node.js.
-  * Fairly small deployable (\~800KB uncompressed, \~100KB compressed).
+  * Fairly small deployable (\~765KB uncompressed, \~96KB compressed).
 
 Still in progress:
 
-  * Speed up async performance (sync test suite time: \~25s, async: \~90s).
-  * Speed up web load time (current 3-6s). Pre-generate environment state (?).
+  * Speed up async performance (sync test suite time: \~24s, async: \~72s).
+  * Speed up web load time (current \~2s). Pre-generate environment state (?).
   * Pre-supply helpful async I/O primitives.
   * Smaller deployable package (?).
 

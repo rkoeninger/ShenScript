@@ -13,7 +13,9 @@ const options = { ...config, async };
     console.log('creating shen environment...');
     window.shen = frontend(await kernel(backend(options)));
     const end = new Date().getTime();
-    console.log(`environment created in ${end - start}ms.`);
+    const message = `environment created in ${end - start}ms.`;
+    console.log(message);
+    setTimeout(() => document.body.innerHTML = message, 0);
   } catch (e) {
     console.error(e);
   }

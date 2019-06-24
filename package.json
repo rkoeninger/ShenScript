@@ -1,6 +1,6 @@
 {
   "name": "ShenScript",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Shen for JavaScript",
   "author": "Robert Koeninger",
   "license": "BSD-3-Clause",
@@ -12,6 +12,7 @@
   "bugs": {
     "url": "https://github.com/rkoeninger/ShenScript/issues"
   },
+  "main": "shen.js",
   "devDependencies": {
     "eslint": "^5.16.0",
     "follow-redirects": "^1.7.0",

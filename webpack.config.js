@@ -6,5 +6,8 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'bundle.js'
+  },
+  stats: {
+    warningsFilter: w => w.includes('the request of a dependency is an expression')
   }
 };

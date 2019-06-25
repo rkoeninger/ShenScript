@@ -1,18 +1,18 @@
-const { language, port, porters, kernelVersion } = require('./lib/config');
-
 module.exports = (options = {}) => {
-  if (options.async === undefined) {
-    throw new Error(`options.async must be specified, not "${options.async}"`);
+  const { async, target } = options;
+
+  if (async === undefined) {
+    throw new Error(`options.async must be specified, not "${async}"`);
   }
 
-  if (options.platform !== 'node' && options.platform !== 'web') {
-    throw new Error(`options.platform must be either "node" or "web", not "${options.platform}"`);
+  if (target !== 'node' && target !== 'web') {
+    throw new Error(`options.target must be either "node" or "web", not "${target}"`);
   }
 
   const backend = require('./lib/backend');
-  const config = require(`./lib/config.${options.platform}`);
-  const kernel = require(`./dist/kernel.${options.async ? 'async' : 'sync'}`);
-  const frontend = require(`./lib/frontend.${options.platform}`);
+  const config = require(`./lib/config.${target}`);
+  const kernel = require(`./dist/kernel.${async ? 'async' : 'sync'}`);
+  const frontend = require(`./lib/frontend.${target}`);
   const $ = kernel(backend({ ...config, ...options }));
-  return options.async ? $.then(frontend) : frontend($);
+  return async ? $.then(frontend) : frontend($);
 };

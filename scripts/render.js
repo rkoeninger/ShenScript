@@ -16,9 +16,9 @@ for (const defun of defuns) {
   }
 }
 
-const nonAsyncs = []; // TODO: defuns listed here are not built as async
+const _nonAsyncs = []; // TODO: defuns listed here are not built as async
 
-for (const defun of sortedDefuns) {
+for (const _defun of sortedDefuns) {
   // TODO: a function gets added to the list if it does not apply as a function:
   //   - a variable
   //   - an expression

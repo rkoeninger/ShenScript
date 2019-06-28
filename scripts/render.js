@@ -5,26 +5,36 @@ const backend         = require('../lib/backend');
 const { Arrow, Assign, Block, Id, Member, Program, Return, Statement, generate } = require('../lib/ast');
 const { defuns, statements } = parseKernel();
 
-const contains = (expr, x) => x === expr || Array.isArray(expr) && expr.some(y => contains(y, x));
+const findFirstIndex = (array, f) => array.findIndex(f);
+const findLastIndex  = (array, f) => {
+  for (let i = array.length - 1; i >= 0; --i) {
+    if (f(array[i])) {
+      return i;
+    }
+  }
+
+  return -1;
+};
+
+const walkFind = (expr, x) => x === expr || Array.isArray(expr) && expr.some(y => walkFind(y, x));
 const sortedDefuns = [];
 
 // sortedDefuns: [lowest-level functions ... top-level functions]
-// if a function doesn't intersect with anything, it gets put at the beginning (could be anywhere, really)
 for (const defun of defuns) {
-  const referredByIndex = sortedDefuns.findIndex(d => contains(defun, d[1]));
-  const referredToIndex = sortedDefuns.findIndex(d => contains(d, defun[1]));
-  const maxIndex = Math.max(referredByIndex, referredToIndex);
-  if (maxIndex === -1) {
-    console.log(`inserting ${Symbol.keyFor(defun[1])} at the beginning`);
-    sortedDefuns.unshift(defun);
-  } else if (maxIndex === referredByIndex) {
-    // maxIndex is a function this refers to this one
-    console.log(`inserting ${Symbol.keyFor(defun[1])} after ${Symbol.keyFor(sortedDefuns[maxIndex][1])}`);
-    sortedDefuns.splice(maxIndex + 1, 0, defun);
+  const indexLastReferredByThis = findLastIndex(sortedDefuns,  d => walkFind(defun, d[1]));
+  const indexFirstRefersToThis  = findFirstIndex(sortedDefuns, d => walkFind(d, defun[1]));
+
+  if (indexLastReferredByThis === -1 && indexFirstRefersToThis === -1) {
+    console.log(`inserting ${Symbol.keyFor(defun[1])} at the end`);
+    sortedDefuns.push(defun);
+
+  } else if (indexLastReferredByThis > indexFirstRefersToThis) {
+    console.log(`inserting ${Symbol.keyFor(defun[1])} after ${Symbol.keyFor(sortedDefuns[indexLastReferredByThis][1])} (last function this refers to)`);
+    sortedDefuns.splice(indexLastReferredByThis + 1, 0, defun);
+
   } else {
-    // maxIndex is a function this one refers to
-    console.log(`inserting ${Symbol.keyFor(defun[1])} before ${Symbol.keyFor(sortedDefuns[maxIndex][1])}`);
-    sortedDefuns.splice(maxIndex, 0, defun);
+    console.log(`inserting ${Symbol.keyFor(defun[1])} before ${Symbol.keyFor(sortedDefuns[indexFirstRefersToThis][1])} (first function that refers to this)`);
+    sortedDefuns.splice(indexFirstRefersToThis, 0, defun);
   }
 }
 
@@ -37,6 +47,9 @@ const consedExternals = statements.find(x =>
 
 // defuns listed here don't need to be awaited when called
 const isConsForm = x => Array.isArray(x) && x.length === 3 && x[0] === s`cons`;
+
+// TODO: need to list all async kernel system functions?
+//       maybe we should only list sync primitive functions
 const asyncPrimitives = [s`open`, s`close`, s`read-byte`, s`write-byte`];
 const sysFuncs = produce(isConsForm, x => x[1], x => x[2], consedExternals);
 const nonAwaits = sysFuncs.filter(x => !asyncPrimitives.includes(x));

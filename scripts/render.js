@@ -1,5 +1,6 @@
 const fs              = require('fs');
 const { parseKernel } = require('./parser');
+const { produce, s }  = require('../lib/utils');
 const backend         = require('../lib/backend');
 const { Arrow, Assign, Block, Id, Member, Program, Return, Statement, generate } = require('../lib/ast');
 const { defuns, statements } = parseKernel();
@@ -8,27 +9,48 @@ const contains = (expr, x) => x === expr || Array.isArray(expr) && expr.some(y =
 const sortedDefuns = [];
 
 for (const defun of defuns) {
+  // TODO: sorting needs to be improved ... somehow
+  //       order that we visit the defuns impacts order too much
   const index = sortedDefuns.findIndex(d => !contains(defun, d[1]));
-  if (index >= 0) {
+  if (index >= 0 && index < sortedDefuns.length - 1) {
     sortedDefuns.splice(index, 0, defun);
   } else {
     sortedDefuns.unshift(defun);
   }
 }
 
-const _nonAsyncs = []; // TODO: defuns listed here are not built as async
+// None of the symbols in shen.external-symbols can be redefined
+const consedExternals = statements.find(x =>
+  Array.isArray(x) &&
+  x.length >= 4 &&
+  x[0] === s`put` &&
+  x[2] === s`shen.external-symbols`)[3];
 
-for (const _defun of sortedDefuns) {
-  // TODO: a function gets added to the list if it does not apply as a function:
-  //   - a variable
-  //   - an expression
-  //   - a function other than itself that is not in nonAsyncs
+// defuns listed here don't need to be awaited when called
+const isConsForm = x => Array.isArray(x) && x.length === 3 && x[0] === s`cons`;
+const asyncPrimitives = [s`open`, s`close`, s`read-byte`, s`write-byte`];
+const sysFuncs = produce(isConsForm, x => x[1], x => x[2], consedExternals);
+const nonAwaits = sysFuncs.filter(x => !asyncPrimitives.includes(x));
+const mustAwait = expr =>
+  Array.isArray(expr) &&
+  expr.length > 0 &&
+  (!nonAwaits.includes(expr[0]) ||
+    (expr[0] === s`cond`
+      ? expr.slice(1).some(x => Array.isArray(x) && x.some(mustAwait))
+      : expr.slice(1).some(mustAwait)));
+
+for (const defun of sortedDefuns) { // TODO: this is including `write-to-file`, which it shouldn't
+  if (!mustAwait(defun)) {
+    nonAwaits.push(defun);
+  }
 }
 
+console.log(nonAwaits.slice(50));
+
 const render = async => {
-  // TODO: nonAsyncs need to be passed in here, propogated to build function
-  //       so when we build a non-async, it's not async
-  //       and when we call a non-async, it's not awaited
+  // TODO: nonAwaits need to be passed in here, propogated to build function
+  //       so when we call a nonAwait, it's not awaited
+  //       and when we build a function with no awaits, it's not async
   const { compile } = backend({ async });
   const syntax = generate(
     Program([Statement(Assign(

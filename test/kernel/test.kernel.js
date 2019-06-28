@@ -1,5 +1,3 @@
-const verbose = process.argv.includes('verbose');
-
 const fs          = require('fs');
 const config      = require('../../lib/config.node');
 const backend     = require('../../lib/backend');

@@ -8,14 +8,23 @@ const { defuns, statements } = parseKernel();
 const contains = (expr, x) => x === expr || Array.isArray(expr) && expr.some(y => contains(y, x));
 const sortedDefuns = [];
 
+// sortedDefuns: [lowest-level functions ... top-level functions]
+// if a function doesn't intersect with anything, it gets put at the beginning (could be anywhere, really)
 for (const defun of defuns) {
-  // TODO: sorting needs to be improved ... somehow
-  //       order that we visit the defuns impacts order too much
-  const index = sortedDefuns.findIndex(d => !contains(defun, d[1]));
-  if (index >= 0 && index < sortedDefuns.length - 1) {
-    sortedDefuns.splice(index, 0, defun);
-  } else {
+  const referredByIndex = sortedDefuns.findIndex(d => contains(defun, d[1]));
+  const referredToIndex = sortedDefuns.findIndex(d => contains(d, defun[1]));
+  const maxIndex = Math.max(referredByIndex, referredToIndex);
+  if (maxIndex === -1) {
+    console.log(`inserting ${Symbol.keyFor(defun[1])} at the beginning`);
     sortedDefuns.unshift(defun);
+  } else if (maxIndex === referredByIndex) {
+    // maxIndex is a function this refers to this one
+    console.log(`inserting ${Symbol.keyFor(defun[1])} after ${Symbol.keyFor(sortedDefuns[maxIndex][1])}`);
+    sortedDefuns.splice(maxIndex + 1, 0, defun);
+  } else {
+    // maxIndex is a function this one refers to
+    console.log(`inserting ${Symbol.keyFor(defun[1])} before ${Symbol.keyFor(sortedDefuns[maxIndex][1])}`);
+    sortedDefuns.splice(maxIndex, 0, defun);
   }
 }
 
@@ -44,8 +53,6 @@ for (const defun of sortedDefuns) { // TODO: this is including `write-to-file`, 
     nonAwaits.push(defun);
   }
 }
-
-console.log(nonAwaits.slice(50));
 
 const render = async => {
   // TODO: nonAwaits need to be passed in here, propogated to build function

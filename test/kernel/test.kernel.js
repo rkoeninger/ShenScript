@@ -1,3 +1,5 @@
+const verbose = process.argv.includes('verbose');
+
 const fs          = require('fs');
 const config      = require('../../lib/config.node');
 const backend     = require('../../lib/backend');
@@ -18,6 +20,15 @@ const OutStream = class {
   write(b) { return this.stream.write(String.fromCharCode(b)); }
 };
 
+const OutBuffer = class {
+  constructor() { this.buffer = Buffer.alloc(24 * 1024); }
+  write(b) {
+    this.buffer.writeInt8(b);
+    return b;
+  }
+  toString() { return this.buffer.toString(); }
+};
+
 const formatDuration = x =>
   [[x / 60000, 'm'], [x / 1000 % 60, 's'], [x % 1000, 'ms']]
     .filter(([n, _]) => n >= 1)
@@ -26,22 +37,30 @@ const formatDuration = x =>
 
 const runTests = async async => {
   const start = Date.now();
-  console.log('creating kernel...');
-  const { evalKl, s } = await (async ? asyncKernel : syncKernel)(backend({
+  console.log(`creating kernel in ${async ? 'async' : 'sync'} mode...`);
+  const stoutput = new OutBuffer();
+  const { evalKl, s, valueOf } = await (async ? asyncKernel : syncKernel)(backend({
     ...config,
     async,
     InStream,
     OutStream,
     openRead: path => new InStream(fs.readFileSync(path)),
-    stoutput: new OutStream(process.stdout),
-    sterror:  new OutStream(process.stderr)
+    stoutput
   }));
   console.log(`kernel ready: ${formatDuration(Date.now() - start)}`);
-  console.log(await evalKl([s`cd`, config.testsPath]));
-  console.log(await evalKl([s`load`, 'README.shen']));
-  console.log(await evalKl([s`load`, 'tests.shen']));
+  console.log('running test suite...');
+  await evalKl([s`cd`, config.testsPath]);
+  await evalKl([s`load`, 'README.shen']);
+  await evalKl([s`load`, 'tests.shen']);
   const duration = Date.now() - start;
   console.log(`total time elapsed: ${formatDuration(duration)}`);
+
+  if (valueOf('test-harness.*failed*') > 0) {
+    console.log(stoutput.toString());
+  } else {
+    console.log(`all tests passed.`);
+  }
+
   return duration;
 };
 

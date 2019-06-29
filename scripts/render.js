@@ -21,19 +21,14 @@ const sortedDefuns = [];
 
 // sortedDefuns: [lowest-level functions ... top-level functions]
 for (const defun of defuns) {
-  const indexLastReferredByThis = findLastIndex(sortedDefuns,  d => walkFind(defun, d[1]));
+  const indexLastReferredByThis = findLastIndex( sortedDefuns, d => walkFind(defun, d[1]));
   const indexFirstRefersToThis  = findFirstIndex(sortedDefuns, d => walkFind(d, defun[1]));
 
   if (indexLastReferredByThis === -1 && indexFirstRefersToThis === -1) {
-    console.log(`inserting ${Symbol.keyFor(defun[1])} at the end`);
     sortedDefuns.push(defun);
-
   } else if (indexLastReferredByThis > indexFirstRefersToThis) {
-    console.log(`inserting ${Symbol.keyFor(defun[1])} after ${Symbol.keyFor(sortedDefuns[indexLastReferredByThis][1])} (last function this refers to)`);
     sortedDefuns.splice(indexLastReferredByThis + 1, 0, defun);
-
   } else {
-    console.log(`inserting ${Symbol.keyFor(defun[1])} before ${Symbol.keyFor(sortedDefuns[indexFirstRefersToThis][1])} (first function that refers to this)`);
     sortedDefuns.splice(indexFirstRefersToThis, 0, defun);
   }
 }

@@ -1,5 +1,5 @@
-Design
-======
+Design and Implementation Details
+=================================
 
 Translating KL to ESTree, rendering with astring and evaluating with Function()
 

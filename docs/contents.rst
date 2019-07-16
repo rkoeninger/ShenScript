@@ -1,4 +1,6 @@
 .. _contents:
 
-Sphinx documentation contents
-=============================
+ShenScript Documentation Contents
+=================================
+
+`Home <https://shenscript.readthedocs.io/en/latest/>`_

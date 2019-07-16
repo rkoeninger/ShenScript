@@ -6,9 +6,7 @@
 
 <img src="https://raw.githubusercontent.com/rkoeninger/ShenScript/master/assets/logo.png" align="right">
 
-An implementation of the [Shen Language](http://www.shenlanguage.org) by [Mark Tarver](http://marktarver.com/) for JavaScript. Built for modern browsers and recent versions of Node, requiring the [latest features](https://github.com/lukehoban/es6features) of the ECMAScript standard.
-
-Full documentation can be viewed at [shenscript.readthedocs.io](https://shenscript.readthedocs.io/en/latest/).
+An implementation of the [Shen Language](http://www.shenlanguage.org) by [Mark Tarver](http://marktarver.com/) for JavaScript. Full documentation can be viewed at [shenscript.readthedocs.io](https://shenscript.readthedocs.io/en/latest/).
 
 ## Features
 
@@ -36,7 +34,3 @@ Refer to [`.travis.yml`](.travis.yml) for typical build/test process. `test-*` c
 ## Running
 
 Run `npm start` to host a simple demo page.
-
-## Prior Art
-
-This library is attempt to improve on the existing [shen-js](https://github.com/gravicappa/shen-js) project by [Ramil Farkhshatov](https://github.com/gravicappa). shen-js implements its own KLVM on top of JS, allowing it to handle deep recursion without stack overflow and make asynchronous I/O transparent to Shen code. It outputs in a large deployable (\~12MB uncompressed). ShenScript is intended to instead be a lighter-weight solution built on more recent JS features, output a smaller deployable and provide plentify facilities for web development.

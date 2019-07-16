@@ -1,2 +1,5 @@
 .. role:: shen(code)
-   :language: clojure
+   :language: lisp
+
+.. role:: js(code)
+   :language: javascript

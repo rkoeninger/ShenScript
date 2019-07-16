@@ -1,3 +1,5 @@
+.. include:: directives.rst
+
 Shen Interop
 ============
 
@@ -190,6 +192,7 @@ js.DataView
 js.Date
 js.Function
 js.GeneratorFunction
+js.globalThis - refers to globalThis if defined or (window in web or global on node)
 js.Infinity
 js.JSON
 js.Map
@@ -210,10 +213,13 @@ js.WeakMap
 js.WeakSet
 js.WebAssembly
 
+Platform-specific Global Classes
+--------------------------------
+
+.. Hint:: You can check if a symbol is defined with :shen:`(bound? Symbol)`.
+
 js.Atomics - not available in Firefox
 js.SharedArrayBuffer - not available in Firefox
-
-js.globalThis - refers to globalThis if defined or (window in web or global on node)
 
 Web-specific Interop
 --------------------

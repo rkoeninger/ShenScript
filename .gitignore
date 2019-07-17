@@ -1,6 +1,7 @@
 /kernel
 dist
 node_modules
+out
 _build
 _static
 _templates

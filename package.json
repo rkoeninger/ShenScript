@@ -30,7 +30,7 @@
   },
   "scripts": {
     "lint": "eslint index.js lib/**/*.js scripts/**/*.js test/**/*.js",
-    "test": "npm run test-backend && npm run test-frontend",
+    "test": "mocha test/backend/test.*.js test/frontend/test.*.js --reporter dot",
     "fetch-kernel": "node scripts/fetch.js",
     "test-backend": "mocha test/backend/test.*.js --reporter dot",
     "render-kernel": "node scripts/render.js",

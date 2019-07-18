@@ -1,7 +1,7 @@
 ShenScript Implementation Internals
 ===================================
 
-.. js:autofunction:: bounce
+.. js:autoclass:: Cons
 
 symbolOf, s
 nameOf

@@ -10,3 +10,4 @@ html_theme = 'sphinx_rtd_theme'
 html_logo = '../assets/logo.svg'
 html_static_path = ['_static']
 master_doc = 'index'
+js_source_path = '../lib'

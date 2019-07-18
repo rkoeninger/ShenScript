@@ -24,6 +24,8 @@ Classes
 
 None of these classes are exported and are only referred to internally.
 
+.. js:autofunction:: bounce
+
 .. class:: Cons(head, tail)
 
    The classic Lisp cons cell. :code:`head` and :code:`tail` are akin to :code:`car` and :code:`cdr`.

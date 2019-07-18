@@ -1,6 +1,8 @@
 ShenScript Implementation Internals
 ===================================
 
+.. js:autofunction:: bounce
+
 symbolOf, s
 nameOf
 raise

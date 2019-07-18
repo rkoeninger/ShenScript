@@ -1,8 +1,6 @@
 ShenScript Implementation Internals
 ===================================
 
-.. js:autoclass:: Cons
-
 symbolOf, s
 nameOf
 raise

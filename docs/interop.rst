@@ -98,19 +98,53 @@ js.ast.inline
 Unchecked Math Operators
 ------------------------
 
-js.unchecked.+
-js.unchecked.-
-js.unchecked.*
-js.unchecked./
-js.unchecked.%
-js.unchecked.**
-js.unchecked.bitwise.not
-js.unchecked.bitwise.and
-js.unchecked.bitwise.or
-js.unchecked.bitwise.xor
-js.unchecked.bitwise.left-shift
-js.unchecked.bitwise.right-shift
-js.unchecked.bitwise.right-shift-unsigned
+.. method:: js.unchecked.+(x, y)
+
+   Applies the JavaScript :code:`+` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
+
+.. method:: js.unchecked.-(x, y)
+
+   Applies the JavaScript :code:`-` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
+
+.. method:: js.unchecked.*(x, y)
+
+   Applies the JavaScript :code:`*` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
+
+.. method:: js.unchecked./(x, y)
+
+   Applies the JavaScript :code:`/` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
+
+.. method:: js.unchecked.**(x, y)
+
+   Applies the JavaScript :code:`**` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
+
+.. method:: js.unchecked.bitwise.not(x)
+
+   Applies the JavaScript :code:`!` operator to :code:`x` without additional typechecks, perserving JavaScript coercion behavior.
+
+.. method:: js.unchecked.bitwise.and(x, y)
+
+   Applies the JavaScript :code:`&` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
+
+.. method:: js.unchecked.bitwise.or(x, y)
+
+   Applies the JavaScript :code:`|` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
+
+.. method:: js.unchecked.bitwise.xor(x, y)
+
+   Applies the JavaScript :code:`^` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
+
+.. method:: js.unchecked.bitwise.left-shift(x, y)
+
+   Applies the JavaScript :code:`<<` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
+
+.. method:: js.unchecked.bitwise.right-shift(x, y)
+
+   Applies the JavaScript :code:`>>` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
+
+.. method:: js.unchecked.bitwise.right-shift-unsigned(x, y)
+
+   Applies the JavaScript :code:`>>>` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
 
 Typed Operators
 ---------------

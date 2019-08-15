@@ -29,8 +29,21 @@ Some of these will return a promise if the environment with built in async mode.
    :returns:           Global symbol's value.
    :throws:            Error if symbol is not bound.
 
-show
-equate
+.. function:: show(value)
+
+   Builds Shen-specific string representation of :js:`value`.
+
+   :param any value: Value to show.
+   :returns:         String representation of :js:`value`.
+
+.. function:: equate(x, y)
+
+   Determines if :js:`x` and :js:`y` are equal using Shen-specific semantics.
+
+   :param any x: Any Shen or JavaScript value.
+   :param any y: Any Shen or JavaScript value.
+   :returns      A JavaScript boolean.
+
 define
 defineTyped
 defmacro
@@ -43,7 +56,15 @@ evalJs
 evalKl
 exec
 execShen
-cons
+
+.. function:: cons(x, y)
+
+   Creates a new :js:`Cons` cell with the given :js:`head` and :js:`tail` values.
+
+   :param any x: Any Shen or JavaScript value.
+   :param any y: Any Shen or JavaScript value.
+   :returns      A new :js:`Cons`.
+
 consFromArray, r
 consToArray
 consFromArrayTree
@@ -61,11 +82,29 @@ ShenScript provides functions in the `js.` namespace to access JavaScript standa
 AST Functions
 -------------
 
-Functions in the `js.ast.` namespace are used to construct, emit and evaluate arbitrary javascript code.
+Functions in the `js.ast` namespace are used to construct, emit and evaluate arbitrary JavaScript code. All of the AST builder functions return JavaScript objects conforming to the informal ESTree standard `ESTree <https://github.com/estree/estree>`_.
 
-js.ast.literal
-js.ast.array
-js.ast.id
+.. function:: js.ast.literal
+
+   Constructs an AST node representing a literal JavaScript value.
+
+   :param Value: JavaScript value that can be a literal (number, string, boolean, null).
+   :returns:     A :code:`Literal` AST node.
+
+.. function:: js.ast.array
+
+   Constructs an AST node representing a JavaScript array literal.
+
+   :param list Values: A Shen list of values to initialise a JavaScript array with.
+   :returns:           An :code:`ArrayExpression` AST node.
+
+.. function:: js.ast.id
+
+   Constructs an AST node representing a JavaScript identifier. Identifier is named exactly as the given argument.
+
+   :param string Name: Name of identifier.
+   :returns:           An :code:`Identifier` AST node.
+
 js.ast.safe-id
 js.ast.const
 js.ast.let

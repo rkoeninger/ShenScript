@@ -3,7 +3,7 @@
 Shen Interop
 ============
 
-The environment object, $, comes with additional functions to make JS functions callable from Shen, setting global symbols, declaring types and macros, etc.
+The environment object, :js:`$`, comes with additional functions to make JavaScript functions callable from Shen, setting global symbols, declaring types and macros, etc.
 
 .. Important:: Some of these will return a promise if the environment was built in async mode.
 
@@ -44,17 +44,56 @@ The environment object, $, comes with additional functions to make JS functions 
    :param any y: Any Shen or JavaScript value.
    :returns:     A JavaScript boolean.
 
-.. function:: define
+.. function:: define(name, f)
 
-.. function:: defineTyped
+   Defines a new global function in the Shen environment by the given name. Function gets wrapped so it automatically handles partial application.
 
-.. function:: defmacro
+   :param string name: Name which function will be accessible by, including package prefix(es).
+   :param function f:  JavaScript function to defer fully-applied invocation to.
+   :returns:           Name as a symbol.
 
-.. function:: symbol
+.. function:: defineTyped(name, type, f)
 
-.. function:: inline
+   Defines a new global function in the Shen environment by the given name and declared Shen type signature. Function gets wrapped so it automatically handles partial application.
 
-.. function:: pre
+   :param string name: Name which function will be accessible by, including package prefix(es).
+   :param any type:    Shen type signature in array tree form, gets recursively converted to Shen lists.
+   :param function f:  JavaScript function to defer fully-applied invocation to.
+   :returns:           Name as a symbol.
+
+.. function:: defmacro(name, f)
+
+   Defines a macro in the Shen environment by the given name. Syntax gets pre-processed with :js:`valueToArrayTree` before being passed into wrapped function. Result returned from :js:`f` gets post-processed with :js:`valueFromArrayTree`. If :js:`f` returns :js:`undefined`, then it causes the macro to have no effect.
+
+   :param string name: Name which macro function will be accessible by, including package prefix(es).
+   :param function f:  JavaScript function to defer invocation to.
+   :returns:           Name as a symbol.
+
+.. function:: symbol(name, value)
+
+   Declares Shen global symbol by the given name (with added earmuffs per convention), setting it to given initial value and declaring a function by the given name that accesses it.
+
+   Example: :js:`symbol('package.thing', 0)` declares global symbol :shen:`package.*thing*`, sets it to :shen:`0` and declares function :shen:`package.thing` which takes no arguments and returns :shen:`(value package.*thing*)`.
+
+   :param string name: Name of accessor function and basis for name of global symbol.
+   :param any value:   Value to initialise global symbol with.
+   :returns:           :js:`value`.
+
+.. function:: inline(name, f)
+
+   Registers a new inline rule for JavaScript code generation. When the KLambda-to-JavaScript transpilier encounters a form starting with a symbol named :js:`name`, it will build child forms and then pass the rendered ASTs into :js:`f`. Whatever :js:`f` returns gets inserted into the greater JavaScript AST at the relative point where the form was encountered.
+
+   :param string name: Name of symbol that triggers this rule to be applied.
+   :param function f:  Function that handles the JavaScript AST transformation for this rule.
+   :returns:           :js:`f`.
+ 
+.. function:: pre(name, f)
+
+   Registers a new pre-processor rule for JavaScript code generation. Similar to :js:`inline`, but child forms are not rendered and are passed into :js:`f` as KLambda expression trees. :js:`f` should then return a JavaScript AST which will get inserted into the greater JavaScript AST at the relative point where the form was encountered.
+
+   :param string name: Name of symbol that triggers this rule to be applied.
+   :param function f:  Function that handles the KLambda expression tree to JavaScript AST conversion.
+   :returns:           :js:`f`.
 
 .. function:: load(path)
 
@@ -63,15 +102,40 @@ The environment object, $, comes with additional functions to make JS functions 
    :param string path: Local file system path relative to :shen:`shen.*home-directory*`
    :returns:           The :shen:`loaded` symbol.
 
-.. function:: evalShen
+.. function:: evalShen(expr)
 
-.. function:: evalJs
+   Invokes the Shen :shen:`eval` function which will evaluate the expression tree in the Shen environment.
 
-.. function:: evalKl
+   :param expr expr: Parsed Shen expression tree.
+   :returns:         Evaluation result.
 
-.. function:: exec
+.. function:: evalJs(ast)
 
-.. function:: execShen
+   Converts JavaScript AST to JavaScript syntax string and evaluates in isolated context.
+
+   :param ast ast: JavaScript AST Node.
+   :returns:       Evaluation result.
+
+.. function:: evalKl(expr)
+
+   Invokes the backend :js:`eval-kl` function which will evaluate the expression tree in the Shen environment.
+
+   :param expr expr: Parsed KLambda expression tree.
+   :returns:         Evaluation result.
+
+.. function:: exec(syntax)
+
+   Parses and evaluates all Shen syntax forms passed in. Returns final evaluation result.
+
+   :param string syntax: Shen syntax.
+   :returns:             Final evaluation result.
+
+.. function:: execEach(syntax)
+
+   Parses and evaluates all Shen syntax forms passed in. Returns array of evaluation results.
+
+   :param string syntax: Shen syntax.
+   :returns:             Array of evaluation results.
 
 .. function:: cons(x, y)
 
@@ -81,21 +145,45 @@ The environment object, $, comes with additional functions to make JS functions 
    :param any y: Any Shen or JavaScript value.
    :returns      A new :js:`Cons`.
 
-.. function:: consFromArray, r
+.. function:: consFromArray(x)
 
-.. function:: consToArray
+   Builds a Shen list from a JavaScript array. Nested elements are not converted, just copied as they are.
 
-.. function:: consFromArrayTree
+   Aliased as :js:`r` for brevity in generated code.
 
-.. function:: consToArrayTree
+   :param array x: A JavaScript array.
+   :returns:       A Shen list.
 
-.. function:: valueFromArray
+.. function:: consToArray(x)
 
-.. function:: valueFromArrayTree
+   Builds a JavaScript array from a Shen list. Nested elements are not converted, just copied as they are.
 
-.. function:: valueToArray
+   :param array x: A Shen list.
+   :returns:       A JavaScript array.
 
-.. function:: valueToArrayTree
+.. function:: consFromArrayTree(x)
+
+   Works like :js:`consFromArray` but recursively transforms child arrays to lists.
+
+.. function:: consToArrayTree(x)
+
+   Works like :js:`consToArray` but recursively transforms child lists to arrays.
+
+.. function:: valueFromArray(x)
+
+   .. note:: This function might not be needed if :js:`consFromArray` already covers what it does.
+
+.. function:: valueFromArrayTree(x)
+
+   .. note:: This function might not be needed if :js:`consFromArrayTree` already covers what it does.
+
+.. function:: valueToArray(x)
+
+   .. note:: This function might not be needed if :js:`consToArray` already covers what it does.
+
+.. function:: valueToArrayTree(x)
+
+   .. note:: This function might not be needed if :js:`consToArrayTree` already covers what it does.
 
 JavaScript Interop
 ==================
@@ -1058,7 +1146,7 @@ Global Functions
 
 .. function:: js.eval
 
-   .. Warning:: Using :js:`eval` is even more dangerous than usual in ShenScript because it will be difficult to know what indentifiers will be in scope when code is evaluated.
+   .. Warning:: Using :js:`eval` is even more dangerous than usual in ShenScript because it will be difficult to know what indentifiers will be in scope and how their names might have been aliased when code is evaluated.
 
    Calls the built-in JavaScript :js:`eval` function.
 

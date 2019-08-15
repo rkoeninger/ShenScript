@@ -363,145 +363,193 @@ js.void
 Global Classes, Values and Functions
 ------------------------------------
 
-Functions to retrieve common JavaScript globals.
+Functions to retrieve common JavaScript globals. All take zero arguments and return what they're called. They Shen global symbols name with additional earmuffs (:shen:`js.*Array*`) where the value is actually held.
 
-.. Hint:: You can check if a symbol is defined with :shen:`(bound? Symbol)`.
+.. Hint:: Some of these are not available in all JavaScript environments. You can check if a symbol is defined with :shen:`(bound? js.*Array*)`.
 
 .. function:: js.Array
 
-   Calling with no arguments returns the global JavaScript :code:`Array` class.
+   Returns the global JavaScript :code:`Array` class.
 
 .. function:: js.ArrayBuffer
 
-   Calling with no arguments returns the global JavaScript :code:`ArrayBuffer` class.
+   Returns the global JavaScript :code:`ArrayBuffer` class.
 
 .. function:: js.AsyncFunction
 
-   Calling with no arguments returns the global JavaScript :code:`AsyncFunction` class.
+   Returns the global JavaScript :code:`AsyncFunction` class.
 
 .. function:: js.Atomics
 
-   Calling with no arguments returns the global JavaScript :code:`Atomics` class. This is not available in Firefox.
+   Returns the global JavaScript :code:`Atomics` class. This is not available in Firefox.
 
 .. function:: js.Boolean
 
-   Calling with no arguments returns the global JavaScript :code:`Boolean` class.
+   Returns the global JavaScript :code:`Boolean` class.
 
 .. function:: js.console
 
-   Calling with no arguments returns the global JavaScript :code:`console` object.
+   Returns the global JavaScript :code:`console` object.
 
 .. function:: js.DataView
 
-   Calling with no arguments returns the global JavaScript :code:`DataView` class.
+   Returns the global JavaScript :code:`DataView` class.
 
 .. function:: js.Date
 
-   Calling with no arguments returns the global JavaScript :code:`Date` class.
+   Returns the global JavaScript :code:`Date` class.
 
 .. function:: js.Function
 
-   Calling with no arguments returns the global JavaScript :code:`Function` class.
+   Returns the global JavaScript :code:`Function` class.
 
 .. function:: js.GeneratorFunction
 
-   Calling with no arguments returns the global JavaScript :code:`GeneratorFunction` class.
+   Returns the global JavaScript :code:`GeneratorFunction` class.
 
 .. function:: js.globalThis
 
-   Calling with no arguments returns the global JavaScript :code:`globalThis` object. If :code:`globalThis` is not defined in this JavaScript environment, then :code:`window`, :code:`global`, etc is used as appropriate.
+   Returns the global JavaScript :code:`globalThis` object. If :code:`globalThis` is not defined in this JavaScript environment, then :code:`window`, :code:`global`, etc is used as appropriate.
 
 .. function:: js.Infinity
 
-   Calling with no arguments returns the JavaScript :code:`Infinity` value.
+   Returns the JavaScript :code:`Infinity` value.
 
 .. function:: js.JSON
 
-   Calling with no arguments returns the global JavaScript :code:`JSON` object.
+   Returns the global JavaScript :code:`JSON` object.
 
 .. function:: js.Map
 
-   Calling with no arguments returns the global JavaScript :code:`Map` class.
+   Returns the global JavaScript :code:`Map` class.
 
 .. function:: js.NaN
 
-   Calling with no arguments returns the JavaScript :code:`NaN` value.
+   Returns the JavaScript :code:`NaN` value.
 
 .. function:: js.Number
 
-   Calling with no arguments returns the global JavaScript :code:`Number` class.
+   Returns the global JavaScript :code:`Number` class.
 
 .. function:: js.null
 
-   Calling with no arguments returns the JavaScript :code:`null` value.
+   Returns the JavaScript :code:`null` value.
 
 .. function:: js.Object
 
-   Calling with no arguments returns the global JavaScript :code:`Object` class.
+   Returns the global JavaScript :code:`Object` class.
 
 .. function:: js.Promise
 
-   Calling with no arguments returns the global JavaScript :code:`Promise` class.
+   Returns the global JavaScript :code:`Promise` class.
 
 .. function:: js.Proxy
 
-   Calling with no arguments returns the global JavaScript :code:`Proxy` class.
+   Returns the global JavaScript :code:`Proxy` class.
 
 .. function:: js.Reflect
 
-   Calling with no arguments returns the global JavaScript :code:`Reflect` class.
+   Returns the global JavaScript :code:`Reflect` class.
 
 .. function:: js.RegExp
 
-   Calling with no arguments returns the global JavaScript :code:`RegExp` class.
+   Returns the global JavaScript :code:`RegExp` class.
 
 .. function:: js.Set
 
-   Calling with no arguments returns the global JavaScript :code:`Set` class.
+   Returns the global JavaScript :code:`Set` class.
 
 .. function:: js.SharedArrayBuffer
 
-   Calling with no arguments returns the global JavaScript :code:`SharedArrayBuffer` class. This is not available in Firefox.
+   Returns the global JavaScript :code:`SharedArrayBuffer` class. This is not available in Firefox.
 
 .. function:: js.String
 
-   Calling with no arguments returns the global JavaScript :code:`String` class.
+   Returns the global JavaScript :code:`String` class.
 
 .. function:: js.Symbol
 
-   Calling with no arguments returns the global JavaScript :code:`Symbol` class.
+   Returns the global JavaScript :code:`Symbol` class.
 
 .. function:: js.undefined
 
-   Calling with no arguments returns the JavaScript :code:`undefined` value.
+   Returns the JavaScript :code:`undefined` value.
 
 .. function:: js.WeakMap
 
-   Calling with no arguments returns the global JavaScript :code:`WeakMap` class.
+   Returns the global JavaScript :code:`WeakMap` class.
 
 .. function:: js.WeakSet
 
-   Calling with no arguments returns the global JavaScript :code:`WeakSet` class.
+   Returns the global JavaScript :code:`WeakSet` class.
 
 .. function:: js.WebAssembly
 
-   Calling with no arguments returns the global JavaScript :code:`WebAssembly` class.
+   Returns the global JavaScript :code:`WebAssembly` class.
 
 Web-specific Interop
 --------------------
 
-web.confirm?
-web.self
-web.window
-web.document
-web.navigator
-web.fetch
-web.fetch-json
+Only available when running in a browser or browser-based environment like Electron.
+
+.. function:: web.confirm?
+
+   Shows a synchronous web confirm pop-up with the given message. Returns Shen :shen:`true` or :shen:`false` depending on whether the user hit "OK" or "Cancel".
+
+   :param string message: Message to show on the pop-up.
+
+.. function:: web.document
+
+   Returns the global :js:`document`.
+
+.. function:: web.fetch
+
+   Does an HTTP GET on the given url and returns the result as a string. Only available when ShenScript is in async mode.
+
+   :param string url: URL to GET from.
+
+.. function:: web.fetch-json
+
+   Same as web.fetch, but parses received value as JSON.
+
+   :param string url: URL to GET from.
+   :returns:          A JSON object.
+
+.. function:: web.navigator
+
+   Returns the global :js:`navigator`.
+
+.. function:: web.self
+
+   Returns the value of the :js:`self` keyword.
+
+.. function:: web.window
+
+   Returns the global :js:`window`.
 
 Node-specific Interop
 ---------------------
 
-node.exit
-node.exit-macro
-node.require
-node.global
+Only available when running in a Node environment.
+
+.. function:: node.exit
+
+   Takes an exit code and terminates the runtime with the process returning that exit code.
+
+   :param number Code: Exit code for the process to return.
+   :returns:           Doesn't.
+
+.. function:: node.exit-macro
+
+   Macro to convert :shen:`node.exit` called with no arguments by inserting :shen:`0` as the default exit code.
+
+.. function:: node.global
+
+   Called with no arguments, returns the value of the Node :js:`global` object.
+
+.. function:: node.require
+
+   Calls Node's :js:`require` function with the given module identifier.
+
+   :param string Module: Name or path to a Node module.
+   :returns:             :js:`exports` object returned by the module.

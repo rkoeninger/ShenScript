@@ -283,16 +283,16 @@ Idle symbols can be used for property names, but they will represented with inte
    :param Args:  Constructor arguments in a Shen list.
    :returns:     New instance of :code:`Class`.
 
-.. function:: js.new-obj
+.. function:: js.obj
 
    Creates new :code:`Object` with properties of given names and values.
 
    :param Values: Shen list of property names and values, every other like :code:`["name1" Val1 "name2" Val2]`.
    :returns:      New :code:`Object`.
 
-.. function:: js.new-obj-macro
+.. function:: js.obj-macro
 
-   Macro that converts syntax like :code:`({ A B C D })` to :code:`(js.new-obj [A B C D])`.
+   Macro that converts syntax like :code:`({ A B C D })` to :code:`(js.obj [A B C D])`.
 
 .. function:: js.set
 

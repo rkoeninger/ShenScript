@@ -390,27 +390,145 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
 .. function:: js.ast.yield
 
+   Constructs a yield expression for use in a generator function.
+
+   Example: :js:`yield x`
+
+   :param ast Argument: Expression to yield.
+   :returns:            A :code:`YieldExpression` AST Node.
+
 .. function:: js.ast.yield*
+
+   Constructs a yield delegate expression for use in a generator function.
+
+   Example: :js:`yield* x`
+
+   :param ast Argument: Iterable or generator expression to yield.
+   :returns:            A :code:`YieldExpression` AST Node.
 
 .. function:: js.ast.await
 
+   Constructs an await expression for use in an async function.
+
+   Example: :js:`await x`
+
+   :param ast Argument: Expression to await.
+   :returns:            An :code:`AwaitExpression` AST Node.
+
 .. function:: js.ast.async
+
+   Makes function or class member async.
+
+   Examples: :js:`async () => ...`, :js:`async function(...) { ... }`, :js:`async method(...) { ... }`
+
+   :param ast Ast: Ast to make async.
+   :returns:       The same AST after setting the :js:`async` property to :js:`true`.
 
 .. function:: js.ast.static
 
+   Makes class member static.
+
+   Example: :js:`static method(...) { ... }`
+
+   :param ast Ast: Ast to make static.
+   :returns:       The same AST after setting the :js:`static` property to :js:`true`.
+
 .. function:: js.ast.if
+
+   Constructs an if statement with optional else clause.
+
+   Examples:
+
+   .. code-block:: js
+
+      if (...) {
+        ...
+      } else {
+        ...
+      }
+
+   .. code-block:: js
+
+     if (...) {
+       ...
+     }
+
+   :param ast Condition:  Conditional expression that determines which clause to step into.
+   :param ast Consequent: The then clause.
+   :param ast Alternate:  Optional else clause.
+   :returns:              An :code:`IfStatement` AST Node.
 
 .. function:: js.ast.try
 
+   Constructs a try statement.
+
+   Example:
+
+   .. code-block:: js
+
+      try {
+        ...
+      } catch (e) {
+        ...
+      }
+
+   :param ast Body:    A block of statements that get tried.
+   :param ast Handler: A catch clause as constructed by :js:`js.ast.catch`.
+   :returns:           A :code:`TryStatement` AST Node.
+
 .. function:: js.ast.catch
+
+   Constructs a catch clause.
+
+   Example: :js:`catch (e) { ... }`
+
+   :param ast Parameter: An identifer for the error that was caught.
+   :param ast Body:      A block of statements that get run when the preceeding try has failed.
+   :returns:             A :code:`CatchClause` AST Node.
 
 .. function:: js.ast.while
 
+   Constructs a while loop.
+
+   Example: :js:`while (...) { ... }`
+
+   :param ast Condition: Conditional expression that determines if the loop will run again or for the first time.
+   :param ast Body:      Block of statements to run each time the loop repeats.
+   :returns:             A :code:`WhileStatement` AST Node.
+
 .. function:: js.ast.for
+
+   Constructs a for loop.
+
+   Example: :js:`for (let x = 0; x < i; ++x) { ... }`
+
+   :param ast Init:   Declarations and initial statements. This can be a sequence expression.
+   :param ast Test:   Conditional expression that determines if the loop will run again or for the first time.
+   :param ast Update: Update expressions to evaluate at the end of each iteration. This can be a sequence expression.
+   :param ast Body:   Block of statements to run each time the loop repeats.
+   :returns:          A :code:`ForStatement` AST Node.
 
 .. function:: js.ast.for-in
 
+   Constructs a for-in loop.
+
+   Example: :js:`for (let x in xs) { ... }`
+
+   :param ast Left:   Declaration of local variable that each key from the object on the right side gets assigned to.
+   :param ast Right:  Expression that evaluates to some object.
+   :param ast Body:   Block of statements to run each time the loop repeats.
+   :returns:          A :code:`ForInStatement` AST Node.
+
 .. function:: js.ast.for-of
+
+   Constructs a for-of loop.
+
+   Example: :js:`for (let x of xs) { ... }`
+
+   :param ast Left:   Declaration of local variable that each value from the iterable on the right side gets assigned to.
+   :param ast Right:  Expression that evaluates to an iterable value.
+   :param ast Body:   Block of statements to run each time the loop repeats.
+   :returns:          A :code:`ForOfStatement` AST Node.
 
 .. function:: js.ast.statement
 

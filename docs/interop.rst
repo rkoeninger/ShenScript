@@ -366,18 +366,23 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
    Constructs a function expression.
 
-   Example: :js:`function name(...) { ... }`
+   Example: :js:`function name(x, y) { ... }`
 
-   TODO: this needs work - Procedure doesn't allow build function exprs as desired
-
-   :param string Name:
-   :param list Parameters:
-   :param ast Body:
-   :returns: A :code:`FunctionExpression` AST Node.
+   :param ast Name:        Optional identifier naming the function.
+   :param list Parameters: A Shen list of parameter expression.
+   :param ast Body:        A block of statements that make of the body of the function.
+   :returns:               A :code:`FunctionExpression` AST Node.
 
 .. function:: js.ast.function*
 
-   TODO: this needs work - Generator doesn't allow build function* exprs as desired
+   Constructs a generator function expression.
+
+   Example: :js:`function* name(x, y) { ... }`
+
+   :param ast Name:        Optional identifier naming the function.
+   :param list Parameters: A Shen list of parameter expression.
+   :param ast Body:        A block of statements that make of the body of the function.
+   :returns:               A :code:`FunctionExpression` AST Node.
 
 .. function:: js.ast.return
 
@@ -775,45 +780,83 @@ Idle symbols can be used for property names, but they will represented with inte
 Global Functions
 ----------------
 
-js.log
-js.decodeURI
-js.decodeURIComponent
-js.encodeURI
-js.encodeURIComponent
-js.parseFloat
-js.parseInt
-js.parseIntRadix
-js.==
-js.===
-js.!=
-js.!==
-js.not
-js.and
-js.or
-js.defined?
-js.undefined?
-js.truthy?
-js.falsy?
-js.array?
-js.async?
-js.boolean?
-js.finite?
-js.generator?
-js.infinite?
-js.+infinity?
-js.-infinity?
-js.integer?
-js.+integer?
-js.-integer?
-js.function?
-js.null?
-js.nan?
-js.object?
-js.symbol?
-js.delete
-js.eval
-js.in
-js.instanceof
+.. function:: js.log
+
+.. function:: js.decodeURI
+
+.. function:: js.decodeURIComponent
+
+.. function:: js.encodeURI
+
+.. function:: js.encodeURIComponent
+
+.. function:: js.parseFloat
+
+.. function:: js.parseInt
+
+.. function:: js.parseIntRadix
+
+.. function:: js.==
+
+.. function:: js.===
+
+.. function:: js.!=
+
+.. function:: js.!==
+
+.. function:: js.not
+
+.. function:: js.and
+
+.. function:: js.or
+
+.. function:: js.defined?
+
+.. function:: js.undefined?
+
+.. function:: js.truthy?
+
+.. function:: js.falsy?
+
+.. function:: js.array?
+
+.. function:: js.async?
+
+.. function:: js.boolean?
+
+.. function:: js.finite?
+
+.. function:: js.generator?
+
+.. function:: js.infinite?
+
+.. function:: js.+infinity?
+
+.. function:: js.-infinity?
+
+.. function:: js.integer?
+
+.. function:: js.+integer?
+
+.. function:: js.-integer?
+
+.. function:: js.function?
+
+.. function:: js.null?
+
+.. function:: js.nan?
+
+.. function:: js.object?
+
+.. function:: js.symbol?
+
+.. function:: js.delete
+
+.. function:: js.eval
+
+.. function:: js.in
+
+.. function:: js.instanceof
 
 .. function:: js.typeof
 

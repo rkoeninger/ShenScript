@@ -806,76 +806,206 @@ Global Functions
 
 .. function:: js.not
 
+   Performs JavaScript boolean inversion.
+
+   :param any X: Value to invert.
+   :returns:     A JavaScript boolean.
+
 .. function:: js.and
 
 .. function:: js.or
 
 .. function:: js.defined?
 
+   Determines if value is *not* :js:`undefined`.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
+
 .. function:: js.undefined?
+
+   Determines if value is :js:`undefined`.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
 
 .. function:: js.truthy?
 
+   Determines if value is coercible to :js:`true` by JavaScript standards.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
+
 .. function:: js.falsy?
+
+   Determines if value is coercible to :js:`false` by JavaScript standards.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
 
 .. function:: js.array?
 
+   Determines if value is a JavaScript array.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
+
 .. function:: js.async?
+
+   Determines if value is an asynchronous function.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
 
 .. function:: js.boolean?
 
+   Determines if value is a JavaScript boolean.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
+
 .. function:: js.finite?
+
+   Determines if value is a finite number.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
 
 .. function:: js.generator?
 
+   Determines if value is a generator function.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
+
 .. function:: js.infinite?
+
+   Determines if value is positive or negative infinity.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
 
 .. function:: js.+infinity?
 
+   Determines if value is positive infinity.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
+
 .. function:: js.-infinity?
+
+   Determines if value is negative infinity.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
 
 .. function:: js.integer?
 
+   Determines if value is an integer.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
+
 .. function:: js.+integer?
+
+   Determines if value is a positive integer.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
 
 .. function:: js.-integer?
 
+   Determines if value is a negative integer.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
+
 .. function:: js.function?
+
+   Determines if value is a function. This test will also work for Shen functions.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
 
 .. function:: js.null?
 
+   Determines if value is :js:`null`.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
+
 .. function:: js.nan?
+
+   Determines if value is :js:`NaN` (not-a-number) which will normally not be equal to itself according to the :js:`===` operator.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
 
 .. function:: js.object?
 
+   Determines if value is an object with the direct protoype :js:`Object` which means it is probably the product of object literal syntax.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
+
 .. function:: js.symbol?
+
+   Determines if a value is a JavaScript symbol. Shen symbols are represented with JS symbols, so this test will pass for idle symbols as well.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
 
 .. function:: js.delete
 
+   Removes a key from an object.
+
+   :param object Object: Object to remove key from.
+   :param any Key:       String or symbol name of key to remove.
+   :returns:             JavaScript :js:`true` if the delete was successful.
+
 .. function:: js.eval
+
+.. Warning:: Using :js:`eval` is even more dangerous than usual in ShenScript because it will be difficult to know what indentifiers will be in scope when code is evaluated.
+
+   Calls the built-in JavaScript :js:`eval` function.
+
+   :param string Code: JavaScript code in string form.
+   :returns:           The result of evaluating the code.
 
 .. function:: js.in
 
+   Determines if value is a key in an object.
+
+   :param any Key:       String or symbol name of a property.
+   :param object Object: Object that might contain a property by that key.
+   :returns:             A JavaScript boolean.
+
 .. function:: js.instanceof
+
+   Determines if value is the product of a constructor, class or anything higher up its prototype chain.
+
+   :param any X:       The value to inspect.
+   :param class Class: A class or constructor function.
+   :returns:           A JavaScript boolean.
 
 .. function:: js.typeof
 
    Applies the JavaScript :js:`typeof` operator to a value.
 
-   :param X: Anything.
+   :param any X: Anything.
    :returns: A string identifying the basic type of the value: object, number, string, symbol, undefined.
 
 .. function:: js.void
 
    Applies the JavaScript :js:`void` operator to argument, which will always return :js:`undefined`.
 
-   :param X: Anything.
+   :param any X: Anything.
    :returns: :js:`undefined`.
 
 Global Classes, Values and Functions
 ------------------------------------
 
-Functions to retrieve common JavaScript globals. All take zero arguments and return what they're called. They Shen global symbols name with additional earmuffs (:shen:`js.*Array*`) where the value is actually held.
+Functions to retrieve common JavaScript globals. All take zero arguments and return what they're called. They Shen global symbols name with additional earmuffs (e.g. :shen:`js.*Array*`) where the value is actually held.
 
 .. Hint:: Some of these are not available in all JavaScript environments. You can check if a symbol is defined with :shen:`(bound? js.*Array*)`.
 

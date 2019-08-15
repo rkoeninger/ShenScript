@@ -98,59 +98,65 @@ js.ast.inline
 Unchecked Math Operators
 ------------------------
 
-.. method:: js.unchecked.+(x, y)
+.. function:: js.unchecked.+(x, y)
 
    Applies the JavaScript :code:`+` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
 
-.. method:: js.unchecked.-(x, y)
+.. function:: js.unchecked.-(x, y)
 
    Applies the JavaScript :code:`-` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
 
-.. method:: js.unchecked.*(x, y)
+.. function:: js.unchecked.*(x, y)
 
    Applies the JavaScript :code:`*` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
 
-.. method:: js.unchecked./(x, y)
+.. function:: js.unchecked./(x, y)
 
    Applies the JavaScript :code:`/` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
 
-.. method:: js.unchecked.**(x, y)
+.. function:: js.unchecked.**(x, y)
 
    Applies the JavaScript :code:`**` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
 
-.. method:: js.unchecked.bitwise.not(x)
+.. function:: js.unchecked.bitwise.not(x)
 
    Applies the JavaScript :code:`!` operator to :code:`x` without additional typechecks, perserving JavaScript coercion behavior.
 
-.. method:: js.unchecked.bitwise.and(x, y)
+.. function:: js.unchecked.bitwise.and(x, y)
 
    Applies the JavaScript :code:`&` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
 
-.. method:: js.unchecked.bitwise.or(x, y)
+.. function:: js.unchecked.bitwise.or(x, y)
 
    Applies the JavaScript :code:`|` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
 
-.. method:: js.unchecked.bitwise.xor(x, y)
+.. function:: js.unchecked.bitwise.xor(x, y)
 
    Applies the JavaScript :code:`^` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
 
-.. method:: js.unchecked.bitwise.left-shift(x, y)
+.. function:: js.unchecked.bitwise.left-shift(x, y)
 
    Applies the JavaScript :code:`<<` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
 
-.. method:: js.unchecked.bitwise.right-shift(x, y)
+.. function:: js.unchecked.bitwise.right-shift(x, y)
 
    Applies the JavaScript :code:`>>` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
 
-.. method:: js.unchecked.bitwise.right-shift-unsigned(x, y)
+.. function:: js.unchecked.bitwise.right-shift-unsigned(x, y)
 
    Applies the JavaScript :code:`>>>` operator to :code:`x` and :code:`y` without additional typechecks, perserving JavaScript coercion behavior.
 
 Typed Operators
 ---------------
 
-js.%                            : number --> number --> number
-js.**                           : number --> number --> number
+.. function:: js.%(x, y) : number --> number --> number
+
+   Checks :code:`x` and :code:`y` are numbers and then applies the JavaScript :code:`%` operator. Always returns a number.
+
+.. function:: js.**(x, y) : number --> number --> number
+
+   Checks :code:`x` and :code:`y` are numbers and then applies the JavaScript :code:`**` operator. Always returns a number.
+
 js.bitwise.not                  : number --> number
 js.bitwise.and                  : number --> number --> number
 js.bitwise.or                   : number --> number --> number

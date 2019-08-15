@@ -83,6 +83,13 @@ The environment object, :js:`$`, comes with additional functions to make JavaScr
 
    Registers a new inline rule for JavaScript code generation. When the KLambda-to-JavaScript transpilier encounters a form starting with a symbol named :js:`name`, it will build child forms and then pass the rendered ASTs into :js:`f`. Whatever :js:`f` returns gets inserted into the greater JavaScript AST at the relative point where the form was encountered.
 
+   Example:
+
+   .. code-block:: js
+
+      // Renders a `(not X)` call with the JavaScript `!` operator and inserts type conversions only as needed
+      inline('not', x => ann('JsBool', Unary('!', cast('JsBool', x))))
+
    :param string name: Name of symbol that triggers this rule to be applied.
    :param function f:  Function that handles the JavaScript AST transformation for this rule.
    :returns:           :js:`f`.
@@ -90,6 +97,13 @@ The environment object, :js:`$`, comes with additional functions to make JavaScr
 .. function:: pre(name, f)
 
    Registers a new pre-processor rule for JavaScript code generation. Similar to :js:`inline`, but child forms are not rendered and are passed into :js:`f` as KLambda expression trees. :js:`f` should then return a JavaScript AST which will get inserted into the greater JavaScript AST at the relative point where the form was encountered.
+
+   Example:
+
+   .. code-block:: js
+
+      // Evaluates math expression at build time and inserts result in place of JavaScript AST that would have been built.
+      pre('build-time-math', x => evalShen(x));
 
    :param string name: Name of symbol that triggers this rule to be applied.
    :param function f:  Function that handles the KLambda expression tree to JavaScript AST conversion.

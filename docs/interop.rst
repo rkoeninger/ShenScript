@@ -5,7 +5,7 @@ Shen Interop
 
 The environment object, $, comes with additional functions to make JS functions callable from Shen, setting global symbols, declaring types and macros, etc.
 
-Some of these will return a promise if the environment with built in async mode.
+.. Important:: Some of these will return a promise if the environment was built in async mode.
 
 .. function:: parse(syntax)
 
@@ -50,7 +50,14 @@ defmacro
 symbol
 inline
 pre
-load
+
+.. function:: load(path)
+
+   Invokes the Shen :shen:`load` function which will read the file at the given path and evaluates its contents.
+
+   :param string path: Local file system path relative to :shen:`shen.*home-directory*`
+   :returns:           The :shen:`loaded` symbol.
+
 evalShen
 evalJs
 evalKl
@@ -86,38 +93,123 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
 .. function:: js.ast.literal
 
-   Constructs an AST node representing a literal JavaScript value.
+   Constructs literal value syntax.
 
    :param Value: JavaScript value that can be a literal (number, string, boolean, null).
    :returns:     A :code:`Literal` AST node.
 
 .. function:: js.ast.array
 
-   Constructs an AST node representing a JavaScript array literal.
+   Constructs array literal syntax.
 
    :param list Values: A Shen list of values to initialise a JavaScript array with.
    :returns:           An :code:`ArrayExpression` AST node.
 
 .. function:: js.ast.id
 
-   Constructs an AST node representing a JavaScript identifier. Identifier is named exactly as the given argument.
+   Constructs an identifier - the name of a function or variable. Identifier is named exactly as the given argument.
 
    :param string Name: Name of identifier.
    :returns:           An :code:`Identifier` AST node.
 
-js.ast.safe-id
-js.ast.const
-js.ast.let
-js.ast.var
-js.ast.arguments
-js.ast.debugger
-js.ast.new-target
-js.ast.this
-js.ast.unary
-js.ast.binary
-js.ast.cond
-js.ast.assign
-js.ast.update
+.. function:: js.ast.safe-id
+
+   Constructs an identifier where the name is escaped to make it valid in JavaScript and to not collide with reserved names in ShenScript.
+
+   :param string Name: Name of identifier.
+   :returns:           An :code:`Identifier` AST node.
+
+.. function:: js.ast.const
+
+   Constructs :js:`const` variable declaration.
+
+   :param ast Id:    Variable name.
+   :param ast Value: Value to initialise variable with.
+   :returns:         A :code:`VariableDeclaration` AST node.
+
+.. function:: js.ast.let
+
+   Constructs :js:`let` variable declaration.
+
+   :param ast Id:    Variable name.
+   :param ast Value: Value to initialise variable with.
+   :returns:         A :code:`VariableDeclaration` AST node.
+
+.. function:: js.ast.var
+
+   Constructs :js:`var` variable declaration.
+
+   :param ast Id:    Variable name.
+   :param ast Value: Value to initialise variable with.
+   :returns:         A :code:`VariableDeclaration` AST node.
+
+.. function:: js.ast.arguments
+
+   Constructs a reference to the :js:`arguments` object.
+
+   :returns: An :code:`Identifier` AST node.
+
+.. function:: js.ast.debugger
+
+   Constructs a :js:`debugger;` statement.
+
+   :returns: A :code:`DebuggerStatement` AST node.
+
+.. function:: js.ast.new-target
+
+   Constructs a reference to the :js:`new.target` meta-property.
+
+   :returns: A :code:`MetaProperty` AST node.
+
+.. function:: js.ast.this
+
+   Constructs a reference to the :js:`this` keyword.
+
+   :returns: A :code:`ThisExpression` AST node.
+
+.. function:: js.ast.unary
+
+   Construts a unary operator application like :js:`!x` or :js:`-x`.
+
+   :param string Operator: Name of operator to apply.
+   :param ast Argument:    Argument to apply operator to.
+   :returns:               A :code:`UnaryExpression` AST Node.
+
+.. function:: js.ast.binary
+
+   Constructs a binary operator application like :js:`x && y` or :js:`x + y`.
+
+   :param string Operator: Name of operator to apply.
+   :param ast Left:        Expression on the left side.
+   :param ast Right:       Expression on the right side.
+   :returns:               A :code:`BinaryExpression` AST Node.
+
+.. function:: js.ast.ternary
+
+   Constructs an application of the ternary operator - :js:`x ? y : z`.
+
+   :param ast Condition:  True/false expression on the left of the :js:`?`.
+   :param ast Consequent: Expression that gets evaluated if the condition is true.
+   :param ast Alternate:  Expression that gets evaluated if the condition is false.
+   :returns:              A :code:`ConditionalExpression` AST Node.
+
+.. function:: js.ast.assign
+
+   Constructs an assignment expression like :js:`x = y`.
+
+   :param ast Target: The variable to assign to.
+   :param ast Value:  The value to assign.
+   :returns:          An :code:`AssignmentExpression` AST Node.
+
+.. function:: js.ast.update
+
+   Constructs an assignment expression with a specific operator like :js:`x += y`.
+
+   :param string Operator: The update operator without the :code:`=`, so :code:`+`, :code:`-`, etc.
+   :param ast Target:      The variable to assign to.
+   :param ast Value:       The value to assign.
+   :returns:               An :code:`AssignmentExpression` AST Node.
+
 js.ast.call
 js.ast.spread
 js.ast.super
@@ -149,6 +241,9 @@ js.ast.for
 js.ast.for-in
 js.ast.for-of
 js.ast.statement
+
+AST Evaluation Functions
+------------------------
 
 .. function:: js.ast.eval
 
@@ -424,8 +519,20 @@ js.delete
 js.eval
 js.in
 js.instanceof
-js.typeof
-js.void
+
+.. function:: js.typeof
+
+   Applies the JavaScript :js:`typeof` operator to a value.
+
+   :param X: Anything.
+   :returns: A string identifying the basic type of the value: object, number, string, symbol, undefined.
+
+.. function:: js.void
+
+   Applies the JavaScript :js:`void` operator to argument, which will always return :js:`undefined`.
+
+   :param X: Anything.
+   :returns: :js:`undefined`.
 
 Global Classes, Values and Functions
 ------------------------------------

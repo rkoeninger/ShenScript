@@ -15,9 +15,9 @@ const frontend      = require('../../lib/frontend.node');
           equal(123, await exec('(js.new (js.Number) ["123"])'));
         });
       });
-      describe('js.new-obj', () => {
+      describe('js.obj', () => {
         it('should construct js object from series of key-value pairs', async () => {
-          ok(equate({ a: 1, b: 2 }, await exec('(js.new-obj ["a" 1 "b" 2])')));
+          ok(equate({ a: 1, b: 2 }, await exec('(js.obj ["a" 1 "b" 2])')));
         });
         it('should work with ({ ... }) macro', async () => {
           ok(equate({ a: 1, b: 2 }, await exec('({ "a" 1 "b" 2 })')));
@@ -37,7 +37,7 @@ const frontend      = require('../../lib/frontend.node');
           equal(3, await caller('js.get')({ y: 3 }, 'y'));
         });
         it('should access chain of properties on object', async () => {
-          equal(3, await exec('(. (js.new-obj ["x" (js.new-obj ["y" (js.new-obj ["z" 3])])]) "x" "y" "z")'));
+          equal(3, await exec('(. (js.obj ["x" (js.obj ["y" (js.obj ["z" 3])])]) "x" "y" "z")'));
         });
       });
     });

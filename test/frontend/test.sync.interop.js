@@ -14,9 +14,9 @@ describe('sync', () => {
         equal(123, exec('(js.new (js.Number) ["123"])'));
       });
     });
-    describe('js.new-obj', () => {
+    describe('js.obj', () => {
       it('should construct js object from series of key-value pairs', () => {
-        ok(equate({ a: 1, b: 2 }, exec('(js.new-obj ["a" 1 "b" 2])')));
+        ok(equate({ a: 1, b: 2 }, exec('(js.obj ["a" 1 "b" 2])')));
       });
       it('should work with ({ ... }) macro', () => {
         ok(equate({ a: 1, b: 2 }, exec('({ "a" 1 "b" 2 })')));
@@ -36,7 +36,7 @@ describe('sync', () => {
         equal(3, caller('js.get')({ y: 3 }, 'y'));
       });
       it('should access chain of properties on object', () => {
-        equal(3, exec('(. (js.new-obj ["x" (js.new-obj ["y" (js.new-obj ["z" 3])])]) "x" "y" "z")'));
+        equal(3, exec('(. (js.obj ["x" (js.obj ["y" (js.obj ["z" 3])])]) "x" "y" "z")'));
       });
     });
   });

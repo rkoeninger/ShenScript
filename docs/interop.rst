@@ -87,7 +87,8 @@ The environment object, :js:`$`, comes with additional functions to make JavaScr
 
    .. code-block:: js
 
-      // Renders a `(not X)` call with the JavaScript `!` operator and inserts type conversions only as needed
+      // Renders a `(not X)` call with the JavaScript `!` operator
+      // and inserts type conversions only as needed
       inline('not', x => ann('JsBool', Unary('!', cast('JsBool', x))))
 
    :param string name: Name of symbol that triggers this rule to be applied.
@@ -102,7 +103,8 @@ The environment object, :js:`$`, comes with additional functions to make JavaScr
 
    .. code-block:: js
 
-      // Evaluates math expression at build time and inserts result in place of JavaScript AST that would have been built.
+      // Evaluates math expression at build time and inserts result
+      // in place of JavaScript AST that would have been built
       pre('build-time-math', x => evalShen(x));
 
    :param string name: Name of symbol that triggers this rule to be applied.

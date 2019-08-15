@@ -42,7 +42,7 @@ The environment object, $, comes with additional functions to make JS functions 
 
    :param any x: Any Shen or JavaScript value.
    :param any y: Any Shen or JavaScript value.
-   :returns      A JavaScript boolean.
+   :returns:     A JavaScript boolean.
 
 define
 defineTyped
@@ -280,27 +280,113 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
 .. function:: js.ast.member
 
+   Constructs a member access expression with the dot operator.
+
+   Examples: :js:`x.y`, :js:`x[y]`
+
+   :param ast Object: Expression AST to access member of.
+   :param ast Member: Expression that computes member name to access. If non-string, will automatically be wrapped in square brackets.
+   :returns:          A :code:`MemberExpression` AST Node.
+
 .. function:: js.ast.object
+
+   Constructs object literal syntax.
+
+   Example: :js:`{ a: b, c: d }`
+
+   :param list Properties: A Shen list of name-value pairs, each of which is a Shen list of length 2.
+   :returns:               An :code:`ObjectExpression` AST Node.
 
 .. function:: js.ast.class
 
+   Constructs ES6 class syntax. Members are constructed using :shen:`js.ast.constructor`, :shen:`js.ast.method`, :shen:`js.ast.getter`, :shen:`js.ast.setter` or the more general function :shen:`js.ast.slot`.
+
+   Example:
+
+   .. code-block:: js
+
+      class Class extends SuperClass {
+        constructor(...) {
+          ...
+        }
+        method(...) {
+          ...
+        }
+      }
+
+   :param ast Name:       Identifier naming the class.
+   :param ast SuperClass: Identifier node of super class, can be undefined or null.
+   :param list Slots:     A Shen list of slot AST's.
+   :returns:              A :code:`ClassExpression` AST Node.
+
 .. function:: js.ast.slot
+
+   Constructs a class property of the given kind.
+
+   :param string Kind: "constructor", "method", "get" or "set".
+   :param ast Name:    Identifier naming the property.
+   :param ast Value:   Expression representing the function or value assigned to the property.
+   :returns:           A :code:`MethodDefinition` AST Node.
 
 .. function:: js.ast.constructor
 
+   Specialisation of :shen:`js.ast.slot` for class constructors.
+
+   Example: :js:`constructor(...) { ... }`
+
 .. function:: js.ast.method
+
+   Specialisation of :shen:`js.ast.slot` for class methods.
+
+   Example: :js:`method(...) { ... }`
 
 .. function:: js.ast.getter
 
+   Specialisation of :shen:`js.ast.slot` for class getters.
+
+   Example: :js:`get thing(...) { ... }`
+
 .. function:: js.ast.setter
+
+   Specialisation of :shen:`js.ast.slot` for class setters.
+
+   Example: :js:`set thing(...) { ... }`
 
 .. function:: js.ast.arrow
 
+   Constructs a lambda expression.
+
+   Example: :js:`x => ...`
+
+   :param list Parameters: A Shen list of parameter identifiers.
+   :param ast Body:        A body expression.
+   :returns:               A :code:`ArrowFunctionExpression` AST Node.
+
 .. function:: js.ast.function
+
+   Constructs a function expression.
+
+   Example: :js:`function name(...) { ... }`
+
+   TODO: this needs work - Procedure doesn't allow build function exprs as desired
+
+   :param string Name:
+   :param list Parameters:
+   :param ast Body:
+   :returns: A :code:`FunctionExpression` AST Node.
 
 .. function:: js.ast.function*
 
+   TODO: this needs work - Generator doesn't allow build function* exprs as desired
+
 .. function:: js.ast.return
+
+   Constructs a return statement.
+
+   Example: :js:`return x;`
+
+   :param ast Argument: Expression to return.
+   :returns:            A :code:`ReturnStatement` AST Node.
 
 .. function:: js.ast.yield
 

@@ -44,12 +44,17 @@ The environment object, $, comes with additional functions to make JS functions 
    :param any y: Any Shen or JavaScript value.
    :returns:     A JavaScript boolean.
 
-define
-defineTyped
-defmacro
-symbol
-inline
-pre
+.. function:: define
+
+.. function:: defineTyped
+
+.. function:: defmacro
+
+.. function:: symbol
+
+.. function:: inline
+
+.. function:: pre
 
 .. function:: load(path)
 
@@ -58,11 +63,15 @@ pre
    :param string path: Local file system path relative to :shen:`shen.*home-directory*`
    :returns:           The :shen:`loaded` symbol.
 
-evalShen
-evalJs
-evalKl
-exec
-execShen
+.. function:: evalShen
+
+.. function:: evalJs
+
+.. function:: evalKl
+
+.. function:: exec
+
+.. function:: execShen
 
 .. function:: cons(x, y)
 
@@ -72,14 +81,21 @@ execShen
    :param any y: Any Shen or JavaScript value.
    :returns      A new :js:`Cons`.
 
-consFromArray, r
-consToArray
-consFromArrayTree
-consToArrayTree
-valueFromArray
-valueFromArrayTree
-valueToArray
-valueToArrayTree
+.. function:: consFromArray, r
+
+.. function:: consToArray
+
+.. function:: consFromArrayTree
+
+.. function:: consToArrayTree
+
+.. function:: valueFromArray
+
+.. function:: valueFromArrayTree
+
+.. function:: valueToArray
+
+.. function:: valueToArrayTree
 
 JavaScript Interop
 ==================
@@ -789,17 +805,53 @@ Global Functions
 
 .. function:: js.decodeURI
 
+   Decodes a URI by un-escaping special characters.
+
+   :param string Uri: URI to decode.
+   :returns:          Decoded URI.
+
 .. function:: js.decodeURIComponent
+
+   Decodes a URI component by un-escaping special characters.
+
+   :param string Uri: URI component to decode.
+   :returns:          Decoded URI.
 
 .. function:: js.encodeURI
 
+   Encodes a URI by escaping special characters.
+
+   :param string Uri: URI to encode.
+   :returns:          Encoded URI.
+
 .. function:: js.encodeURIComponent
+
+   Encodes a URI component by escaping special characters.
+
+   :param string Uri: URI component to encode.
+   :returns:          Encoded URI.
 
 .. function:: js.parseFloat
 
+   Parses a floating-point number.
+
+   :param string X: Numeric string to parse.
+   :returns:        Parsed number.
+
 .. function:: js.parseInt
 
+   Parses an integral number with radix specified to be 10 to avoid unusual parsing behavior.
+
+   :param string X: Numeric string to parse.
+   :returns:        Parsed number.
+
 .. function:: js.parseIntRadix
+
+   Parses an integral number with the given.
+
+   :param string X:     Numeric string to parse.
+   :param number Radix: Radix to parse the number with.
+   :returns:            Parsed number.
 
 .. function:: js.==
 

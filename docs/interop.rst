@@ -519,10 +519,10 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
    Example: :js:`for (let x in xs) { ... }`
 
-   :param ast Left:   Declaration of local variable that each key from the object on the right side gets assigned to.
-   :param ast Right:  Expression that evaluates to some object.
-   :param ast Body:   Block of statements to run each time the loop repeats.
-   :returns:          A :code:`ForInStatement` AST Node.
+   :param ast Left:  Declaration of local variable that each key from the object on the right side gets assigned to.
+   :param ast Right: Expression that evaluates to some object.
+   :param ast Body:  Block of statements to run each time the loop repeats.
+   :returns:         A :code:`ForInStatement` AST Node.
 
 .. function:: js.ast.for-of
 
@@ -530,10 +530,10 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
    Example: :js:`for (let x of xs) { ... }`
 
-   :param ast Left:   Declaration of local variable that each value from the iterable on the right side gets assigned to.
-   :param ast Right:  Expression that evaluates to an iterable value.
-   :param ast Body:   Block of statements to run each time the loop repeats.
-   :returns:          A :code:`ForOfStatement` AST Node.
+   :param ast Left:  Declaration of local variable that each value from the iterable on the right side gets assigned to.
+   :param ast Right: Expression that evaluates to an iterable value.
+   :param ast Body:  Block of statements to run each time the loop repeats.
+   :returns:         A :code:`ForOfStatement` AST Node.
 
 .. function:: js.ast.statement
 
@@ -563,105 +563,105 @@ Unchecked Math Operators
 
 .. function:: js.unchecked.+
 
-   Applies the JavaScript :code:`+` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+   Applies the JavaScript :js:`+` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X: Whatever.
-   :param Y: Whatever.
-   :returns: Whatever :code:`+` does based on JavaScript-specific behavior.
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     Whatever :js:`+` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.-
 
-   Applies the JavaScript :code:`-` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+   Applies the JavaScript :js:`-` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X: Whatever.
-   :param Y: Whatever.
-   :returns: Whatever :code:`-` does based on JavaScript-specific behavior.
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     Whatever :js:`-` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.*
 
-   Applies the JavaScript :code:`*` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+   Applies the JavaScript :js:`*` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X: Whatever.
-   :param Y: Whatever.
-   :returns: Whatever :code:`*` does based on JavaScript-specific behavior.
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     Whatever :js:`*` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked./
 
-   Applies the JavaScript :code:`/` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+   Applies the JavaScript :js:`/` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X: Whatever.
-   :param Y: Whatever.
-   :returns: Whatever :code:`/` does based on JavaScript-specific behavior.
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     Whatever :js:`/` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.**
 
-   Applies the JavaScript :code:`**` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+   Applies the JavaScript :js:`**` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X: Whatever.
-   :param Y: Whatever.
-   :returns: Whatever :code:`**` does based on JavaScript-specific behavior.
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     Whatever :js:`**` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.bitwise.not
 
-   Applies the JavaScript :code:`!` operator to argument without additional typechecks, perserving JavaScript coercion behavior.
+   Applies the JavaScript :js:`!` operator to argument without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X: Whatever.
-   :returns: Whatever :code:`!` does based on JavaScript-specific behavior.
+   :param any X: Whatever.
+   :returns:     Whatever :js:`!` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.bitwise.and
 
-   Applies the JavaScript :code:`&` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+   Applies the JavaScript :js:`&` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X: Whatever.
-   :param Y: Whatever.
-   :returns: Whatever :code:`&` does based on JavaScript-specific behavior.
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     Whatever :js:`&` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.bitwise.or
 
-   Applies the JavaScript :code:`|` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+   Applies the JavaScript :js:`|` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X: Whatever.
-   :param Y: Whatever.
-   :returns: Whatever :code:`|` does based on JavaScript-specific behavior.
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     Whatever :js:`|` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.bitwise.xor
 
-   Applies the JavaScript :code:`^` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+   Applies the JavaScript :js:`^` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X: Whatever.
-   :param Y: Whatever.
-   :returns: Whatever :code:`^` does based on JavaScript-specific behavior.
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     Whatever :js:`^` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.bitwise.left-shift
 
-   Applies the JavaScript :code:`<<` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+   Applies the JavaScript :js:`<<` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X: Value to shift.
-   :param Y: Amount to shift by.
-   :returns: Whatever :code:`<<` does based on JavaScript-specific behavior.
+   :param any X: Value to shift.
+   :param any Y: Amount to shift by.
+   :returns:     Whatever :js:`<<` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.bitwise.right-shift
 
-   Applies the JavaScript :code:`>>` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+   Applies the JavaScript :js:`>>` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X: Value to shift.
-   :param Y: Amount to shift by.
-   :returns: Whatever :code:`>>` does based on JavaScript-specific behavior.
+   :param any X: Value to shift.
+   :param any Y: Amount to shift by.
+   :returns:     Whatever :js:`>>` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.bitwise.right-shift-unsigned
 
-   Applies the JavaScript :code:`>>>` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+   Applies the JavaScript :js:`>>>` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X: Value to shift.
-   :param Y: Amount to shift by.
-   :returns: Whatever :code:`>>>` does based on JavaScript-specific behavior.
+   :param any X: Value to shift.
+   :param any Y: Amount to shift by.
+   :returns:     Whatever :js:`>>>` does based on JavaScript-specific behavior.
 
 Typed Operators
 ---------------
 
 .. function:: js.% : number --> number --> number
 
-   Checks arguments are numbers and then applies the JavaScript :code:`%` operator.
+   Checks arguments are numbers and then applies the JavaScript :js:`%` operator.
 
    :param number X: A Shen number.
    :param number Y: A Shen number.
@@ -669,7 +669,7 @@ Typed Operators
 
 .. function:: js.** : number --> number --> number
 
-   Checks arguments are numbers and then applies the JavaScript :code:`**` operator.
+   Checks arguments are numbers and then applies the JavaScript :js:`**` operator.
 
    :param number X: A Shen number.
    :param number Y: A Shen number.
@@ -677,14 +677,14 @@ Typed Operators
 
 .. function:: js.bitwise.not : number --> number
 
-   Checks argument is a number and then applies the JavaScript :code:`~` operator.
+   Checks argument is a number and then applies the JavaScript :js:`~` operator.
 
    :param number X: A Shen number.
    :returns:        A Shen number.
 
 .. function:: js.bitwise.and : number --> number --> number
 
-   Checks arguments are numbers and then applies the JavaScript :code:`&` operator.
+   Checks arguments are numbers and then applies the JavaScript :js:`&` operator.
 
    :param number X: A Shen number.
    :param number Y: A Shen number.
@@ -692,7 +692,7 @@ Typed Operators
 
 .. function:: js.bitwise.or : number --> number --> number
 
-   Checks arguments are numbers and then applies the JavaScript :code:`|` operator.
+   Checks arguments are numbers and then applies the JavaScript :js:`|` operator.
 
    :param number X: A Shen number.
    :param number Y: A Shen number.
@@ -700,7 +700,7 @@ Typed Operators
 
 .. function:: js.bitwise.xor : number --> number --> number
 
-   Checks arguments are numbers and then applies the JavaScript :code:`^` operator.
+   Checks arguments are numbers and then applies the JavaScript :js:`^` operator.
 
    :param number X: A Shen number.
    :param number Y: A Shen number.
@@ -708,7 +708,7 @@ Typed Operators
 
 .. function:: js.bitwise.left-shift : number --> number --> number
 
-   Checks arguments are numbers and then applies the JavaScript :code:`<<` operator.
+   Checks arguments are numbers and then applies the JavaScript :js:`<<` operator.
 
    :param number X: Value to shift.
    :param number Y: Amount to shift by.
@@ -716,7 +716,7 @@ Typed Operators
 
 .. function:: js.bitwise.right-shift : number --> number --> number
 
-   Checks arguments are numbers and then applies the JavaScript :code:`>>` operator.
+   Checks arguments are numbers and then applies the JavaScript :js:`>>` operator.
 
    :param number X: Value to shift.
    :param number Y: Amount to shift by.
@@ -724,7 +724,7 @@ Typed Operators
 
 .. function:: js.bitwise.right-shift-unsigned : number --> number --> number
 
-   Checks arguments are numbers and then applies the JavaScript :code:`>>>` operator.
+   Checks arguments are numbers and then applies the JavaScript :js:`>>>` operator.
 
    :param number X: Value to shift.
    :param number Y: Amount to shift by.
@@ -782,6 +782,11 @@ Global Functions
 
 .. function:: js.log
 
+   Logs given value using :js:`console.log`.
+
+   :param any X: Value to log
+   :returns:     :js:`undefined`.
+
 .. function:: js.decodeURI
 
 .. function:: js.decodeURIComponent
@@ -798,11 +803,35 @@ Global Functions
 
 .. function:: js.==
 
+   Applies the JavaScript :js:`==` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     A JavaScript boolean.
+
 .. function:: js.===
+
+   Applies the JavaScript :js:`===` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     A JavaScript boolean.
 
 .. function:: js.!=
 
+   Applies the JavaScript :js:`!=` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     A JavaScript boolean.
+
 .. function:: js.!==
+
+   Applies the JavaScript :js:`!==` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     A JavaScript boolean.
 
 .. function:: js.not
 
@@ -813,7 +842,19 @@ Global Functions
 
 .. function:: js.and
 
+   Applies the JavaScript :js:`&&` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     Whatever :js:`&&` does based on JavaScript-specific behavior.
+
 .. function:: js.or
+
+   Applies the JavaScript :js:`||` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     Whatever :js:`||` does based on JavaScript-specific behavior.
 
 .. function:: js.defined?
 
@@ -965,7 +1006,7 @@ Global Functions
 
 .. function:: js.eval
 
-.. Warning:: Using :js:`eval` is even more dangerous than usual in ShenScript because it will be difficult to know what indentifiers will be in scope when code is evaluated.
+   .. Warning:: Using :js:`eval` is even more dangerous than usual in ShenScript because it will be difficult to know what indentifiers will be in scope when code is evaluated.
 
    Calls the built-in JavaScript :js:`eval` function.
 

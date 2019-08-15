@@ -6,7 +6,7 @@ Accessing ShenScript Internals from JavaScript
 Data
 ----
 
-.. note:: These objects are not meant to be tampered with by user or client code. Tinker with them if you must, but it will void the warranty.
+.. warning:: These objects are not meant to be tampered with by user or client code. Tinker with them if you must, but it will void the warranty.
 
 .. data:: inlines
 

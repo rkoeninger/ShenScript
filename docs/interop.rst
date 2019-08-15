@@ -102,12 +102,16 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
    Constructs array literal syntax.
 
-   :param list Values: A Shen list of values to initialise a JavaScript array with.
+   Example: :js:`[x, y, z]`.
+
+   :param list Values: A Shen list of value AST's to initialise a JavaScript array with.
    :returns:           An :code:`ArrayExpression` AST node.
 
 .. function:: js.ast.id
 
    Constructs an identifier - the name of a function or variable. Identifier is named exactly as the given argument.
+
+   Example: :js:`x`
 
    :param string Name: Name of identifier.
    :returns:           An :code:`Identifier` AST node.
@@ -169,7 +173,9 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
 .. function:: js.ast.unary
 
-   Construts a unary operator application like :js:`!x` or :js:`-x`.
+   Construts a unary operator application.
+
+   Examples: :js:`!x`, :js:`-x`
 
    :param string Operator: Name of operator to apply.
    :param ast Argument:    Argument to apply operator to.
@@ -177,7 +183,9 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
 .. function:: js.ast.binary
 
-   Constructs a binary operator application like :js:`x && y` or :js:`x + y`.
+   Constructs a binary operator application.
+
+   Examples: :js:`x && y`, :js:`x + y`
 
    :param string Operator: Name of operator to apply.
    :param ast Left:        Expression on the left side.
@@ -186,7 +194,9 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
 .. function:: js.ast.ternary
 
-   Constructs an application of the ternary operator - :js:`x ? y : z`.
+   Constructs an application of the ternary operator. 
+
+   Example :js:`x ? y : z`
 
    :param ast Condition:  True/false expression on the left of the :js:`?`.
    :param ast Consequent: Expression that gets evaluated if the condition is true.
@@ -195,7 +205,9 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
 .. function:: js.ast.assign
 
-   Constructs an assignment expression like :js:`x = y`.
+   Constructs an assignment expression.
+
+   Example :js:`x = y`
 
    :param ast Target: The variable to assign to.
    :param ast Value:  The value to assign.
@@ -203,44 +215,123 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
 .. function:: js.ast.update
 
-   Constructs an assignment expression with a specific operator like :js:`x += y`.
+   Constructs an assignment expression with a specific operator.
+
+   Examples :js:`x += y`, :js:`x *= y`
 
    :param string Operator: The update operator without the :code:`=`, so :code:`+`, :code:`-`, etc.
    :param ast Target:      The variable to assign to.
    :param ast Value:       The value to assign.
    :returns:               An :code:`AssignmentExpression` AST Node.
 
-js.ast.call
-js.ast.spread
-js.ast.super
-js.ast.block
-js.ast.empty
-js.ast.sequence
-js.ast.member
-js.ast.object
-js.ast.class
-js.ast.slot
-js.ast.constructor
-js.ast.method
-js.ast.getter
-js.ast.setter
-js.ast.arrow
-js.ast.function
-js.ast.function*
-js.ast.return
-js.ast.yield
-js.ast.yield*
-js.ast.await
-js.ast.async
-js.ast.static
-js.ast.if
-js.ast.try
-js.ast.catch
-js.ast.while
-js.ast.for
-js.ast.for-in
-js.ast.for-of
-js.ast.statement
+.. function:: js.ast.call
+
+   Constructs a function call expression.
+
+   Example: :js:`f(x, y)`
+
+   :param ast Function: An expression AST that evaluates to a function.
+   :param list Args:    A Shen list of argument AST's.
+   :returns:            A :code:`CallExpression` AST Node.
+
+.. function:: js.ast.spread
+
+   Constructs spread operator/pattern syntax.
+
+   Example: :js:`...x`
+
+   :param ast Argument: 
+   :returns:            A :code:`SpreadElement` AST Node.
+
+.. function:: js.ast.super
+
+   Constructs a call to the super (prototype) constructor.
+
+   Example: :js:`super(x, y);`
+
+   :param list Arguments: A Shen list of argument AST's.
+   :returns:              A :code:`Super` AST Node.
+
+.. function:: js.ast.block
+
+   Constructs a block that groups statements into a single statement and provides isolated scope for :js:`const` and :js:`let` bindings.
+
+   Example: :js:`{ x; y; z; }`
+
+   :param list Statements: A Shen list of statement AST's.
+   :returns:               A :code:`BlockStatement` AST Node.
+
+.. function:: js.ast.empty
+
+   Constructs an empty statement.
+
+   Example: :js:`;`
+
+   :returns: An :code:`EmptyStatement` AST Node.
+
+.. function:: js.ast.sequence
+
+   Constructs a compound expression using the comma operator.
+
+   Example: :js:`(x, y, z)`
+
+   :param list Expressions: A Shen list of expression AST's.
+   :returns:                A :code:`SequenceExpresssion` AST Node.
+
+.. function:: js.ast.member
+
+.. function:: js.ast.object
+
+.. function:: js.ast.class
+
+.. function:: js.ast.slot
+
+.. function:: js.ast.constructor
+
+.. function:: js.ast.method
+
+.. function:: js.ast.getter
+
+.. function:: js.ast.setter
+
+.. function:: js.ast.arrow
+
+.. function:: js.ast.function
+
+.. function:: js.ast.function*
+
+.. function:: js.ast.return
+
+.. function:: js.ast.yield
+
+.. function:: js.ast.yield*
+
+.. function:: js.ast.await
+
+.. function:: js.ast.async
+
+.. function:: js.ast.static
+
+.. function:: js.ast.if
+
+.. function:: js.ast.try
+
+.. function:: js.ast.catch
+
+.. function:: js.ast.while
+
+.. function:: js.ast.for
+
+.. function:: js.ast.for-in
+
+.. function:: js.ast.for-of
+
+.. function:: js.ast.statement
+
+   Constructs a wrapper that allows an expression to be a statement.
+
+   :param ast Expression: The expression in question.
+   :returns:              An :code:`ExpressionStatement` AST Node.
 
 AST Evaluation Functions
 ------------------------
@@ -433,7 +524,7 @@ Typed Operators
 Object Construction, Member Access
 ----------------------------------
 
-Remember that properties on JavaScript object are named with strings, so using Shen strings for property names is recommended for these functions. For example, the JavaScript code :code:`x.y` would get written like :code:`(js.get X "y")`.
+Remember that properties on JavaScript object are named with strings, so using Shen strings for property names is recommended for the function below. For example, the JavaScript code :code:`x.y` would get written like :code:`(js.get X "y")`.
 
 Idle symbols can be used for property names, but they will represented with interned JavaScript symbols.
 

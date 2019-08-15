@@ -7,9 +7,28 @@ The environment object, $, comes with additional functions to make JS functions 
 
 Some of these will return a promise if the environment with built in async mode.
 
-parse
-caller
-valueOf
+.. function:: parse(syntax)
+
+   Parses Shen syntax using the :shen:`read-from-string` function from the Shen kernel.
+
+   :param string syntax: Shen syntax in string form.
+   :returns:             A Shen list of syntax forms. Wrapped in a Promise if in async mode.
+
+.. function:: caller(name)
+
+   Returns a handle to a function in the Shen environment which automatically performs trampoline settling.
+
+   :param string name: Function name.
+   :returns:           A function to call Shen function by given name. Returned function will be async if in async mode.
+
+.. function:: valueOf(name)
+
+   Returns the value of the global symbol with the given name.
+
+   :param string name: Name of global symbol.
+   :returns:           Global symbol's value.
+   :throws:            Error if symbol is not bound.
+
 show
 equate
 define
@@ -92,8 +111,18 @@ js.ast.for-in
 js.ast.for-of
 js.ast.statement
 
-js.ast.eval
-js.ast.inline
+.. function:: js.ast.eval
+
+   Takes a JavaScript AST as built by the :code:`js.ast` functions, renders it to JavaScript and evaluates it in the current environment.
+
+   :param Code: JavaScript AST.
+   :returns:    Whatever the code the AST represents evaluates to.
+
+.. function:: js.ast.inline
+
+   Syntax pre-processor that evaluates Shen code provided as an argument and then inlines the resuling JavaScript AST in the surround rendered JavaScript at that location.
+
+   :param Code: Code that will build a JavaScript AST.
 
 Unchecked Math Operators
 ------------------------

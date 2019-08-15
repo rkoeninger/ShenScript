@@ -102,96 +102,95 @@ Unchecked Math Operators
 
    Applies the JavaScript :code:`+` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X:
-   :param Y:
+   :param X: Whatever.
+   :param Y: Whatever.
    :returns: Whatever :code:`+` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.-
 
    Applies the JavaScript :code:`-` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X:
-   :param Y:
+   :param X: Whatever.
+   :param Y: Whatever.
    :returns: Whatever :code:`-` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.*
 
    Applies the JavaScript :code:`*` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X:
-   :param Y:
+   :param X: Whatever.
+   :param Y: Whatever.
    :returns: Whatever :code:`*` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked./
 
    Applies the JavaScript :code:`/` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X:
-   :param Y:
+   :param X: Whatever.
+   :param Y: Whatever.
    :returns: Whatever :code:`/` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.**
 
    Applies the JavaScript :code:`**` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X:
-   :param Y:
+   :param X: Whatever.
+   :param Y: Whatever.
    :returns: Whatever :code:`**` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.bitwise.not
 
    Applies the JavaScript :code:`!` operator to argument without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X:
-   :param Y:
+   :param X: Whatever.
    :returns: Whatever :code:`!` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.bitwise.and
 
    Applies the JavaScript :code:`&` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X:
-   :param Y:
+   :param X: Whatever.
+   :param Y: Whatever.
    :returns: Whatever :code:`&` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.bitwise.or
 
    Applies the JavaScript :code:`|` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X:
-   :param Y:
+   :param X: Whatever.
+   :param Y: Whatever.
    :returns: Whatever :code:`|` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.bitwise.xor
 
    Applies the JavaScript :code:`^` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X:
-   :param Y:
+   :param X: Whatever.
+   :param Y: Whatever.
    :returns: Whatever :code:`^` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.bitwise.left-shift
 
    Applies the JavaScript :code:`<<` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X:
-   :param Y:
+   :param X: Value to shift.
+   :param Y: Amount to shift by.
    :returns: Whatever :code:`<<` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.bitwise.right-shift
 
    Applies the JavaScript :code:`>>` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X:
-   :param Y:
+   :param X: Value to shift.
+   :param Y: Amount to shift by.
    :returns: Whatever :code:`>>` does based on JavaScript-specific behavior.
 
 .. function:: js.unchecked.bitwise.right-shift-unsigned
 
    Applies the JavaScript :code:`>>>` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
-   :param X:
-   :param Y:
+   :param X: Value to shift.
+   :param Y: Amount to shift by.
    :returns: Whatever :code:`>>>` does based on JavaScript-specific behavior.
 
 Typed Operators
@@ -201,72 +200,72 @@ Typed Operators
 
    Checks arguments are numbers and then applies the JavaScript :code:`%` operator.
 
-   :param number X:
-   :param number Y:
-   :returns: A Shen number.
+   :param number X: A Shen number.
+   :param number Y: A Shen number.
+   :returns:        A Shen number.
 
 .. function:: js.** : number --> number --> number
 
    Checks arguments are numbers and then applies the JavaScript :code:`**` operator.
 
-   :param number X:
-   :param number Y:
-   :returns: A Shen number.
+   :param number X: A Shen number.
+   :param number Y: A Shen number.
+   :returns:        A Shen number.
 
 .. function:: js.bitwise.not : number --> number
 
    Checks argument is a number and then applies the JavaScript :code:`~` operator.
 
-   :param number X:
-   :returns: A Shen number.
+   :param number X: A Shen number.
+   :returns:        A Shen number.
 
 .. function:: js.bitwise.and : number --> number --> number
 
    Checks arguments are numbers and then applies the JavaScript :code:`&` operator.
 
-   :param number X:
-   :param number Y:
-   :returns: A Shen number.
+   :param number X: A Shen number.
+   :param number Y: A Shen number.
+   :returns:        A Shen number.
 
 .. function:: js.bitwise.or : number --> number --> number
 
    Checks arguments are numbers and then applies the JavaScript :code:`|` operator.
 
-   :param number X:
-   :param number Y:
-   :returns: A Shen number.
+   :param number X: A Shen number.
+   :param number Y: A Shen number.
+   :returns:        A Shen number.
 
 .. function:: js.bitwise.xor : number --> number --> number
 
    Checks arguments are numbers and then applies the JavaScript :code:`^` operator.
 
-   :param number X:
-   :param number Y:
-   :returns: A Shen number.
+   :param number X: A Shen number.
+   :param number Y: A Shen number.
+   :returns:        A Shen number.
 
 .. function:: js.bitwise.left-shift : number --> number --> number
 
    Checks arguments are numbers and then applies the JavaScript :code:`<<` operator.
 
-   :param number X:
-   :param number Y:
-   :returns: A Shen number.
+   :param number X: Value to shift.
+   :param number Y: Amount to shift by.
+   :returns:        A Shen number.
 
 .. function:: js.bitwise.right-shift : number --> number --> number
 
    Checks arguments are numbers and then applies the JavaScript :code:`>>` operator.
 
-   :param number X:
-   :param number Y:
-   :returns: A Shen number.
+   :param number X: Value to shift.
+   :param number Y: Amount to shift by.
+   :returns:        A Shen number.
 
 .. function:: js.bitwise.right-shift-unsigned : number --> number --> number
 
    Checks arguments are numbers and then applies the JavaScript :code:`>>>` operator.
 
-   :param number X:
-   :param number Y:
-   :returns: A Shen number.
+   :param number X: Value to shift.
+   :param number Y: Amount to shift by.
+   :returns:        A Shen number.
 
 Object Construction, Member Access
 ----------------------------------

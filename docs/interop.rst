@@ -542,7 +542,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
    Makes function or class member async.
 
-   Examples: :js:`async () => ...`, :js:`async function(...) { ... }`, :js:`async method(...) { ... }`
+   Examples: :js:`async (x, y) => ...`, :js:`async function(x, y) { ... }`, :js:`async method(x, y) { ... }`
 
    :param ast Ast: Ast to make async.
    :returns:       The same AST after setting the :js:`async` property to :js:`true`.
@@ -551,7 +551,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
    Makes class member static.
 
-   Example: :js:`static method(...) { ... }`
+   Example: :js:`static method(x, y) { ... }`
 
    :param ast Ast: Ast to make static.
    :returns:       The same AST after setting the :js:`static` property to :js:`true`.
@@ -564,7 +564,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
    .. code-block:: js
 
-      if (...) {
+      if (condition) {
         ...
       } else {
         ...
@@ -572,7 +572,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
    .. code-block:: js
 
-     if (...) {
+     if (condition) {
        ...
      }
 
@@ -613,7 +613,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
    Constructs a while loop.
 
-   Example: :js:`while (...) { ... }`
+   Example: :js:`while (condition) { ... }`
 
    :param ast Condition: Conditional expression that determines if the loop will run again or for the first time.
    :param ast Body:      Block of statements to run each time the loop repeats.
@@ -1160,7 +1160,7 @@ Global Functions
 
 .. function:: js.eval
 
-   .. Warning:: Using :js:`eval` is even more dangerous than usual in ShenScript because it will be difficult to know what indentifiers will be in scope and how their names might have been aliased when code is evaluated.
+   .. warning:: Using :js:`eval` is even more dangerous than usual in ShenScript because it will be difficult to know what indentifiers will be in scope and how their names might have been aliased when code is evaluated.
 
    Calls the built-in JavaScript :js:`eval` function.
 
@@ -1202,7 +1202,7 @@ Global Classes, Values and Functions
 
 Functions to retrieve common JavaScript globals. All take zero arguments and return what they're called. They Shen global symbols name with additional earmuffs (e.g. :shen:`js.*Array*`) where the value is actually held.
 
-.. Hint:: Some of these are not available in all JavaScript environments. You can check if a symbol is defined with :shen:`(bound? js.*Array*)`.
+.. hint:: Some of these are not available in all JavaScript environments. You can check if a symbol is defined with :shen:`(bound? js.*Array*)`.
 
 .. function:: js.Array
 
@@ -1246,7 +1246,7 @@ Functions to retrieve common JavaScript globals. All take zero arguments and ret
 
 .. function:: js.globalThis
 
-   Returns the global JavaScript :code:`globalThis` object. If :code:`globalThis` is not defined in this JavaScript environment, then :code:`window`, :code:`global`, etc is used as appropriate.
+   Returns the global JavaScript :js:`globalThis` object. If :js:`globalThis` is not defined in this JavaScript environment, then :js:`window`, :js:`global`, etc is used as appropriate.
 
 .. function:: js.Infinity
 

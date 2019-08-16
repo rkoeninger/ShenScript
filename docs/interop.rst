@@ -1331,38 +1331,38 @@ Web-specific Interop
 
 Only available when running in a browser or browser-based environment like Electron.
 
-.. function:: web.confirm?
+.. function:: (web.confirm? Message)
 
    Shows a synchronous web confirm pop-up with the given message. Returns Shen :shen:`true` or :shen:`false` depending on whether the user hit "OK" or "Cancel".
 
    :param string message: Message to show on the pop-up.
 
-.. function:: web.document
+.. function:: (web.document)
 
    Returns the global :js:`document`.
 
-.. function:: web.fetch
+.. function:: (web.fetch Url)
 
    Does an HTTP GET on the given url and returns the result as a string. Only available when ShenScript is in async mode.
 
    :param string url: URL to GET from.
 
-.. function:: web.fetch-json
+.. function:: (web.fetch-json Url)
 
    Same as web.fetch, but parses received value as JSON.
 
    :param string url: URL to GET from.
    :returns:          A JSON object.
 
-.. function:: web.navigator
+.. function:: (web.navigator)
 
    Returns the global :js:`navigator`.
 
-.. function:: web.self
+.. function:: (web.self)
 
    Returns the value of the :js:`self` keyword.
 
-.. function:: web.window
+.. function:: (web.window)
 
    Returns the global :js:`window`.
 

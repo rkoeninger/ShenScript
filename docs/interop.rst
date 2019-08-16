@@ -5,6 +5,9 @@ Interop from JavaScript to Shen
 
 The environment object, :js:`$`, comes with additional functions to make JavaScript functions callable from Shen, setting global symbols, declaring types and macros, etc.
 
+Exported Functions
+------------------
+
 .. Important:: Some of these will return a promise if the environment was built in async mode.
 
 .. function:: caller(name)

@@ -607,6 +607,16 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Body:      A block of statements that get run when the preceeding try has failed.
    :returns:             A :code:`CatchClause` AST Node.
 
+.. function:: (js.ast.do-while Test Body)
+
+   Constructs a do-while loop.
+
+   Example: :js:`do { ... } while (condition);`
+
+   :param ast Test: Conditional expression that determines if the loop will run again.
+   :param ast Body: Block of statements to run each time the loop repeats or the first time.
+   :returns:        A :code:`DoWhileStatement` AST Node.
+
 .. function:: (js.ast.while Test Body)
 
    Constructs a while loop.

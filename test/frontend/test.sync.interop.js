@@ -4,7 +4,7 @@ const kernel        = require('../../dist/kernel.sync');
 const frontend      = require('../../lib/frontend.node');
 
 const $ = frontend(kernel(backend()));
-const { caller, consFromArray, equate, exec, isArray } = $;
+const { caller, equate, exec, isArray, toList } = $;
 
 describe('sync', () => {
   describe('interop', () => {
@@ -28,7 +28,7 @@ describe('sync', () => {
     describe('exec', () => {
       it('should work', () => {
         equal(5, exec('(+ 3 2)'));
-        ok(equate(consFromArray([1, 2, 3]), exec('[1 2 3]')));
+        ok(equate(toList([1, 2, 3]), exec('[1 2 3]')));
       });
     });
     describe('.', () => {

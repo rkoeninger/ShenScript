@@ -5,7 +5,7 @@ const frontend      = require('../../lib/frontend.node');
 
 (async () => {
   const $ = frontend(await kernel(backend({ async: true })));
-  const { caller, consFromArray, equate, exec, isArray } = $;
+  const { caller, equate, exec, isArray, toList } = $;
 
   describe('async', () => {
     describe('interop', () => {
@@ -29,7 +29,7 @@ const frontend      = require('../../lib/frontend.node');
       describe('exec', () => {
         it('should work', async () => {
           equal(5, await exec('(+ 3 2)'));
-          ok(equate(consFromArray([1, 2, 3]), await exec('[1 2 3]')));
+          ok(equate(toList([1, 2, 3]), await exec('[1 2 3]')));
         });
       });
       describe('.', () => {

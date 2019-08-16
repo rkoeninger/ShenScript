@@ -25,30 +25,6 @@ Exported Functions
    :param any y: Any Shen or JavaScript value.
    :returns      A new :js:`Cons`.
 
-.. function:: consFromArray(x)
-
-   Builds a Shen list from a JavaScript array. Nested elements are not converted, just copied as they are.
-
-   Aliased as :js:`r` for brevity in generated code.
-
-   :param array x: A JavaScript array.
-   :returns:       A Shen list.
-
-.. function:: consToArray(x)
-
-   Builds a JavaScript array from a Shen list. Nested elements are not converted, just copied as they are.
-
-   :param array x: A Shen list.
-   :returns:       A JavaScript array.
-
-.. function:: consFromArrayTree(x)
-
-   Works like :js:`consFromArray` but recursively transforms child arrays to lists.
-
-.. function:: consToArrayTree(x)
-
-   Works like :js:`consToArray` but recursively transforms child lists to arrays.
-
 .. function:: define(name, f)
 
    Defines a new global function in the Shen environment by the given name. Function gets wrapped so it automatically handles partial application.
@@ -68,7 +44,7 @@ Exported Functions
 
 .. function:: defmacro(name, f)
 
-   Defines a macro in the Shen environment by the given name. Syntax gets pre-processed with :js:`valueToArrayTree` before being passed into wrapped function. Result returned from :js:`f` gets post-processed with :js:`valueFromArrayTree`. If :js:`f` returns :js:`undefined`, then it causes the macro to have no effect.
+   Defines a macro in the Shen environment by the given name. Syntax gets pre-processed with :js:`toArrayTree` before being passed into wrapped function. Result returned from :js:`f` gets post-processed with :js:`toListTree`. If :js:`f` returns :js:`undefined`, then it causes the macro to have no effect.
 
    :param string name: Name which macro function will be accessible by, including package prefix(es).
    :param function f:  JavaScript function to defer invocation to.
@@ -180,13 +156,35 @@ Exported Functions
    :param any value:   Value to initialise global symbol with.
    :returns:           :js:`value`.
 
-.. function:: valueFromArray(x)
+.. function:: toArray(x)
 
-   .. note:: This function might not be needed if :js:`consFromArray` already covers what it does.
+   Builds a JavaScript array from a Shen list. Elements are not transformed. :js:`x` is passed through if not a Shen list.
 
-.. function:: valueFromArrayTree(x)
+   :param any x: A Shen list or any other value.
+   :returns:     A JavaScript array or whatever was passed in.
 
-   .. note:: This function might not be needed if :js:`consFromArrayTree` already covers what it does.
+.. function:: toArrayTree(x)
+
+   Recursively builds a JavaScript array tree from a Shen list tree. Non-list children are not transformed. :js:`x` is passed through if not a Shen list.
+
+   :param any x: A tree of Shen lists or any other value.
+   :returns:     A tree of JavaScript arrays or whatever was passed in.
+
+.. function:: toList(x)
+
+   Builds a Shen list from a JavaScript array. Elements are not transformed. :js:`x` is passed through if not a JavaScript array.
+
+   Aliased as :js:`r` for brevity in generated code.
+
+   :param any x: A JavaScript array or any other value.
+   :returns:     A Shen list or whatever was passed in.
+
+.. function:: toListTree(x)
+
+   Recursively builds a Shen list tree from a JavaScript array tree. Non-list children are not transformed. :js:`x` is passed through if not a JavaScript array.
+
+   :param any x: A tree of nested JavaScript arrays or any other value.
+   :returns:     A tree of nested Shen lists or whatever was passed in.
 
 .. function:: valueOf(name)
 
@@ -195,14 +193,6 @@ Exported Functions
    :param string name: Name of global symbol.
    :returns:           Global symbol's value.
    :throws:            Error if symbol is not bound.
-
-.. function:: valueToArray(x)
-
-   .. note:: This function might not be needed if :js:`consToArray` already covers what it does.
-
-.. function:: valueToArrayTree(x)
-
-   .. note:: This function might not be needed if :js:`consToArrayTree` already covers what it does.
 
 Interop from Shen to JavaScript
 ===============================

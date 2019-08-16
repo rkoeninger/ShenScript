@@ -170,27 +170,27 @@ Functions
 
 These functions are callable from Shen to give access to the implementation details of ShenScript.
 
-.. function:: shen-script.lookup-function
+.. function:: (shen-script.lookup-function Name)
 
    Allows lookup of global function by name instead of building wrapper lambdas or the like.
 
    :param symbol Name: Name of function to lookup.
    :returns:           Shen function by that name, or :shen:`[]` when function does not exist.
 
-.. function:: shen-script.$
+.. function:: (shen-script.$)
 
    Provides access to the ShenScript environment object, which when combined with :code:`js` interop functions, allows arbitrary manipulation of the port's implementation details from Shen.
 
    :returns: ShenScript environment object.
 
-.. function:: shen-script.boolean.js->shen
+.. function:: (shen-script.boolean.js->shen X)
 
    Converts a JavaScript boolean to a Shen boolean. Any truthy value counts as JavaScript :js:`true` and any falsy value counts as JavaScript :js:`false`.
 
    :param any X: Accepts any value as an argument.
    :returns:     A Shen boolean.
 
-.. function:: shen-script.boolean.shen->js
+.. function:: (shen-script.boolean.shen->js X)
 
    Converts a Shen boolean to a JavaScript boolean.
 

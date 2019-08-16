@@ -211,14 +211,14 @@ AST Functions
 
 Functions in the `js.ast` namespace are used to construct, emit and evaluate arbitrary JavaScript code. All of the AST builder functions return JavaScript objects conforming to the informal ESTree standard `ESTree <https://github.com/estree/estree>`_.
 
-.. function:: js.ast.literal
+.. function:: (js.ast.literal Value)
 
    Constructs literal value syntax.
 
    :param Value: JavaScript value that can be a literal (number, string, boolean, null).
    :returns:     A :code:`Literal` AST node.
 
-.. function:: js.ast.array
+.. function:: (js.ast.array Values)
 
    Constructs array literal syntax.
 
@@ -227,7 +227,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param list Values: A Shen list of value AST's to initialise a JavaScript array with.
    :returns:           An :code:`ArrayExpression` AST node.
 
-.. function:: js.ast.id
+.. function:: (js.ast.id Name)
 
    Constructs an identifier - the name of a function or variable. Identifier is named exactly as the given argument.
 
@@ -236,14 +236,14 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param string Name: Name of identifier.
    :returns:           An :code:`Identifier` AST node.
 
-.. function:: js.ast.safe-id
+.. function:: (js.ast.safe-id Name)
 
    Constructs an identifier where the name is escaped to make it valid in JavaScript and to not collide with reserved names in ShenScript.
 
    :param string Name: Name of identifier.
    :returns:           An :code:`Identifier` AST node.
 
-.. function:: js.ast.const
+.. function:: (js.ast.const Id Value)
 
    Constructs :js:`const` variable declaration.
 
@@ -251,7 +251,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Value: Value to initialise variable with.
    :returns:         A :code:`VariableDeclaration` AST node.
 
-.. function:: js.ast.let
+.. function:: (js.ast.let Id Value)
 
    Constructs :js:`let` variable declaration.
 
@@ -259,7 +259,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Value: Value to initialise variable with.
    :returns:         A :code:`VariableDeclaration` AST node.
 
-.. function:: js.ast.var
+.. function:: (js.ast.var Id Value)
 
    Constructs :js:`var` variable declaration.
 
@@ -267,31 +267,31 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Value: Value to initialise variable with.
    :returns:         A :code:`VariableDeclaration` AST node.
 
-.. function:: js.ast.arguments
+.. function:: (js.ast.arguments)
 
    Constructs a reference to the :js:`arguments` object.
 
    :returns: An :code:`Identifier` AST node.
 
-.. function:: js.ast.debugger
+.. function:: (js.ast.debugger)
 
    Constructs a :js:`debugger;` statement.
 
    :returns: A :code:`DebuggerStatement` AST node.
 
-.. function:: js.ast.new-target
+.. function:: (js.ast.new-target)
 
    Constructs a reference to the :js:`new.target` meta-property.
 
    :returns: A :code:`MetaProperty` AST node.
 
-.. function:: js.ast.this
+.. function:: (js.ast.this)
 
    Constructs a reference to the :js:`this` keyword.
 
    :returns: A :code:`ThisExpression` AST node.
 
-.. function:: js.ast.unary
+.. function:: (js.ast.unary Operator Argument)
 
    Construts a unary operator application.
 
@@ -301,7 +301,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Argument:    Argument to apply operator to.
    :returns:               A :code:`UnaryExpression` AST Node.
 
-.. function:: js.ast.binary
+.. function:: (js.ast.binary Operator Left Right)
 
    Constructs a binary operator application.
 
@@ -312,7 +312,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Right:       Expression on the right side.
    :returns:               A :code:`BinaryExpression` AST Node.
 
-.. function:: js.ast.ternary
+.. function:: (js.ast.ternary Condition Consequent Alternate)
 
    Constructs an application of the ternary operator. 
 
@@ -323,7 +323,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Alternate:  Expression that gets evaluated if the condition is false.
    :returns:              A :code:`ConditionalExpression` AST Node.
 
-.. function:: js.ast.assign
+.. function:: (js.ast.assign Target Value)
 
    Constructs an assignment expression.
 
@@ -333,7 +333,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Value:  The value to assign.
    :returns:          An :code:`AssignmentExpression` AST Node.
 
-.. function:: js.ast.update
+.. function:: (js.ast.update Operator Target Value)
 
    Constructs an assignment expression with a specific operator.
 
@@ -344,7 +344,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Value:       The value to assign.
    :returns:               An :code:`AssignmentExpression` AST Node.
 
-.. function:: js.ast.call
+.. function:: (js.ast.call Function Args)
 
    Constructs a function call expression.
 
@@ -354,16 +354,16 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param list Args:    A Shen list of argument AST's.
    :returns:            A :code:`CallExpression` AST Node.
 
-.. function:: js.ast.spread
+.. function:: (js.ast.spread Argument)
 
    Constructs spread operator/pattern syntax.
 
    Example: :js:`...x`
 
-   :param ast Argument: 
+   :param ast Argument: Identifier or pattern that are gathered or spread.
    :returns:            A :code:`SpreadElement` AST Node.
 
-.. function:: js.ast.super
+.. function:: (js.ast.super Arguments)
 
    Constructs a call to the super (prototype) constructor.
 
@@ -372,7 +372,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param list Arguments: A Shen list of argument AST's.
    :returns:              A :code:`Super` AST Node.
 
-.. function:: js.ast.block
+.. function:: (js.ast.block Statements)
 
    Constructs a block that groups statements into a single statement and provides isolated scope for :js:`const` and :js:`let` bindings.
 
@@ -381,7 +381,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param list Statements: A Shen list of statement AST's.
    :returns:               A :code:`BlockStatement` AST Node.
 
-.. function:: js.ast.empty
+.. function:: (js.ast.empty)
 
    Constructs an empty statement.
 
@@ -389,7 +389,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
    :returns: An :code:`EmptyStatement` AST Node.
 
-.. function:: js.ast.sequence
+.. function:: (js.ast.sequence Expressions)
 
    Constructs a compound expression using the comma operator.
 
@@ -398,7 +398,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param list Expressions: A Shen list of expression AST's.
    :returns:                A :code:`SequenceExpresssion` AST Node.
 
-.. function:: js.ast.member
+.. function:: (js.ast.member Object Member)
 
    Constructs a member access expression with the dot operator.
 
@@ -408,7 +408,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Member: Expression that computes member name to access. If non-string, will automatically be wrapped in square brackets.
    :returns:          A :code:`MemberExpression` AST Node.
 
-.. function:: js.ast.object
+.. function:: (js.ast.object Properties)
 
    Constructs object literal syntax.
 
@@ -417,7 +417,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param list Properties: A Shen list of name-value pairs, each of which is a Shen list of length 2.
    :returns:               An :code:`ObjectExpression` AST Node.
 
-.. function:: js.ast.class
+.. function:: (js.ast.class Name SuperClass Slots)
 
    Constructs ES6 class syntax. Members are constructed using :shen:`js.ast.constructor`, :shen:`js.ast.method`, :shen:`js.ast.getter`, :shen:`js.ast.setter` or the more general function :shen:`js.ast.slot`.
 
@@ -439,40 +439,40 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param list Slots:     A Shen list of slot AST's.
    :returns:              A :code:`ClassExpression` AST Node.
 
-.. function:: js.ast.slot
+.. function:: (js.ast.slot Kind Name Body)
 
    Constructs a class property of the given kind.
 
    :param string Kind: "constructor", "method", "get" or "set".
    :param ast Name:    Identifier naming the property.
-   :param ast Value:   Expression representing the function or value assigned to the property.
+   :param ast Body:    Expression representing the function or value assigned to the property.
    :returns:           A :code:`MethodDefinition` AST Node.
 
-.. function:: js.ast.constructor
+.. function:: (js.ast.constructor Body)
 
    Specialisation of :shen:`js.ast.slot` for class constructors.
 
    Example: :js:`constructor(...) { ... }`
 
-.. function:: js.ast.method
+.. function:: (js.ast.method Name Body)
 
    Specialisation of :shen:`js.ast.slot` for class methods.
 
    Example: :js:`method(...) { ... }`
 
-.. function:: js.ast.getter
+.. function:: (js.ast.getter Name Body)
 
    Specialisation of :shen:`js.ast.slot` for class getters.
 
    Example: :js:`get thing(...) { ... }`
 
-.. function:: js.ast.setter
+.. function:: (js.ast.setter Name Body)
 
    Specialisation of :shen:`js.ast.slot` for class setters.
 
    Example: :js:`set thing(...) { ... }`
 
-.. function:: js.ast.arrow
+.. function:: (js.ast.arrow Parameters Body)
 
    Constructs a lambda expression.
 
@@ -482,7 +482,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Body:        A body expression.
    :returns:               A :code:`ArrowFunctionExpression` AST Node.
 
-.. function:: js.ast.function
+.. function:: (js.ast.function Name Parameters Body)
 
    Constructs a function expression.
 
@@ -493,7 +493,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Body:        A block of statements that make of the body of the function.
    :returns:               A :code:`FunctionExpression` AST Node.
 
-.. function:: js.ast.function*
+.. function:: (js.ast.function* Name Parameters Body)
 
    Constructs a generator function expression.
 
@@ -504,7 +504,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Body:        A block of statements that make of the body of the function.
    :returns:               A :code:`FunctionExpression` AST Node.
 
-.. function:: js.ast.return
+.. function:: (js.ast.return Argument)
 
    Constructs a return statement.
 
@@ -513,7 +513,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Argument: Expression to return.
    :returns:            A :code:`ReturnStatement` AST Node.
 
-.. function:: js.ast.yield
+.. function:: (js.ast.yield Argument)
 
    Constructs a yield expression for use in a generator function.
 
@@ -522,7 +522,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Argument: Expression to yield.
    :returns:            A :code:`YieldExpression` AST Node.
 
-.. function:: js.ast.yield*
+.. function:: (js.ast.yield* Argument)
 
    Constructs a yield delegate expression for use in a generator function.
 
@@ -531,7 +531,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Argument: Iterable or generator expression to yield.
    :returns:            A :code:`YieldExpression` AST Node.
 
-.. function:: js.ast.await
+.. function:: (js.ast.await Argument)
 
    Constructs an await expression for use in an async function.
 
@@ -540,7 +540,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Argument: Expression to await.
    :returns:            An :code:`AwaitExpression` AST Node.
 
-.. function:: js.ast.async
+.. function:: (js.ast.async Ast)
 
    Makes function or class member async.
 
@@ -549,7 +549,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Ast: Ast to make async.
    :returns:       The same AST after setting the :js:`async` property to :js:`true`.
 
-.. function:: js.ast.static
+.. function:: (js.ast.static Ast)
 
    Makes class member static.
 
@@ -558,7 +558,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Ast: Ast to make static.
    :returns:       The same AST after setting the :js:`static` property to :js:`true`.
 
-.. function:: js.ast.if
+.. function:: (js.ast.if Condition Consequent Alternate)
 
    Constructs an if statement with optional else clause.
 
@@ -583,7 +583,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Alternate:  Optional else clause.
    :returns:              An :code:`IfStatement` AST Node.
 
-.. function:: js.ast.try
+.. function:: (js.ast.try Body Handler)
 
    Constructs a try statement.
 
@@ -601,7 +601,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Handler: A catch clause as constructed by :js:`js.ast.catch`.
    :returns:           A :code:`TryStatement` AST Node.
 
-.. function:: js.ast.catch
+.. function:: (js.ast.catch Parameter Body)
 
    Constructs a catch clause.
 
@@ -611,17 +611,17 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Body:      A block of statements that get run when the preceeding try has failed.
    :returns:             A :code:`CatchClause` AST Node.
 
-.. function:: js.ast.while
+.. function:: (js.ast.while Test Body)
 
    Constructs a while loop.
 
    Example: :js:`while (condition) { ... }`
 
-   :param ast Condition: Conditional expression that determines if the loop will run again or for the first time.
-   :param ast Body:      Block of statements to run each time the loop repeats.
-   :returns:             A :code:`WhileStatement` AST Node.
+   :param ast Test: Conditional expression that determines if the loop will run again or for the first time.
+   :param ast Body: Block of statements to run each time the loop repeats.
+   :returns:        A :code:`WhileStatement` AST Node.
 
-.. function:: js.ast.for
+.. function:: (js.ast.for Init Test Update Body)
 
    Constructs a for loop.
 
@@ -633,7 +633,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Body:   Block of statements to run each time the loop repeats.
    :returns:          A :code:`ForStatement` AST Node.
 
-.. function:: js.ast.for-in
+.. function:: (js.ast.for-in Left Right Body)
 
    Constructs a for-in loop.
 
@@ -644,7 +644,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Body:  Block of statements to run each time the loop repeats.
    :returns:         A :code:`ForInStatement` AST Node.
 
-.. function:: js.ast.for-of
+.. function:: (js.ast.for-of Left Right Body)
 
    Constructs a for-of loop.
 
@@ -655,7 +655,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Body:  Block of statements to run each time the loop repeats.
    :returns:         A :code:`ForOfStatement` AST Node.
 
-.. function:: js.ast.statement
+.. function:: (js.ast.statement Expression)
 
    Constructs a wrapper that allows an expression to be a statement.
 
@@ -665,23 +665,23 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 AST Evaluation Functions
 ------------------------
 
-.. function:: js.ast.eval
+.. function:: (js.ast.eval Ast)
 
    Takes a JavaScript AST as built by the :code:`js.ast` functions, renders it to JavaScript and evaluates it in the current environment.
 
-   :param Code: JavaScript AST.
-   :returns:    Whatever the code the AST represents evaluates to.
+   :param Ast: JavaScript AST.
+   :returns:   Whatever the code the AST represents evaluates to.
 
-.. function:: js.ast.inline
+.. function:: (js.ast.inline Ast)
 
    Syntax pre-processor that evaluates Shen code provided as an argument and then inlines the resuling JavaScript AST in the surround rendered JavaScript at that location.
 
-   :param Code: Code that will build a JavaScript AST.
+   :param Ast: Code that will build a JavaScript AST.
 
 Unchecked Math Operators
 ------------------------
 
-.. function:: js.unchecked.+
+.. function:: (js.unchecked.+ X Y)
 
    Applies the JavaScript :js:`+` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -689,7 +689,7 @@ Unchecked Math Operators
    :param any Y: Whatever.
    :returns:     Whatever :js:`+` does based on JavaScript-specific behavior.
 
-.. function:: js.unchecked.-
+.. function:: (js.unchecked.- X Y)
 
    Applies the JavaScript :js:`-` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -697,7 +697,7 @@ Unchecked Math Operators
    :param any Y: Whatever.
    :returns:     Whatever :js:`-` does based on JavaScript-specific behavior.
 
-.. function:: js.unchecked.*
+.. function:: (js.unchecked.* X Y)
 
    Applies the JavaScript :js:`*` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -705,7 +705,7 @@ Unchecked Math Operators
    :param any Y: Whatever.
    :returns:     Whatever :js:`*` does based on JavaScript-specific behavior.
 
-.. function:: js.unchecked./
+.. function:: (js.unchecked./ X Y)
 
    Applies the JavaScript :js:`/` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -713,7 +713,7 @@ Unchecked Math Operators
    :param any Y: Whatever.
    :returns:     Whatever :js:`/` does based on JavaScript-specific behavior.
 
-.. function:: js.unchecked.**
+.. function:: (js.unchecked.** X Y)
 
    Applies the JavaScript :js:`**` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -721,14 +721,14 @@ Unchecked Math Operators
    :param any Y: Whatever.
    :returns:     Whatever :js:`**` does based on JavaScript-specific behavior.
 
-.. function:: js.unchecked.bitwise.not
+.. function:: (js.unchecked.bitwise.not X)
 
    Applies the JavaScript :js:`!` operator to argument without additional typechecks, perserving JavaScript coercion behavior.
 
    :param any X: Whatever.
    :returns:     Whatever :js:`!` does based on JavaScript-specific behavior.
 
-.. function:: js.unchecked.bitwise.and
+.. function:: (js.unchecked.bitwise.and X Y)
 
    Applies the JavaScript :js:`&` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -736,7 +736,7 @@ Unchecked Math Operators
    :param any Y: Whatever.
    :returns:     Whatever :js:`&` does based on JavaScript-specific behavior.
 
-.. function:: js.unchecked.bitwise.or
+.. function:: (js.unchecked.bitwise.or X Y)
 
    Applies the JavaScript :js:`|` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -744,7 +744,7 @@ Unchecked Math Operators
    :param any Y: Whatever.
    :returns:     Whatever :js:`|` does based on JavaScript-specific behavior.
 
-.. function:: js.unchecked.bitwise.xor
+.. function:: (js.unchecked.bitwise.xor X Y)
 
    Applies the JavaScript :js:`^` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -752,7 +752,7 @@ Unchecked Math Operators
    :param any Y: Whatever.
    :returns:     Whatever :js:`^` does based on JavaScript-specific behavior.
 
-.. function:: js.unchecked.bitwise.left-shift
+.. function:: (js.unchecked.bitwise.left-shift X Y)
 
    Applies the JavaScript :js:`<<` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -760,7 +760,7 @@ Unchecked Math Operators
    :param any Y: Amount to shift by.
    :returns:     Whatever :js:`<<` does based on JavaScript-specific behavior.
 
-.. function:: js.unchecked.bitwise.right-shift
+.. function:: (js.unchecked.bitwise.right-shift X Y)
 
    Applies the JavaScript :js:`>>` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -768,7 +768,7 @@ Unchecked Math Operators
    :param any Y: Amount to shift by.
    :returns:     Whatever :js:`>>` does based on JavaScript-specific behavior.
 
-.. function:: js.unchecked.bitwise.right-shift-unsigned
+.. function:: (js.unchecked.bitwise.right-shift-unsigned X Y)
 
    Applies the JavaScript :js:`>>>` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -857,7 +857,7 @@ Remember that properties on JavaScript object are named with strings, so using S
 
 Idle symbols can be used for property names, but they will represented with interned JavaScript symbols.
 
-.. function:: js.new
+.. function:: (js.new Class Args)
 
    Creates new instance of class by calling given constructor on argument list.
 
@@ -865,7 +865,7 @@ Idle symbols can be used for property names, but they will represented with inte
    :param list Args:         Constructor arguments in a Shen list.
    :returns:                 New instance of :code:`Class`.
 
-.. function:: js.obj
+.. function:: (js.obj Values)
 
    Creates new :code:`Object` with properties of given names and values.
 
@@ -876,7 +876,7 @@ Idle symbols can be used for property names, but they will represented with inte
 
    Macro that converts syntax like :code:`({ A B C D })` to :code:`(js.obj [A B C D])`.
 
-.. function:: js.set
+.. function:: (js.set Object Property Value)
 
    Assigns property on a JavaScript object.
 
@@ -885,7 +885,7 @@ Idle symbols can be used for property names, but they will represented with inte
    :param any Value:     Value to assign.
    :returns:             :code:`Value`, just like the JavaScript assignment operator.
 
-.. function:: js.get
+.. function:: (js.get Object Property)
 
    Retrieves a property's value from a JavaScript object.
 
@@ -900,64 +900,64 @@ Idle symbols can be used for property names, but they will represented with inte
 Global Functions
 ----------------
 
-.. function:: js.log
+.. function:: (js.log X)
 
    Logs given value using :js:`console.log`.
 
    :param any X: Value to log
    :returns:     :js:`undefined`.
 
-.. function:: js.decodeURI
+.. function:: (js.decodeURI Uri)
 
    Decodes a URI by un-escaping special characters.
 
    :param string Uri: URI to decode.
    :returns:          Decoded URI.
 
-.. function:: js.decodeURIComponent
+.. function:: (js.decodeURIComponent Uri)
 
    Decodes a URI component by un-escaping special characters.
 
    :param string Uri: URI component to decode.
    :returns:          Decoded URI.
 
-.. function:: js.encodeURI
+.. function:: (js.encodeURI Uri)
 
    Encodes a URI by escaping special characters.
 
    :param string Uri: URI to encode.
    :returns:          Encoded URI.
 
-.. function:: js.encodeURIComponent
+.. function:: (js.encodeURIComponent Uri)
 
    Encodes a URI component by escaping special characters.
 
    :param string Uri: URI component to encode.
    :returns:          Encoded URI.
 
-.. function:: js.parseFloat
+.. function:: (js.parseFloat String)
 
    Parses a floating-point number.
 
-   :param string X: Numeric string to parse.
-   :returns:        Parsed number.
+   :param string String: Numeric string to parse.
+   :returns:             Parsed number.
 
-.. function:: js.parseInt
+.. function:: (js.parseInt String)
 
    Parses an integral number with radix specified to be 10 to avoid unusual parsing behavior.
 
-   :param string X: Numeric string to parse.
-   :returns:        Parsed number.
+   :param string String: Numeric string to parse.
+   :returns:             Parsed number.
 
-.. function:: js.parseIntRadix
+.. function:: (js.parseIntRadix String Radix)
 
    Parses an integral number with the given.
 
-   :param string X:     Numeric string to parse.
-   :param number Radix: Radix to parse the number with.
-   :returns:            Parsed number.
+   :param string String: Numeric string to parse.
+   :param number Radix:  Radix to parse the number with.
+   :returns:             Parsed number.
 
-.. function:: js.==
+.. function:: (js.== X Y)
 
    Applies the JavaScript :js:`==` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -965,7 +965,7 @@ Global Functions
    :param any Y: Whatever.
    :returns:     A JavaScript boolean.
 
-.. function:: js.===
+.. function:: (js.=== X Y)
 
    Applies the JavaScript :js:`===` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -973,7 +973,7 @@ Global Functions
    :param any Y: Whatever.
    :returns:     A JavaScript boolean.
 
-.. function:: js.!=
+.. function:: (js.!= X Y)
 
    Applies the JavaScript :js:`!=` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -981,7 +981,7 @@ Global Functions
    :param any Y: Whatever.
    :returns:     A JavaScript boolean.
 
-.. function:: js.!==
+.. function:: (js.!== X Y)
 
    Applies the JavaScript :js:`!==` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -989,14 +989,14 @@ Global Functions
    :param any Y: Whatever.
    :returns:     A JavaScript boolean.
 
-.. function:: js.not
+.. function:: (js.not X)
 
    Performs JavaScript boolean inversion.
 
    :param any X: Value to invert.
    :returns:     A JavaScript boolean.
 
-.. function:: js.and
+.. function:: (js.and X Y)
 
    Applies the JavaScript :js:`&&` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -1004,7 +1004,7 @@ Global Functions
    :param any Y: Whatever.
    :returns:     Whatever :js:`&&` does based on JavaScript-specific behavior.
 
-.. function:: js.or
+.. function:: (js.or X Y)
 
    Applies the JavaScript :js:`||` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -1012,147 +1012,147 @@ Global Functions
    :param any Y: Whatever.
    :returns:     Whatever :js:`||` does based on JavaScript-specific behavior.
 
-.. function:: js.defined?
+.. function:: (js.defined? X)
 
    Determines if value is *not* :js:`undefined`.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.undefined?
+.. function:: (js.undefined? X)
 
    Determines if value is :js:`undefined`.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.truthy?
+.. function:: (js.truthy? X)
 
    Determines if value is coercible to :js:`true` by JavaScript standards.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.falsy?
+.. function:: (js.falsy? X)
 
    Determines if value is coercible to :js:`false` by JavaScript standards.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.array?
+.. function:: (js.array? X)
 
    Determines if value is a JavaScript array.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.async?
+.. function:: (js.async? X)
 
    Determines if value is an asynchronous function.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.boolean?
+.. function:: (js.boolean? X)
 
    Determines if value is a JavaScript boolean.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.finite?
+.. function:: (js.finite? X)
 
    Determines if value is a finite number.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.generator?
+.. function:: (js.generator? X)
 
    Determines if value is a generator function.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.infinite?
+.. function:: (js.infinite? X)
 
    Determines if value is positive or negative infinity.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.+infinity?
+.. function:: (js.+infinity? X)
 
    Determines if value is positive infinity.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.-infinity?
+.. function:: (js.-infinity? X)
 
    Determines if value is negative infinity.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.integer?
+.. function:: (js.integer? X)
 
    Determines if value is an integer.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.+integer?
+.. function:: (js.+integer? X)
 
    Determines if value is a positive integer.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.-integer?
+.. function:: (js.-integer? X)
 
    Determines if value is a negative integer.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.function?
+.. function:: (js.function? X)
 
    Determines if value is a function. This test will also work for Shen functions.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.null?
+.. function:: (js.null? X)
 
    Determines if value is :js:`null`.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.nan?
+.. function:: (js.nan? X)
 
    Determines if value is :js:`NaN` (not-a-number) which will normally not be equal to itself according to the :js:`===` operator.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.object?
+.. function:: (js.object? X)
 
    Determines if value is an object with the direct protoype :js:`Object` which means it is probably the product of object literal syntax.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.symbol?
+.. function:: (js.symbol? X)
 
    Determines if a value is a JavaScript symbol. Shen symbols are represented with JS symbols, so this test will pass for idle symbols as well.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: js.delete
+.. function:: (js.delete Object Key)
 
    Removes a key from an object.
 
@@ -1160,7 +1160,7 @@ Global Functions
    :param any Key:       String or symbol name of key to remove.
    :returns:             JavaScript :js:`true` if the delete was successful.
 
-.. function:: js.eval
+.. function:: (js.eval Code)
 
    .. warning:: Using :js:`eval` is even more dangerous than usual in ShenScript because it will be difficult to know what indentifiers will be in scope and how their names might have been aliased when code is evaluated.
 
@@ -1169,7 +1169,7 @@ Global Functions
    :param string Code: JavaScript code in string form.
    :returns:           The result of evaluating the code.
 
-.. function:: js.in
+.. function:: (js.in Key Object)
 
    Determines if value is a key in an object.
 
@@ -1177,7 +1177,7 @@ Global Functions
    :param object Object: Object that might contain a property by that key.
    :returns:             A JavaScript boolean.
 
-.. function:: js.instanceof
+.. function:: (js.instanceof X Class)
 
    Determines if value is the product of a constructor, class or anything higher up its prototype chain.
 
@@ -1185,14 +1185,14 @@ Global Functions
    :param class Class: A class or constructor function.
    :returns:           A JavaScript boolean.
 
-.. function:: js.typeof
+.. function:: (js.typeof X)
 
    Applies the JavaScript :js:`typeof` operator to a value.
 
    :param any X: Anything.
-   :returns: A string identifying the basic type of the value: object, number, string, symbol, undefined.
+   :returns: A string identifying the basic type of the value: object, number, string, symbol, undefined, boolean.
 
-.. function:: js.void
+.. function:: (js.void X)
 
    Applies the JavaScript :js:`void` operator to argument, which will always return :js:`undefined`.
 
@@ -1206,123 +1206,123 @@ Functions to retrieve common JavaScript globals. All take zero arguments and ret
 
 .. hint:: Some of these are not available in all JavaScript environments. You can check if a symbol is defined with :shen:`(bound? js.*Array*)`.
 
-.. function:: js.Array
+.. function:: (js.Array)
 
    Returns the global JavaScript :code:`Array` class.
 
-.. function:: js.ArrayBuffer
+.. function:: (js.ArrayBuffer)
 
    Returns the global JavaScript :code:`ArrayBuffer` class.
 
-.. function:: js.AsyncFunction
+.. function:: (js.AsyncFunction)
 
    Returns the global JavaScript :code:`AsyncFunction` class.
 
-.. function:: js.Atomics
+.. function:: (js.Atomics)
 
    Returns the global JavaScript :code:`Atomics` class. This is not available in Firefox.
 
-.. function:: js.Boolean
+.. function:: (js.Boolean)
 
    Returns the global JavaScript :code:`Boolean` class.
 
-.. function:: js.console
+.. function:: (js.console)
 
    Returns the global JavaScript :code:`console` object.
 
-.. function:: js.DataView
+.. function:: (js.DataView)
 
    Returns the global JavaScript :code:`DataView` class.
 
-.. function:: js.Date
+.. function:: (js.Date)
 
    Returns the global JavaScript :code:`Date` class.
 
-.. function:: js.Function
+.. function:: (js.Function)
 
    Returns the global JavaScript :code:`Function` class.
 
-.. function:: js.GeneratorFunction
+.. function:: (js.GeneratorFunction)
 
    Returns the global JavaScript :code:`GeneratorFunction` class.
 
-.. function:: js.globalThis
+.. function:: (js.globalThis)
 
    Returns the global JavaScript :js:`globalThis` object. If :js:`globalThis` is not defined in this JavaScript environment, then :js:`window`, :js:`global`, etc is used as appropriate.
 
-.. function:: js.Infinity
+.. function:: (js.Infinity)
 
    Returns the JavaScript :code:`Infinity` value.
 
-.. function:: js.JSON
+.. function:: (js.JSON)
 
    Returns the global JavaScript :code:`JSON` object.
 
-.. function:: js.Map
+.. function:: (js.Map)
 
    Returns the global JavaScript :code:`Map` class.
 
-.. function:: js.NaN
+.. function:: (js.NaN)
 
    Returns the JavaScript :code:`NaN` value.
 
-.. function:: js.Number
+.. function:: (js.Number)
 
    Returns the global JavaScript :code:`Number` class.
 
-.. function:: js.null
+.. function:: (js.null)
 
    Returns the JavaScript :code:`null` value.
 
-.. function:: js.Object
+.. function:: (js.Object)
 
    Returns the global JavaScript :code:`Object` class.
 
-.. function:: js.Promise
+.. function:: (js.Promise)
 
    Returns the global JavaScript :code:`Promise` class.
 
-.. function:: js.Proxy
+.. function:: (js.Proxy)
 
    Returns the global JavaScript :code:`Proxy` class.
 
-.. function:: js.Reflect
+.. function:: (js.Reflect)
 
    Returns the global JavaScript :code:`Reflect` class.
 
-.. function:: js.RegExp
+.. function:: (js.RegExp)
 
    Returns the global JavaScript :code:`RegExp` class.
 
-.. function:: js.Set
+.. function:: (js.Set)
 
    Returns the global JavaScript :code:`Set` class.
 
-.. function:: js.SharedArrayBuffer
+.. function:: (js.SharedArrayBuffer)
 
    Returns the global JavaScript :code:`SharedArrayBuffer` class. This is not available in Firefox.
 
-.. function:: js.String
+.. function:: (js.String)
 
    Returns the global JavaScript :code:`String` class.
 
-.. function:: js.Symbol
+.. function:: (js.Symbol)
 
    Returns the global JavaScript :code:`Symbol` class.
 
-.. function:: js.undefined
+.. function:: (js.undefined)
 
    Returns the JavaScript :code:`undefined` value.
 
-.. function:: js.WeakMap
+.. function:: (js.WeakMap)
 
    Returns the global JavaScript :code:`WeakMap` class.
 
-.. function:: js.WeakSet
+.. function:: (js.WeakSet)
 
    Returns the global JavaScript :code:`WeakSet` class.
 
-.. function:: js.WebAssembly
+.. function:: (js.WebAssembly)
 
    Returns the global JavaScript :code:`WebAssembly` class.
 
@@ -1335,7 +1335,7 @@ Only available when running in a browser or browser-based environment like Elect
 
    Shows a synchronous web confirm pop-up with the given message. Returns Shen :shen:`true` or :shen:`false` depending on whether the user hit "OK" or "Cancel".
 
-   :param string message: Message to show on the pop-up.
+   :param string Message: Message to show on the pop-up.
 
 .. function:: (web.document)
 
@@ -1345,14 +1345,15 @@ Only available when running in a browser or browser-based environment like Elect
 
    Does an HTTP GET on the given url and returns the result as a string. Only available when ShenScript is in async mode.
 
-   :param string url: URL to GET from.
+   :param string Url: URL to GET from.
+   :returns:          A string wrapped in a :js:`Promise`.
 
 .. function:: (web.fetch-json Url)
 
    Same as web.fetch, but parses received value as JSON.
 
-   :param string url: URL to GET from.
-   :returns:          A JSON object.
+   :param string Url: URL to GET from.
+   :returns:          A JSON object wrapped in a :js:`Promise`.
 
 .. function:: (web.navigator)
 
@@ -1371,7 +1372,7 @@ Node-specific Interop
 
 Only available when running in a Node environment.
 
-.. function:: node.exit
+.. function:: (node.exit Code)
 
    Takes an exit code and terminates the runtime with the process returning that exit code.
 
@@ -1382,13 +1383,13 @@ Only available when running in a Node environment.
 
    Macro to convert :shen:`node.exit` called with no arguments by inserting :shen:`0` as the default exit code.
 
-.. function:: node.global
+.. function:: (node.global)
 
    Called with no arguments, returns the value of the Node :js:`global` object.
 
-.. function:: node.require
+.. function:: (node.require Id)
 
    Calls Node's :js:`require` function with the given module identifier.
 
-   :param string Module: Name or path to a Node module.
-   :returns:             :js:`exports` object returned by the module.
+   :param string Id: Name or path to a Node module.
+   :returns:         :js:`exports` object returned by the module.

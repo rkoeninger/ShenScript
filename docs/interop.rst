@@ -7,151 +7,12 @@ The environment object, :js:`$`, comes with additional functions to make JavaScr
 
 .. Important:: Some of these will return a promise if the environment was built in async mode.
 
-.. function:: parse(syntax)
-
-   Parses Shen syntax using the :shen:`read-from-string` function from the Shen kernel.
-
-   :param string syntax: Shen syntax in string form.
-   :returns:             A Shen list of syntax forms. Wrapped in a Promise if in async mode.
-
 .. function:: caller(name)
 
    Returns a handle to a function in the Shen environment which automatically performs trampoline settling.
 
    :param string name: Function name.
    :returns:           A function to call Shen function by given name. Returned function will be async if in async mode.
-
-.. function:: valueOf(name)
-
-   Returns the value of the global symbol with the given name.
-
-   :param string name: Name of global symbol.
-   :returns:           Global symbol's value.
-   :throws:            Error if symbol is not bound.
-
-.. function:: show(value)
-
-   Builds Shen-specific string representation of :js:`value`.
-
-   :param any value: Value to show.
-   :returns:         String representation of :js:`value`.
-
-.. function:: equate(x, y)
-
-   Determines if :js:`x` and :js:`y` are equal using Shen-specific semantics.
-
-   :param any x: Any Shen or JavaScript value.
-   :param any y: Any Shen or JavaScript value.
-   :returns:     A JavaScript boolean.
-
-.. function:: define(name, f)
-
-   Defines a new global function in the Shen environment by the given name. Function gets wrapped so it automatically handles partial application.
-
-   :param string name: Name which function will be accessible by, including package prefix(es).
-   :param function f:  JavaScript function to defer fully-applied invocation to.
-   :returns:           Name as a symbol.
-
-.. function:: defineTyped(name, type, f)
-
-   Defines a new global function in the Shen environment by the given name and declared Shen type signature. Function gets wrapped so it automatically handles partial application.
-
-   :param string name: Name which function will be accessible by, including package prefix(es).
-   :param any type:    Shen type signature in array tree form, gets recursively converted to Shen lists.
-   :param function f:  JavaScript function to defer fully-applied invocation to.
-   :returns:           Name as a symbol.
-
-.. function:: defmacro(name, f)
-
-   Defines a macro in the Shen environment by the given name. Syntax gets pre-processed with :js:`valueToArrayTree` before being passed into wrapped function. Result returned from :js:`f` gets post-processed with :js:`valueFromArrayTree`. If :js:`f` returns :js:`undefined`, then it causes the macro to have no effect.
-
-   :param string name: Name which macro function will be accessible by, including package prefix(es).
-   :param function f:  JavaScript function to defer invocation to.
-   :returns:           Name as a symbol.
-
-.. function:: symbol(name, value)
-
-   Declares Shen global symbol by the given name (with added earmuffs per convention), setting it to given initial value and declaring a function by the given name that accesses it.
-
-   Example: :js:`symbol('package.thing', 0)` declares global symbol :shen:`package.*thing*`, sets it to :shen:`0` and declares function :shen:`package.thing` which takes no arguments and returns :shen:`(value package.*thing*)`.
-
-   :param string name: Name of accessor function and basis for name of global symbol.
-   :param any value:   Value to initialise global symbol with.
-   :returns:           :js:`value`.
-
-.. function:: inline(name, f)
-
-   Registers a new inline rule for JavaScript code generation. When the KLambda-to-JavaScript transpilier encounters a form starting with a symbol named :js:`name`, it will build child forms and then pass the rendered ASTs into :js:`f`. Whatever :js:`f` returns gets inserted into the greater JavaScript AST at the relative point where the form was encountered.
-
-   Example:
-
-   .. code-block:: js
-
-      // Renders a `(not X)` call with the JavaScript `!` operator
-      // and inserts type conversions only as needed
-      inline('not', x => ann('JsBool', Unary('!', cast('JsBool', x))))
-
-   :param string name: Name of symbol that triggers this rule to be applied.
-   :param function f:  Function that handles the JavaScript AST transformation for this rule.
-   :returns:           :js:`f`.
- 
-.. function:: pre(name, f)
-
-   Registers a new pre-processor rule for JavaScript code generation. Similar to :js:`inline`, but child forms are not rendered and are passed into :js:`f` as KLambda expression trees. :js:`f` should then return a JavaScript AST which will get inserted into the greater JavaScript AST at the relative point where the form was encountered.
-
-   Example:
-
-   .. code-block:: js
-
-      // Evaluates math expression at build time and inserts result
-      // in place of JavaScript AST that would have been built
-      pre('build-time-math', x => evalShen(x));
-
-   :param string name: Name of symbol that triggers this rule to be applied.
-   :param function f:  Function that handles the KLambda expression tree to JavaScript AST conversion.
-   :returns:           :js:`f`.
-
-.. function:: load(path)
-
-   Invokes the Shen :shen:`load` function which will read the file at the given path and evaluates its contents.
-
-   :param string path: Local file system path relative to :shen:`shen.*home-directory*`
-   :returns:           The :shen:`loaded` symbol.
-
-.. function:: evalShen(expr)
-
-   Invokes the Shen :shen:`eval` function which will evaluate the expression tree in the Shen environment.
-
-   :param expr expr: Parsed Shen expression tree.
-   :returns:         Evaluation result.
-
-.. function:: evalJs(ast)
-
-   Converts JavaScript AST to JavaScript syntax string and evaluates in isolated context.
-
-   :param ast ast: JavaScript AST Node.
-   :returns:       Evaluation result.
-
-.. function:: evalKl(expr)
-
-   Invokes the backend :js:`eval-kl` function which will evaluate the expression tree in the Shen environment.
-
-   :param expr expr: Parsed KLambda expression tree.
-   :returns:         Evaluation result.
-
-.. function:: exec(syntax)
-
-   Parses and evaluates all Shen syntax forms passed in. Returns final evaluation result.
-
-   :param string syntax: Shen syntax.
-   :returns:             Final evaluation result.
-
-.. function:: execEach(syntax)
-
-   Parses and evaluates all Shen syntax forms passed in. Returns array of evaluation results.
-
-   :param string syntax: Shen syntax.
-   :returns:             Array of evaluation results.
 
 .. function:: cons(x, y)
 
@@ -185,6 +46,137 @@ The environment object, :js:`$`, comes with additional functions to make JavaScr
 
    Works like :js:`consToArray` but recursively transforms child lists to arrays.
 
+.. function:: define(name, f)
+
+   Defines a new global function in the Shen environment by the given name. Function gets wrapped so it automatically handles partial application.
+
+   :param string name: Name which function will be accessible by, including package prefix(es).
+   :param function f:  JavaScript function to defer fully-applied invocation to.
+   :returns:           Name as a symbol.
+
+.. function:: defineTyped(name, type, f)
+
+   Defines a new global function in the Shen environment by the given name and declared Shen type signature. Function gets wrapped so it automatically handles partial application.
+
+   :param string name: Name which function will be accessible by, including package prefix(es).
+   :param any type:    Shen type signature in array tree form, gets recursively converted to Shen lists.
+   :param function f:  JavaScript function to defer fully-applied invocation to.
+   :returns:           Name as a symbol.
+
+.. function:: defmacro(name, f)
+
+   Defines a macro in the Shen environment by the given name. Syntax gets pre-processed with :js:`valueToArrayTree` before being passed into wrapped function. Result returned from :js:`f` gets post-processed with :js:`valueFromArrayTree`. If :js:`f` returns :js:`undefined`, then it causes the macro to have no effect.
+
+   :param string name: Name which macro function will be accessible by, including package prefix(es).
+   :param function f:  JavaScript function to defer invocation to.
+   :returns:           Name as a symbol.
+
+.. function:: equate(x, y)
+
+   Determines if :js:`x` and :js:`y` are equal using Shen-specific semantics.
+
+   :param any x: Any Shen or JavaScript value.
+   :param any y: Any Shen or JavaScript value.
+   :returns:     A JavaScript boolean.
+
+.. function:: evalJs(ast)
+
+   Converts JavaScript AST to JavaScript syntax string and evaluates in isolated context.
+
+   :param ast ast: JavaScript AST Node.
+   :returns:       Evaluation result.
+
+.. function:: evalKl(expr)
+
+   Invokes the backend :js:`eval-kl` function which will evaluate the expression tree in the Shen environment.
+
+   :param expr expr: Parsed KLambda expression tree.
+   :returns:         Evaluation result.
+
+.. function:: evalShen(expr)
+
+   Invokes the Shen :shen:`eval` function which will evaluate the expression tree in the Shen environment.
+
+   :param expr expr: Parsed Shen expression tree.
+   :returns:         Evaluation result.
+
+.. function:: exec(syntax)
+
+   Parses and evaluates all Shen syntax forms passed in. Returns final evaluation result.
+
+   :param string syntax: Shen syntax.
+   :returns:             Final evaluation result.
+
+.. function:: execEach(syntax)
+
+   Parses and evaluates all Shen syntax forms passed in. Returns array of evaluation results.
+
+   :param string syntax: Shen syntax.
+   :returns:             Array of evaluation results.
+
+.. function:: inline(name, f)
+
+   Registers a new inline rule for JavaScript code generation. When the KLambda-to-JavaScript transpilier encounters a form starting with a symbol named :js:`name`, it will build child forms and then pass the rendered ASTs into :js:`f`. Whatever :js:`f` returns gets inserted into the greater JavaScript AST at the relative point where the form was encountered.
+
+   Example:
+
+   .. code-block:: js
+
+      // Renders a `(not X)` call with the JavaScript `!` operator
+      // and inserts type conversions only as needed
+      inline('not', x => ann('JsBool', Unary('!', cast('JsBool', x))))
+
+   :param string name: Name of symbol that triggers this rule to be applied.
+   :param function f:  Function that handles the JavaScript AST transformation for this rule.
+   :returns:           :js:`f`.
+
+.. function:: load(path)
+
+   Invokes the Shen :shen:`load` function which will read the file at the given path and evaluates its contents.
+
+   :param string path: Local file system path relative to :shen:`shen.*home-directory*`
+   :returns:           The :shen:`loaded` symbol.
+
+.. function:: parse(syntax)
+
+   Parses Shen syntax using the :shen:`read-from-string` function from the Shen kernel.
+
+   :param string syntax: Shen syntax in string form.
+   :returns:             A Shen list of syntax forms. Wrapped in a Promise if in async mode.
+ 
+.. function:: pre(name, f)
+
+   Registers a new pre-processor rule for JavaScript code generation. Similar to :js:`inline`, but child forms are not rendered and are passed into :js:`f` as KLambda expression trees. :js:`f` should then return a JavaScript AST which will get inserted into the greater JavaScript AST at the relative point where the form was encountered.
+
+   Example:
+
+   .. code-block:: js
+
+      // Evaluates math expression at build time and inserts result
+      // in place of JavaScript AST that would have been built
+      pre('build-time-math', x => evalShen(x));
+
+   :param string name: Name of symbol that triggers this rule to be applied.
+   :param function f:  Function that handles the KLambda expression tree to JavaScript AST conversion.
+   :returns:           :js:`f`.
+
+.. function:: show(value)
+
+   Builds Shen-specific string representation of :js:`value`.
+
+   :param any value: Value to show.
+   :returns:         String representation of :js:`value`.
+
+.. function:: symbol(name, value)
+
+   Declares Shen global symbol by the given name (with added earmuffs per convention), setting it to given initial value and declaring a function by the given name that accesses it.
+
+   Example: :js:`symbol('package.thing', 0)` declares global symbol :shen:`package.*thing*`, sets it to :shen:`0` and declares function :shen:`package.thing` which takes no arguments and returns :shen:`(value package.*thing*)`.
+
+   :param string name: Name of accessor function and basis for name of global symbol.
+   :param any value:   Value to initialise global symbol with.
+   :returns:           :js:`value`.
+
 .. function:: valueFromArray(x)
 
    .. note:: This function might not be needed if :js:`consFromArray` already covers what it does.
@@ -192,6 +184,14 @@ The environment object, :js:`$`, comes with additional functions to make JavaScr
 .. function:: valueFromArrayTree(x)
 
    .. note:: This function might not be needed if :js:`consFromArrayTree` already covers what it does.
+
+.. function:: valueOf(name)
+
+   Returns the value of the global symbol with the given name.
+
+   :param string name: Name of global symbol.
+   :returns:           Global symbol's value.
+   :throws:            Error if symbol is not bound.
 
 .. function:: valueToArray(x)
 

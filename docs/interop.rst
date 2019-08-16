@@ -385,6 +385,18 @@ Remember that properties on JavaScript object are named with strings, so using S
 
 Idle symbols can be used for property names, but they will represented with interned JavaScript symbols.
 
+.. function:: (js.get Object Property)
+
+   Retrieves a property's value from a JavaScript object.
+
+   :param object Object: Object to read from.
+   :param any Property:  Property name to get.
+   :returns:             Property value.
+
+.. function:: js.get-macro
+
+   Macro that converts variable-depth accessor syntax like :code:`(. X Y Z)` to :code:`(js.get (js.get X Y) Z)`.
+
 .. function:: (js.new Class Args)
 
    Creates new instance of class by calling given constructor on argument list.
@@ -397,7 +409,7 @@ Idle symbols can be used for property names, but they will represented with inte
 
    Creates new :code:`Object` with properties of given names and values.
 
-   :param list Values: Shen list of property names and values, every other like :code:`["name1" Val1 "name2" Val2]`.
+   :param list Values: A flat Shen list of property names and values, like :code:`["name1" Val1 "name2" Val2]`.
    :returns:           New :code:`Object`.
 
 .. function:: js.obj-macro
@@ -412,18 +424,6 @@ Idle symbols can be used for property names, but they will represented with inte
    :param any Property:  Property name to set.
    :param any Value:     Value to assign.
    :returns:             :code:`Value`, just like the JavaScript assignment operator.
-
-.. function:: (js.get Object Property)
-
-   Retrieves a property's value from a JavaScript object.
-
-   :param object Object: Object to read from.
-   :param any Property:  Property name to get.
-   :returns:             Property value.
-
-.. function:: js.get-macro
-
-   Macro that converts variable-depth accessor syntax like :code:`(. X Y Z)` to :code:`(js.get (js.get X Y) Z)`.
 
 Global Functions
 ----------------

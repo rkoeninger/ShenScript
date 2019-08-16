@@ -499,7 +499,7 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
 
    Example: :js:`{ a: b, c: d }`
 
-   :param list Properties: A Shen list of name-value pairs, each of which is a Shen list of length 2.
+   :param list Properties: A flat Shen list of property names and values.
    :returns:               An :code:`ObjectExpression` AST Node.
 
 .. function:: (js.ast.return Argument)

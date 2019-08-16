@@ -1,7 +1,7 @@
 .. include:: directives.rst
 
-Interop with Shen from JavaScript
-=================================
+Interop from JavaScript to Shen
+===============================
 
 The environment object, :js:`$`, comes with additional functions to make JavaScript functions callable from Shen, setting global symbols, declaring types and macros, etc.
 
@@ -201,8 +201,8 @@ The environment object, :js:`$`, comes with additional functions to make JavaScr
 
    .. note:: This function might not be needed if :js:`consToArrayTree` already covers what it does.
 
-Interop with JavaScript from Shen
-=================================
+Interop from Shen to JavaScript
+===============================
 
 ShenScript provides functions in the :code:`js` namespace to access JavaScript standard classes and functionality.
 

@@ -10,14 +10,6 @@ Data
 
 .. warning:: These objects are not meant to be tampered with by user or client code. Tinker with them if you must, but it will void the warranty.
 
-.. data:: inlines
-
-   Code inlining rules, indexed by the string name of the symbol that triggers them.
-
-.. data:: preprocessors
-
-   Code pre-processor rules, indexed by the string name of the symbol that triggers them.
-
 .. data:: awaitedInlines
 
    Collection of inlined functions that must be awaited.
@@ -27,6 +19,14 @@ Data
    Collection of Shen functions, indexed by string name.
 
    Aliased as :js:`f` for brevity in generated code.
+
+.. data:: inlines
+
+   Code inlining rules, indexed by the string name of the symbol that triggers them.
+
+.. data:: preprocessors
+
+   Code pre-processor rules, indexed by the string name of the symbol that triggers them.
 
 .. data:: symbols
 
@@ -65,14 +65,55 @@ Classes
 Functions
 ---------
 
-.. function:: symbolOf(name)
+.. function:: as___(x)
 
-   Returns the interned symbol by the given name.
+   There are several functions following this naming pattern which first check if their argument passes the related :js:`is___` function and returns it if it does. If it does not pass the type check, an error is raised.
 
-   Aliased as :js:`s` for brevity in generated code.
+   :param any x: Whatever.
+   :returns:     The same value.
+   :throws:      If argument does not pass the type check.
 
-   :param string name: Symbol name.
-   :returns:           Symbol by that name.
+.. function:: bounce(f, args)
+
+   Creates a :js:`Trampoline`.
+
+   Aliased as :js:`b` for brevity in generated code.
+
+   :param function f: A JavaScript function.
+   :param args:       A variadic parameter containing any values.
+   :returns:          A :js:`Trampoline`.
+
+.. function:: compile(expr)
+
+   Builds a KLambda expression tree in the root context.
+
+   :param expr expr: Expression to build.
+   :returns:         Rendered JavaScript AST.
+
+.. function:: fun(f)
+
+   Takes a function that takes a precise number of arguments and returns a wrapper that automatically applies partial and curried application.
+
+   Aliased as :js:`l` for brevity in generated code.
+
+   :param function f: Function wrap with partial application logic.
+   :returns:          Wrapper function.
+
+.. function:: future(x)
+
+   Same purpose as :js:`settle`, but works asynchronously and will always return a :js:`Promise`, which will yield and non-trampoline value.
+
+   Aliased as :js:`u` for brevity in generated code.
+
+   :param any x: May or may not be a :js:`Promise` and may be a :js:`Trampoline`, which will be run, or any other value, which will be returned immediately.
+   :returns:     Final non-trampoline result wrapped in a :js:`Promise`.
+
+.. function:: is___(x)
+
+   There are several functions following this naming pattern which checks if the argument qualifies as the type it's named for.
+
+   :param any x: Whatever.
+   :returns:     A JavaScript boolean.
 
 .. function:: nameOf(symbol)
 
@@ -89,32 +130,6 @@ Functions
    :returns:              Doesn't.
    :throws:               Error with the given message.
 
-.. function:: trapSync(body, handler)
-
-   Invokes :js:`body` with no arguments. If it raises an error, invokes :js:`handler`, passing it the error, and returns the result.
-
-   :param function body:    Zero-parameter function.
-   :param function handler: One-parameter function.
-   :returns:                The result of calling :js:`body` or the result of :js:`handler` if :js:`body` failed.
-
-.. function:: trapAsync(body, handler)
-
-   Invokes :js:`body` with no arguments and awaits the result. If it raises an error, invokes :js:`handler`, passing it the error, and returns the result.
-
-   :param function body:    Zero-parameter function.
-   :param function handler: One-parameter function.
-   :returns:                The result of calling :js:`body` or the result of :js:`handler` if :js:`body` failed, wrapped in a :js:`Promise`.
-
-.. function:: bounce(f, args)
-
-   Creates a :js:`Trampoline`.
-
-   Aliased as :js:`b` for brevity in generated code.
-
-   :param function f: A JavaScript function.
-   :param args:       A variadic parameter containing any values.
-   :returns:          A :js:`Trampoline`.
-
 .. function:: settle(x)
 
    If given a trampoline, runs trampoline and checks if result is a trampoline, in which case that is then run. Process repeats until result is not a trampoline. Never returns a trampoline. Potentially any function in :js:`functions` will need to be settled after being called to get a useful value.
@@ -124,45 +139,30 @@ Functions
    :param any x: May be a :js:`Trampoline`, which will be run, or any other value, which will be returned immediately.
    :returns:     Final non-trampoline result.
 
-.. function:: future(x)
+.. function:: symbolOf(name)
 
-   Same purpose as :js:`settle`, but works asynchronously and will always return a :js:`Promise`, which will yield and non-trampoline value.
+   Returns the interned symbol by the given name.
 
-   Aliased as :js:`u` for brevity in generated code.
+   Aliased as :js:`s` for brevity in generated code.
 
-   :param any x: May or may not be a :js:`Promise` and may be a :js:`Trampoline`, which will be run, or any other value, which will be returned immediately.
-   :returns:     Final non-trampoline result wrapped in a :js:`Promise`.
+   :param string name: Symbol name.
+   :returns:           Symbol by that name.
 
-.. function:: fun(f)
+.. function:: trapAsync(body, handler)
 
-   Takes a function that takes a precise number of arguments and returns a wrapper that automatically applies partial and curried application.
+   Invokes :js:`body` with no arguments and awaits the result. If it raises an error, invokes :js:`handler`, passing it the error, and returns the result.
 
-   Aliased as :js:`l` for brevity in generated code.
+   :param function body:    Zero-parameter function.
+   :param function handler: One-parameter function.
+   :returns:                The result of calling :js:`body` or the result of :js:`handler` if :js:`body` failed, wrapped in a :js:`Promise`.
 
-   :param function f: Function wrap with partial application logic.
-   :returns:          Wrapper function.
+.. function:: trapSync(body, handler)
 
-.. function:: compile(expr)
+   Invokes :js:`body` with no arguments. If it raises an error, invokes :js:`handler`, passing it the error, and returns the result.
 
-   Builds a KLambda expression tree in the root context.
-
-   :param expr expr: Expression to build.
-   :returns:         Rendered JavaScript AST.
-
-.. function:: as___(x)
-
-   There are several functions following this naming pattern which first check if their argument passes the related :js:`is___` function and returns it if it does. If it does not pass the type check, an error is raised.
-
-   :param any x: Whatever.
-   :returns:     The same value.
-   :throws:      If argument does not pass the type check.
-
-.. function:: is___(x)
-
-   There are several functions following this naming pattern which checks if the argument qualifies as the type it's named for.
-
-   :param any x: Whatever.
-   :returns:     A JavaScript boolean.
+   :param function body:    Zero-parameter function.
+   :param function handler: One-parameter function.
+   :returns:                The result of calling :js:`body` or the result of :js:`handler` if :js:`body` failed.
 
 Accessing ShenScript Internals from Shen
 ========================================
@@ -174,18 +174,18 @@ Functions
 
 These functions are callable from Shen to give access to the implementation details of ShenScript.
 
+.. function:: (shen-script.$)
+
+   Provides access to the ShenScript environment object, which when combined with :code:`js` interop functions, allows arbitrary manipulation of the port's implementation details from Shen.
+
+   :returns: ShenScript environment object.
+
 .. function:: (shen-script.lookup-function Name)
 
    Allows lookup of global function by name instead of building wrapper lambdas or the like.
 
    :param symbol Name: Name of function to lookup.
    :returns:           Shen function by that name, or :shen:`[]` when function does not exist.
-
-.. function:: (shen-script.$)
-
-   Provides access to the ShenScript environment object, which when combined with :code:`js` interop functions, allows arbitrary manipulation of the port's implementation details from Shen.
-
-   :returns: ShenScript environment object.
 
 .. function:: (shen-script.boolean.js->shen X)
 

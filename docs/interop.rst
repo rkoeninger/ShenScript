@@ -431,63 +431,6 @@ Idle symbols can be used for property names, but they will represented with inte
 Global Functions
 ----------------
 
-.. function:: (js.log X)
-
-   Logs given value using :js:`console.log`.
-
-   :param any X: Value to log
-   :returns:     :js:`undefined`.
-
-.. function:: (js.decodeURI Uri)
-
-   Decodes a URI by un-escaping special characters.
-
-   :param string Uri: URI to decode.
-   :returns:          Decoded URI.
-
-.. function:: (js.decodeURIComponent Uri)
-
-   Decodes a URI component by un-escaping special characters.
-
-   :param string Uri: URI component to decode.
-   :returns:          Decoded URI.
-
-.. function:: (js.encodeURI Uri)
-
-   Encodes a URI by escaping special characters.
-
-   :param string Uri: URI to encode.
-   :returns:          Encoded URI.
-
-.. function:: (js.encodeURIComponent Uri)
-
-   Encodes a URI component by escaping special characters.
-
-   :param string Uri: URI component to encode.
-   :returns:          Encoded URI.
-
-.. function:: (js.parseFloat String)
-
-   Parses a floating-point number.
-
-   :param string String: Numeric string to parse.
-   :returns:             Parsed number.
-
-.. function:: (js.parseInt String)
-
-   Parses an integral number with radix specified to be 10 to avoid unusual parsing behavior.
-
-   :param string String: Numeric string to parse.
-   :returns:             Parsed number.
-
-.. function:: (js.parseIntRadix String Radix)
-
-   Parses an integral number with the given.
-
-   :param string String: Numeric string to parse.
-   :param number Radix:  Radix to parse the number with.
-   :returns:             Parsed number.
-
 .. function:: (js.== X Y)
 
    Applies the JavaScript :js:`==` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
@@ -520,13 +463,6 @@ Global Functions
    :param any Y: Whatever.
    :returns:     A JavaScript boolean.
 
-.. function:: (js.not X)
-
-   Performs JavaScript boolean inversion.
-
-   :param any X: Value to invert.
-   :returns:     A JavaScript boolean.
-
 .. function:: (js.and X Y)
 
    Applies the JavaScript :js:`&&` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
@@ -534,42 +470,6 @@ Global Functions
    :param any X: Whatever.
    :param any Y: Whatever.
    :returns:     Whatever :js:`&&` does based on JavaScript-specific behavior.
-
-.. function:: (js.or X Y)
-
-   Applies the JavaScript :js:`||` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
-
-   :param any X: Whatever.
-   :param any Y: Whatever.
-   :returns:     Whatever :js:`||` does based on JavaScript-specific behavior.
-
-.. function:: (js.defined? X)
-
-   Determines if value is *not* :js:`undefined`.
-
-   :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
-
-.. function:: (js.undefined? X)
-
-   Determines if value is :js:`undefined`.
-
-   :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
-
-.. function:: (js.truthy? X)
-
-   Determines if value is coercible to :js:`true` by JavaScript standards.
-
-   :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
-
-.. function:: (js.falsy? X)
-
-   Determines if value is coercible to :js:`false` by JavaScript standards.
-
-   :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
 
 .. function:: (js.array? X)
 
@@ -592,9 +492,75 @@ Global Functions
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
+.. function:: (js.decodeURI Uri)
+
+   Decodes a URI by un-escaping special characters.
+
+   :param string Uri: URI to decode.
+   :returns:          Decoded URI.
+
+.. function:: (js.decodeURIComponent Uri)
+
+   Decodes a URI component by un-escaping special characters.
+
+   :param string Uri: URI component to decode.
+   :returns:          Decoded URI.
+
+.. function:: (js.defined? X)
+
+   Determines if value is *not* :js:`undefined`.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
+
+.. function:: (js.delete Object Key)
+
+   Removes a key from an object.
+
+   :param object Object: Object to remove key from.
+   :param any Key:       String or symbol name of key to remove.
+   :returns:             JavaScript :js:`true` if the delete was successful.
+
+.. function:: (js.encodeURI Uri)
+
+   Encodes a URI by escaping special characters.
+
+   :param string Uri: URI to encode.
+   :returns:          Encoded URI.
+
+.. function:: (js.encodeURIComponent Uri)
+
+   Encodes a URI component by escaping special characters.
+
+   :param string Uri: URI component to encode.
+   :returns:          Encoded URI.
+
+.. function:: (js.eval Code)
+
+   .. warning:: Using :js:`eval` is even more dangerous than usual in ShenScript because it will be difficult to know what indentifiers will be in scope and how their names might have been aliased when code is evaluated.
+
+   Calls the built-in JavaScript :js:`eval` function.
+
+   :param string Code: JavaScript code in string form.
+   :returns:           The result of evaluating the code.
+
+.. function:: (js.falsy? X)
+
+   Determines if value is coercible to :js:`false` by JavaScript standards.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
+
 .. function:: (js.finite? X)
 
    Determines if value is a finite number.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
+
+.. function:: (js.function? X)
+
+   Determines if value is a function. This test will also work for Shen functions.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
@@ -605,6 +571,14 @@ Global Functions
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
+
+.. function:: (js.in Key Object)
+
+   Determines if value is a key in an object.
+
+   :param any Key:       String or symbol name of a property.
+   :param object Object: Object that might contain a property by that key.
+   :returns:             A JavaScript boolean.
 
 .. function:: (js.infinite? X)
 
@@ -648,23 +622,38 @@ Global Functions
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: (js.function? X)
+.. function:: (js.instanceof X Class)
 
-   Determines if value is a function. This test will also work for Shen functions.
+   Determines if value is the product of a constructor, class or anything higher up its prototype chain.
+
+   :param any X:       The value to inspect.
+   :param class Class: A class or constructor function.
+   :returns:           A JavaScript boolean.
+
+.. function:: (js.log X)
+
+   Logs given value using :js:`console.log`.
+
+   :param any X: Value to log
+   :returns:     :js:`undefined`.
+
+.. function:: (js.nan? X)
+
+   Determines if value is :js:`NaN` (not-a-number) which will normally not be equal to itself according to the :js:`===` operator.
 
    :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
+
+.. function:: (js.not X)
+
+   Performs JavaScript boolean inversion.
+
+   :param any X: Value to invert.
    :returns:     A JavaScript boolean.
 
 .. function:: (js.null? X)
 
    Determines if value is :js:`null`.
-
-   :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
-
-.. function:: (js.nan? X)
-
-   Determines if value is :js:`NaN` (not-a-number) which will normally not be equal to itself according to the :js:`===` operator.
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
@@ -676,6 +665,36 @@ Global Functions
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
+.. function:: (js.or X Y)
+
+   Applies the JavaScript :js:`||` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     Whatever :js:`||` does based on JavaScript-specific behavior.
+
+.. function:: (js.parseFloat String)
+
+   Parses a floating-point number.
+
+   :param string String: Numeric string to parse.
+   :returns:             Parsed number.
+
+.. function:: (js.parseInt String)
+
+   Parses an integral number with radix specified to be 10 to avoid unusual parsing behavior.
+
+   :param string String: Numeric string to parse.
+   :returns:             Parsed number.
+
+.. function:: (js.parseIntRadix String Radix)
+
+   Parses an integral number with the given.
+
+   :param string String: Numeric string to parse.
+   :param number Radix:  Radix to parse the number with.
+   :returns:             Parsed number.
+
 .. function:: (js.symbol? X)
 
    Determines if a value is a JavaScript symbol. Shen symbols are represented with JS symbols, so this test will pass for idle symbols as well.
@@ -683,38 +702,12 @@ Global Functions
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: (js.delete Object Key)
+.. function:: (js.truthy? X)
 
-   Removes a key from an object.
+   Determines if value is coercible to :js:`true` by JavaScript standards.
 
-   :param object Object: Object to remove key from.
-   :param any Key:       String or symbol name of key to remove.
-   :returns:             JavaScript :js:`true` if the delete was successful.
-
-.. function:: (js.eval Code)
-
-   .. warning:: Using :js:`eval` is even more dangerous than usual in ShenScript because it will be difficult to know what indentifiers will be in scope and how their names might have been aliased when code is evaluated.
-
-   Calls the built-in JavaScript :js:`eval` function.
-
-   :param string Code: JavaScript code in string form.
-   :returns:           The result of evaluating the code.
-
-.. function:: (js.in Key Object)
-
-   Determines if value is a key in an object.
-
-   :param any Key:       String or symbol name of a property.
-   :param object Object: Object that might contain a property by that key.
-   :returns:             A JavaScript boolean.
-
-.. function:: (js.instanceof X Class)
-
-   Determines if value is the product of a constructor, class or anything higher up its prototype chain.
-
-   :param any X:       The value to inspect.
-   :param class Class: A class or constructor function.
-   :returns:           A JavaScript boolean.
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
 
 .. function:: (js.typeof X)
 
@@ -722,6 +715,13 @@ Global Functions
 
    :param any X: Anything.
    :returns: A string identifying the basic type of the value: object, number, string, symbol, undefined, boolean.
+
+.. function:: (js.undefined? X)
+
+   Determines if value is :js:`undefined`.
+
+   :param any X: Value to inspect.
+   :returns:     A JavaScript boolean.
 
 .. function:: (js.void X)
 

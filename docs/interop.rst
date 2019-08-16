@@ -170,14 +170,15 @@ Exported Functions
    :param any x: A tree of Shen lists or any other value.
    :returns:     A tree of JavaScript arrays or whatever was passed in.
 
-.. function:: toList(x)
+.. function:: toList(x, [tail = null])
 
    Builds a Shen list from a JavaScript array. Elements are not transformed. :js:`x` is passed through if not a JavaScript array.
 
    Aliased as :js:`r` for brevity in generated code.
 
-   :param any x: A JavaScript array or any other value.
-   :returns:     A Shen list or whatever was passed in.
+   :param any x:    A JavaScript array or any other value.
+   :param any tail: Optional tail value for the final :js:`Cons` cell, instead of :js:`null`. Ignored if :js:`x` is not an array.
+   :returns:        A Shen list or whatever was passed in.
 
 .. function:: toListTree(x)
 

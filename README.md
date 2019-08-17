@@ -25,7 +25,7 @@ Still in progress:
 
 ## Prerequisites
 
-Requires recent version (10+) of [Node.js and npm](https://nodejs.org/en/download/).
+Requires recent version (10+) of [Node.js and npm](https://nodejs.org/en/download/) as well as [webpack-cli](https://www.npmjs.com/package/webpack-cli) locally installed.
 
 ## Building and Testing
 
@@ -33,4 +33,24 @@ Refer to [`.travis.yml`](.travis.yml) for typical build/test process. `test-*` c
 
 ## Running
 
-Run `npm start` to host a simple demo page.
+Run the following commands in order to host a simple demo page:
+
+```bash
+npm install
+npm start
+# You should serve the root directory
+python -m SimpleHTTPServer
+```
+
+If you open a browser on [localhost:8000](localhost:8000) a basic webpage will load and after a while it will display 
+the time required to load the shen environment in miliseconds (see the performance section above).
+
+If you open the javascript console at the developer tools it is possible to access to the shen global object and
+execute commands:
+
+```javascript
+shen.exec("(+ 1 1)").
+then(console.log)
+```
+
+For more information refer to the [documentation](https://shenscript.readthedocs.io/en/latest/interop.html).

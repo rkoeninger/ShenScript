@@ -25,7 +25,7 @@ Still in progress:
 
 ## Prerequisites
 
-Requires recent version (10+) of [Node.js and npm](https://nodejs.org/en/download/) as well as [webpack-cli](https://www.npmjs.com/package/webpack-cli) locally installed.
+Requires recent version (10+) of [Node.js and npm](https://nodejs.org/en/download/) as well as [webpack-cli](https://www.npmjs.com/package/webpack-cli) locally installed and [http-server](https://www.npmjs.com/package/http-server) if you want to run the demo.
 
 ## Building and Testing
 
@@ -39,7 +39,7 @@ Run the following commands in order to host a simple demo page:
 npm install
 npm start
 # You should serve the root directory
-python -m SimpleHTTPServer
+http-server -p 8000
 ```
 
 If you open a browser on [localhost:8000](localhost:8000) a basic webpage will load and after a while it will display 

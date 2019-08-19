@@ -13,6 +13,8 @@ The top-level module, :js:`shen`, exports a single function. That function takes
 The Kernel Sandwich
 ===================
 
+A full ShenScript environment is created by initialising a new backend with the options passed into the top-level, running that through the appropriate async or sync pre-rendered kernel and then applying the frontend decorator for whichever node or web environment is specified in the options. The composition looks like :js:`frontend(kernel(backend(options)))`.
+
 .. danger:: need to document backend
 
 ..

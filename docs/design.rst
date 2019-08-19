@@ -35,6 +35,8 @@ if, and, or, cond
 simple-error, trap-error
   Error handling works just like JavaScript, using the :js:`throw` and :js:`try` / :js:`catch` constructs.
 
+  Since both :js:`throw` and :js:`try` are statements in JavaScript, there are the functions :js:`raise` and :js:`trap` which contain these JavaScript constructs so they can be invoked as an expression. This does require the cost of an additional function call and instantiation of additional lambdas.
+
 defun, lambda, freeze
   All function forms build and return JavaScript functions.
 
@@ -160,11 +162,64 @@ In order to make the translation process fairly direct, generated JavaScript use
 Alternate Designs Considered
 ============================
 
-Hybrid Sync-Async Kernel
-------------------------
+Some designs are still up in the air. They either solve remaining problems like performance or provide additional capabilites.
 
 Fabrs/Fabrications
 ------------------
 
-KL AST interpreter in case CSP policy prevents use of eval() and Function()
----------------------------------------------------------------------------
+Shen's code style is very expression-oriented and is most easily translated to another expression-oriented language. Most of Shen's forms translate directly to expression syntax in JavaScript without a problem. All function calls are expressions in JavaScript, conditions can use the :js:`? :` ternary operator, etc. Two forms in particular pose a problem: :shen:`let` and :shen:`trap-error` would most naturally be represented with statements in JavaScript.
+
+We could just emit :code:`VariableDeclaration` and :code:`TryStatement` AST nodes for these forms, but that causes a compilication when either a statement or an expression might be emitted by the transpiler at any point in the code. And while it's easy to embed an expression in a statement construct - just by wrapping in an :code:`ExpressionStatement` - it's harder to embed a statement in an expression.
+
+An expression like :shen:`(+ 1 (trap-error (whatever) (/. _ 0)))` would normally be rendered like :js:`1 + asNumber(trap(() => whatever(), _ => 0))`. How would it be rendered if we wanted to inline a :js:`try/catch` instead of using the :js:`trap` function?
+
+The concept of a Fabrication (aka "fabr") was introduced to represent the composition of the two forms of syntax. Whenever a child form is built, it would return a fabr, consisting of a list of prerequiste statements and a resulting expression. Fabrs are typically composed by making a new fabr with all the statements from the first fabr, followed by the statements from the second fabr and then the result expressions are combined as they would be in the current design.
+
+Since every fabr needs a result expression, for statement syntax, an additional variable declaration is added for a result variable and the result of the fabr is just the identifier expression for that variable.
+
+The example above would get rendered like this. The :shen:`1` literal becomes:
+
+   .. code-block:: json
+
+      {
+        "statements": [],
+        "result": << 1 >>
+      }
+
+   .. code-block:: json
+
+      {
+        "statements": [
+          << let R123$; >>,
+          <<
+            try {
+              R123$ = settle(whatever());
+            } catch (e$) {
+              R123$ = 0;
+            }
+          >>
+        ],
+        "result": << R123$ >>
+      }
+
+This whole approach was attempted on the premise that using more idiomatic JavaScript syntax would give the runtime more opportunities to identify optimisations vs using :js:`trap` and immediately-invoked lambdas. Turns out using fabrs produced about twice the code volume and benchmarks took 3-4 times as long to run. I guess V8 is really good at optimising IIFEs. So fabrs were reverted. The design is documented here for historical reasons.
+
+KLambda-Expression Interpreter
+------------------------------
+
+Some JavaScript environments will have a `Content Security Policy <https://developer.chrome.com/extensions/contentSecurityPolicy#JSEval>`_ enabled that forbids the use of :js:`eval` and :js:`Function`. This would completely break the current design of the ShenScript evaluator. The transpiler would continue to work, and could produce JavaScript ASTs, but they could not be evaluated.
+
+A scratch ESTree interpreter could be written, but as it might need to support most of the capabilities of JavaScript itself, it would easier to write an interpreter that acts on the incoming KLambda expression trees themselves and forgo the transpiler entirely.
+
+The obvious downside is that the interpreter would be much slower that generated JavaScript which would enjoy all the optimisations built into a modern runtime like V8. The interpreter would only be used when it was absolutely necessary.
+
+Hybrid Sync-Async Kernel
+------------------------
+
+Currently, there is an option passed into the environment builder function that either loads a kernel rendered with all synchronous code or one with async/await. This results in using async functions when it isn't required and evaluating additional promise chains when a simple synchronous function call would do.
+
+Instead, the environment could load a kernel with both versions of each function and generate sync and async versions of each user-defined function and use one or the other on a case-by-case basis.
+
+For example, if we have Shen code like :shen:`(map F Xs)` and :shen:`F` is known not to be async, we can call the sync version of :shen:`map` which is tail-recursive or is a simple for-loop by way of a pinhole optimisation. This way, we won't have to evaluate the long chain of promises and trampolines the async version would result in for any list of decent length.
+
+If we think of the dependencies between functions in the kernel and user code as a tree or a graph, there is one leg going down the side of it that actually needs to be async and the rest of it can remain sync. Detecting and isolating that sub-graph allows for plentiful optimisation.

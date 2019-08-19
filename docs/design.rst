@@ -134,16 +134,23 @@ To reduce the volume of generated code, and to improve performance, most primiti
 The transpiler does this simple type inference following a few rules:
 
   * Literal numeric, string and idle symbol values are inferred to be of those types.
+
     * :shen:`123` is :code:`Number`.
     * :shen:`"hello"` is :code:`String`.
     * :shen:`thing` is :code:`Symbol`.
+
   * The value returned by primitive functions is inferred to be a particular type.
+
     * The result of :shen:`(+ X Y)` is :code:`Number` regardless of the types of the arguments.
     * :shen:`(tlstr X)` is :code:`String`.
     * :shen:`(cons X Y)` is :code:`Cons`.
+
   * Local variables in :shen:`let` bindings are inferred to be of the type their bound value was inferred to be.
+
     * :shen:`(let X 1 (+ X Y))` would not need an :js:`asNumber` cast for :shen:`X`.
+
   * The parameter to a lambda expression used as an error handler in a :shen:`trap-error` form is inferred to be :code:`Error`.
+
     * :shen:`(trap-error (whatever) (/. E (error-to-string E)))` does not generate an :js:`asError` check for :shen:`E`.
 
 More sophisticated analysis could be done, but with dimishing returns in the number of cases it actually catches. And consider that user-defined functions can be re-defined, either in a REPL session or in code loaded from a file, meaning assumptions made by optimised functions could be invalidated. When a function was re-defined, all dependent functions would have to be re-visited and potentially all functions dependent on those functions. That's why these return type assumptions are only made for primitives.

@@ -5,15 +5,11 @@ An implementation of the `Shen Language <http://shen-language.github.io>`_ by `M
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Table of Contents
 
    background
    design
    internals
    interop
-
-Indices and Tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
+   setup
+   :ref:`genindex`

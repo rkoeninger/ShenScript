@@ -33,7 +33,7 @@ if, and, or, cond
   Conditional code translates directly into matching JavaScript conditionals. :shen:`cond` expressions are turned into :js:`if` - :js:`else` chains.
 
 simple-error, trap-error
-  Error handling works just like JavaScript, using the :js:`throw` and :js:`try` / :js:`catch` constructs.
+  Error handling works just like JavaScript, using the :js:`throw` and :js:`try-catch` constructs.
 
   Since both :js:`throw` and :js:`try` are statements in JavaScript, there are the functions :js:`raise` and :js:`trap` which contain these JavaScript constructs so they can be invoked as an expression. This does require the cost of an additional function call and instantiation of additional lambdas.
 
@@ -206,19 +206,21 @@ Shen's code style is very expression-oriented and is most easily translated to a
 
 We could just emit :code:`VariableDeclaration` and :code:`TryStatement` AST nodes for these forms, but that causes a compilication when either a statement or an expression might be emitted by the transpiler at any point in the code. And while it's easy to embed an expression in a statement construct - just by wrapping in an :code:`ExpressionStatement` - it's harder to embed a statement in an expression.
 
-An expression like :shen:`(+ 1 (trap-error (whatever) (/. _ 0)))` would normally be rendered like :js:`1 + asNumber(trap(() => whatever(), _ => 0))`. How would it be rendered if we wanted to inline a :js:`try/catch` instead of using the :js:`trap` function?
+An expression like :shen:`(+ 1 (trap-error (whatever) (/. _ 0)))` would normally be rendered like :js:`1 + asNumber(trap(() => whatever(), _ => 0))`. How would it be rendered if we wanted to inline a :js:`try-catch` instead of using the :js:`trap` function?
 
 The concept of a Fabrication (aka "fabr") was introduced to represent the composition of the two forms of syntax. Whenever a child form is built, it would return a fabr, consisting of a list of prerequiste statements and a resulting expression. Fabrs are typically composed by making a new fabr with all the statements from the first fabr, followed by the statements from the second fabr and then the result expressions are combined as they would be in the current design.
 
 Since every fabr needs a result expression, for statement syntax, an additional variable declaration is added for a result variable and the result of the fabr is just the identifier expression for that variable.
 
-The example above would get rendered like this. The :shen:`1` literal becomes:
+An example like :shen:`(+ (let X 3 (* X 2)) (trap-error (whatever) (/. _ 0)))` would get rendered like this. The :shen:`(let X 3 (* X 2))` expression becomes:
 
    .. code-block:: json
 
       {
-        "statements": [],
-        "result": << 1 >>
+        "statements": [
+          << const X = 3; >>
+        ],
+        "result": << X * 2 >>
       }
 
 The :shen:`(trap-error (whatever) (/. _ 0))` becomes:
@@ -245,6 +247,7 @@ And composed together, they are:
 
       {
         "statements": [
+          << const X = 3; >>
           << let R123$; >>,
           <<
             try {
@@ -254,7 +257,7 @@ And composed together, they are:
             }
           >>
         ],
-        "result": << 1 + asNumber(R123$) >>
+        "result": << (X * 2) + asNumber(R123$) >>
       }
 
 This whole approach was attempted on the premise that using more idiomatic JavaScript syntax would give the runtime more opportunities to identify optimisations vs using :js:`trap` and immediately-invoked lambdas. Turns out using fabrs produced about twice the code volume and benchmarks took 3-4 times as long to run. I guess V8 is really good at optimising IIFEs. So fabrs were reverted. The design is documented here for historical reasons.

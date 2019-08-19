@@ -36,9 +36,9 @@ Refer to [`.travis.yml`](.travis.yml) for typical build/test process. `test-*` c
 Run the following commands in order to host a simple demo page:
 
 ```bash
-npm install
-npm start
-http-server -p 8080
+npm install           # Get npm dependencies
+npm start             # Start webpack watch
+http-server -p 8080   # Host the page
 ```
 
 If you open a browser on [localhost:8080](http://localhost:8080) a basic webpage will load, and when ready, it will display the load time.

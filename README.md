@@ -38,19 +38,17 @@ Run the following commands in order to host a simple demo page:
 ```bash
 npm install
 npm start
-# You should serve the root directory
-http-server -p 8000
+http-server -p 8080
 ```
 
-If you open a browser on [localhost:8000](localhost:8000) a basic webpage will load and after a while it will display 
-the time required to load the shen environment in miliseconds (see the performance section above).
+If you open a browser on [localhost:8080](http://localhost:8080) a basic webpage will load, and when ready, it will display the load time.
 
-If you open the javascript console at the developer tools it is possible to access to the shen global object and
-execute commands:
+If you open the JavaScript console in the developer tools, it is possible to access to the `shen` global object and execute commands:
 
 ```javascript
-shen.exec("(+ 1 1)").
-then(console.log)
+shen.exec("(+ 1 1)").then(console.log);
 ```
+
+Chaining the `then` call is necessary because the environment will be built in `async` mode and `exec` will return a `Promise`.
 
 For more information refer to the [documentation](https://shenscript.readthedocs.io/en/latest/interop.html).

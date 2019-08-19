@@ -7,10 +7,10 @@ An implementation of the `Shen Language <http://shen-language.github.io>`_ by `M
    :maxdepth: 2
    :caption: Contents:
 
+   background
    design
    internals
    interop
-   prior_art
 
 Indices and Tables
 ==================

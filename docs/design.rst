@@ -221,6 +221,8 @@ The example above would get rendered like this. The :shen:`1` literal becomes:
         "result": << 1 >>
       }
 
+The :shen:`(trap-error (whatever) (/. _ 0))` becomes:
+
    .. code-block:: json
 
       {
@@ -235,6 +237,24 @@ The example above would get rendered like this. The :shen:`1` literal becomes:
           >>
         ],
         "result": << R123$ >>
+      }
+
+And composed together, they are:
+
+   .. code-block:: json
+
+      {
+        "statements": [
+          << let R123$; >>,
+          <<
+            try {
+              R123$ = settle(whatever());
+            } catch (e$) {
+              R123$ = 0;
+            }
+          >>
+        ],
+        "result": << 1 + asNumber(R123$) >>
       }
 
 This whole approach was attempted on the premise that using more idiomatic JavaScript syntax would give the runtime more opportunities to identify optimisations vs using :js:`trap` and immediately-invoked lambdas. Turns out using fabrs produced about twice the code volume and benchmarks took 3-4 times as long to run. I guess V8 is really good at optimising IIFEs. So fabrs were reverted. The design is documented here for historical reasons.

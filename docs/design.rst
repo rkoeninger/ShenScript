@@ -139,15 +139,15 @@ The transpiler does this simple type inference following a few rules:
     * :shen:`"hello"` is :code:`String`.
     * :shen:`thing` is :code:`Symbol`.
 
-  * The value returned by primitive functions is inferred to be a particular type.
+  * The value returned by a primitive function is inferred to be of that function's known return type, regardless of the type of the arguments. If the arguments are of an unexpected type, an error will be raised anyway.
 
-    * The result of :shen:`(+ X Y)` is :code:`Number` regardless of the types of the arguments.
+    * :shen:`(+ X Y)` is :code:`Number`.
     * :shen:`(tlstr X)` is :code:`String`.
     * :shen:`(cons X Y)` is :code:`Cons`.
 
   * Local variables in :shen:`let` bindings are inferred to be of the type their bound value was inferred to be.
 
-    * :shen:`(let X 1 (+ X Y))` would not need an :js:`asNumber` cast for :shen:`X`.
+    * The :shen:`X` in :shen:`(+ X Y)` in :shen:`(let X 1 (+ X Y))` is :code:`Number`. :shen:`X` would not need an :js:`asNumber` cast in :shen:`(+ X Y)`.
 
   * The parameter to a lambda expression used as an error handler in a :shen:`trap-error` form is inferred to be :code:`Error`.
 

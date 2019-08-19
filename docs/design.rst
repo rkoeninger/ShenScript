@@ -81,7 +81,46 @@ Escaping Special Variable Names
 
 There are still some variables that need to be accessible to generated code, but not to the source code - referenceable in JavaScript, but not Shen. The main example is the environment object, conventionally named :js:`$`. Dollar signs and other special characters get escaped by replacing them with a dollar sign followed by the two-digit hex code for that character. Since dollar signs are valid identifier characters in JavaScript, hidden environment variables can be named ending with dollar sign, because if a Shen variable ends with :shen:`$`, the escaped JavaScript name will have a trailing :js:`$24` instead.
 
-.. danger:: js.ast functions, inlines, preprocessors to allow port to control code generation
+Dynamic Type-Checking
+---------------------
+
+Many JavaScript operators, like the :js:`+` operator, are not limited to working with specific types like they are in Shen. In JavaScript, :js:`+` can do numberic addition, string concatenation and offers a variety of strange behaviors are argument types are mixed. In Shen, the :shen:`+` function only works on numbers and passing a non-number is an error.
+
+So in order to make sure these primitive functions are being applied to the correct types, there are a series of :js:`is` functions like :js:`isNumber`, :js:`isString` and :js:`isCons`, which determine if a value is of that type. There are also a series of :js:`as` functions for the same types which check if the argument is of that type and returns it if it is, but raises an error if it is not.
+
+This allows concise definition of primitive functions. The :shen:`+` primitve is defined like this:
+
+   .. code-block:: js
+
+      (x, y) => asNumber(x) + asNumber(y)
+
+and the :shen:`cn` primitive is defined like this:
+
+   .. code-block:: js
+
+      (x, y) => asString(x) + asString(y)
+
+Code Inlining and Optimisation
+------------------------------
+
+To reduce the volume of generated code, and to improve performance, most primitive operations are inlined when fully applied. Since the type checks described in the previous section are still necessary, they get inlined as well, but can be excluded on certain circumstances. For instance, when generating code for the expression :shen:`(+ 1 X)`, it is certain that the argument expression :shen:`1` is of a numeric type as it is a numeric constant. So instead of generating the code :js:`asNumber(1) + asNumber(X)`, we can just render :js:`1 + asNumber(X)`.
+
+The transpiler does this simple type inference following a few rules:
+
+  * Literal numeric, string and idle symbol values are inferred to be of those types.
+    * :shen:`123` is :code:`Number`.
+    * :shen:`"hello"` is :code:`String`.
+    * :shen:`thing` is :code:`Symbol`.
+  * The value returned by primitive functions is inferred to be a particular type.
+    * The result of :shen:`(+ X Y)` is :code:`Number` regardless of the types of the arguments.
+    * :shen:`(tlstr X)` is :code:`String`.
+    * :shen:`(cons X Y)` is :code:`Cons`.
+  * Local variables in :shen:`let` bindings are inferred to be of the type their bound value was inferred to be.
+    * :shen:`(let X 1 (+ X Y))` would not need an :js:`asNumber` cast for :shen:`X`.
+  * The parameter to a lambda expression used as an error handler in a :shen:`trap-error` form is inferred to be :code:`Error`.
+    * :shen:`(trap-error (whatever) (/. E (error-to-string E)))` does not generate an :js:`asError` check for :shen:`E`.
+
+More sophisticated analysis could be done, but with dimishing returns in the number of cases it actually catches. And consider that user-defined functions can be re-defined, either in a REPL session or in code loaded from a file, meaning assumptions made by optimised functions could be invalidated. When a function was re-defined, all dependent functions would have to be re-visited and potentially all functions dependent on those functions. That's why these return type assumptions are only made for primitives.
 
 Partial Function Application
 ----------------------------

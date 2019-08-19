@@ -92,8 +92,8 @@ settle
 bounce
   Bouncing a function call means making a trampoline from a reference to the function and the list of arguments and returning. The function will actually be invoked when the trampoline is settled at some point later.
 
-Design and Implementation Details
-=================================
+Generation of Syntax
+====================
 
 Generating JavaScript
 ---------------------
@@ -159,10 +159,38 @@ In order to make the translation process fairly direct, generated JavaScript use
 
 :js:`async` code generation is actually controlled by a config flag passed when the backend is created. So if your Shen code is using synchronous I/O, or if it's not going to use I/O at all, you can enjoy a significant performance boost from using faster synchronous JavaScript.
 
-Alternate Designs Considered
-============================
+Future Designs Options
+======================
 
 Some designs are still up in the air. They either solve remaining problems like performance or provide additional capabilites.
+
+KLambda-Expression Interpreter
+------------------------------
+
+Some JavaScript environments will have a `Content Security Policy <https://developer.chrome.com/extensions/contentSecurityPolicy#JSEval>`_ enabled that forbids the use of :js:`eval` and :js:`Function`. This would completely break the current design of the ShenScript evaluator. The transpiler would continue to work, and could produce JavaScript ASTs, but they could not be evaluated.
+
+A scratch ESTree interpreter could be written, but as it might need to support most of the capabilities of JavaScript itself, it would easier to write an interpreter that acts on the incoming KLambda expression trees themselves and forgo the transpiler entirely.
+
+The obvious downside is that the interpreter would be much slower that generated JavaScript which would enjoy all the optimisations built into a modern runtime like V8. The interpreter would only be used when it was absolutely necessary.
+
+Hybrid Sync-Async Kernel
+------------------------
+
+Currently, there is an option passed into the environment builder function that either loads a kernel rendered with all synchronous code or one with async/await. This results in using async functions when it isn't required and evaluating additional promise chains when a simple synchronous function call would do.
+
+Instead, the environment could load a kernel with both versions of each function and generate sync and async versions of each user-defined function and use one or the other on a case-by-case basis.
+
+For example, if we have Shen code like :shen:`(map F Xs)` and :shen:`F` is known not to be async, we can call the sync version of :shen:`map` which is tail-recursive or is a simple for-loop by way of a pinhole optimisation. This way, we won't have to evaluate the long chain of promises and trampolines the async version would result in for any list of decent length.
+
+If we think of the dependencies between functions in the kernel and user code as a tree or a graph, there is one leg going down the side of it that actually needs to be async and the rest of it can remain sync. Detecting and isolating that sub-graph allows for plentiful optimisation.
+
+Historical and Abandoned Design
+===============================
+
+String Concatenation
+--------------------
+
+In a much earlier version, code generation was done with JavaScript template strings and string concatenation. This was replaced with the use of the astring library since it is cleaner, more reliable and more flexible to have an AST that can undergo further manipulation as opposed to a final code string that can only be concatenated.
 
 Fabrs/Fabrications
 ------------------
@@ -203,23 +231,3 @@ The example above would get rendered like this. The :shen:`1` literal becomes:
       }
 
 This whole approach was attempted on the premise that using more idiomatic JavaScript syntax would give the runtime more opportunities to identify optimisations vs using :js:`trap` and immediately-invoked lambdas. Turns out using fabrs produced about twice the code volume and benchmarks took 3-4 times as long to run. I guess V8 is really good at optimising IIFEs. So fabrs were reverted. The design is documented here for historical reasons.
-
-KLambda-Expression Interpreter
-------------------------------
-
-Some JavaScript environments will have a `Content Security Policy <https://developer.chrome.com/extensions/contentSecurityPolicy#JSEval>`_ enabled that forbids the use of :js:`eval` and :js:`Function`. This would completely break the current design of the ShenScript evaluator. The transpiler would continue to work, and could produce JavaScript ASTs, but they could not be evaluated.
-
-A scratch ESTree interpreter could be written, but as it might need to support most of the capabilities of JavaScript itself, it would easier to write an interpreter that acts on the incoming KLambda expression trees themselves and forgo the transpiler entirely.
-
-The obvious downside is that the interpreter would be much slower that generated JavaScript which would enjoy all the optimisations built into a modern runtime like V8. The interpreter would only be used when it was absolutely necessary.
-
-Hybrid Sync-Async Kernel
-------------------------
-
-Currently, there is an option passed into the environment builder function that either loads a kernel rendered with all synchronous code or one with async/await. This results in using async functions when it isn't required and evaluating additional promise chains when a simple synchronous function call would do.
-
-Instead, the environment could load a kernel with both versions of each function and generate sync and async versions of each user-defined function and use one or the other on a case-by-case basis.
-
-For example, if we have Shen code like :shen:`(map F Xs)` and :shen:`F` is known not to be async, we can call the sync version of :shen:`map` which is tail-recursive or is a simple for-loop by way of a pinhole optimisation. This way, we won't have to evaluate the long chain of promises and trampolines the async version would result in for any list of decent length.
-
-If we think of the dependencies between functions in the kernel and user code as a tree or a graph, there is one leg going down the side of it that actually needs to be async and the rest of it can remain sync. Detecting and isolating that sub-graph allows for plentiful optimisation.

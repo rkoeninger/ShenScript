@@ -66,6 +66,30 @@ Values are considered equivalent in ShenScript if they are equal according to th
   * Both values are JavaScript arrays of the same length and all of their values are equal according to :js:`equate`.
   * Both values are JavaScript objects with the same constructor, same set of keys and the values for each key are equal according to :js:`equate`.
 
+Partial Function Application
+----------------------------
+
+In Shen, functions have precise arities, and when a function is applied to fewer arguments than it takes, it returns a function that takes the remaining arguments. So since :shen:`+` takes two arguments, if it is applied to a single one, as in :shen:`(+ 1)`, the result is a function that takes one number and returns :shen:`1` plus that number.
+
+ShenScript also supports curried application, where there are more arguments than the function actually takes. The function is applied to the first :code:`N` arguments equal to the function's arity, the result is asserted to be a function, and then the resulting function is applied to the remaining arguments. Repeat this process until there are no remaining arguments or until a non-function is returned and an error is raised.
+
+.. warning:: Curried application is not a part of the Shen standard, is not supported by `shen-cl <https://github.com/Shen-Language/shen-cl>`_, and might be removed from ShenScript.
+
+This is implemented in ShenScript for primitives, kernel functions and user-defined functions by wrapping them in a function that takes a variable number of arguments, checks the number passed in, and then returns another function to take the remaining arguments, performs curried application, or simply returns the result.
+
+Tail-Call Optimization
+----------------------
+
+Tail-call optimization is required by the Shen standard and Shen code make prolific use of recursion making TCO a necessity.
+
+In ShenScript, tail calls are handled dynamically using `trampolines <https://en.wikipedia.org/wiki/Trampoline_(computing)>`_. When a function is built by the transpiler, the lexical position of expressions are tracked as being in head or tail position. Function calls in head position are a simple invocation and the result is settled; calls in tail position are bounced.
+
+settle
+  Settling is the process of taking a value that might be a :js:`Trampoline`, checking if it's a tramoline, and if it is, running it. The result of running the trampoline is checked if it's a trampoline, and if so, that is run and this process is repeated until the final result is a non-trampoline value, which is returned.
+
+bounce
+  Bouncing a function call means making a trampoline from a reference to the function and the list of arguments and returning. The function will actually be invoked when the trampoline is settled at some point later.
+
 Design and Implementation Details
 =================================
 
@@ -122,32 +146,8 @@ The transpiler does this simple type inference following a few rules:
 
 More sophisticated analysis could be done, but with dimishing returns in the number of cases it actually catches. And consider that user-defined functions can be re-defined, either in a REPL session or in code loaded from a file, meaning assumptions made by optimised functions could be invalidated. When a function was re-defined, all dependent functions would have to be re-visited and potentially all functions dependent on those functions. That's why these return type assumptions are only made for primitives.
 
-Partial Function Application
-----------------------------
-
-In Shen, functions have precise arities, and when a function is applied to fewer arguments than it takes, it returns a function that takes the remaining arguments. So since :shen:`+` takes two arguments, if it is applied to a single one, as in :shen:`(+ 1)`, the result is a function that takes one number and returns :shen:`1` plus that number.
-
-ShenScript also supports curried application, where there are more arguments than the function actually takes. The function is applied to the first :code:`N` arguments equal to the function's arity, the result is asserted to be a function, and then the resulting function is applied to the remaining arguments. Repeat this process until there are no remaining arguments or until a non-function is returned and an error is raised.
-
-.. warning:: Curried application is not a part of the Shen standard, is not supported by `shen-cl <https://github.com/Shen-Language/shen-cl>`_, and might be removed from ShenScript.
-
-This is implemented in ShenScript for primitives, kernel functions and user-defined functions by wrapping them in a function that takes a variable number of arguments, checks the number passed in, 
-
-Tail-Call Optimization
-----------------------
-
-Tail-call optimization is required by the Shen standard and Shen code make prolific use of recursion making TCO a necessity.
-
-In ShenScript, tail calls are handled dynamically using `trampolines <https://en.wikipedia.org/wiki/Trampoline_(computing)>`_. When a function is built by the transpiler, the lexical position of expressions are tracked as being in head or tail position. Function calls in head position are a simple invocation and the result is settled; calls in tail position are bounced.
-
-settle
-  Settling is the process of taking a value that might be a :js:`Trampoline`, checking if it's a tramoline, and if it is, running it. The result of running the trampoline is checked if it's a trampoline, and if so, that is run and this process is repeated until the final result is a non-trampoline value, which is returned.
-
-bounce
-  Bouncing a function call means making a trampoline from a reference to the function and the list of arguments and returning. The function will actually be invoked when the trampoline is settled at some point later.
-
-Optional Pervasive Async
-------------------------
+Optional Pervasive Asynchronocity
+---------------------------------
 
 I/O functions, including primitives like :shen:`read-byte` and :shen:`write-byte` are idiomatically synchronous in Shen. This poses a problem when porting Shen to a platform like JavaScript which pervasively uses asynchronous I/O.
 

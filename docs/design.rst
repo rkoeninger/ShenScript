@@ -155,12 +155,12 @@ I/O functions, including primitives like :shen:`read-byte` and :shen:`write-byte
 
 Functions like :shen:`read-byte` and :shen:`open` are especially problematic, because where :shen:`write-byte` and :shen:`close` can be fire-and-forget even if they do need to be async, Shen code will expect :shen:`read-byte` and :shen:`open` to be blocking and the kernel isn't designed to await a promise or even pass a continuation.
 
-In order to make the translation process fairly direct, generated JavaScript uses `async/await <https://javascript.info/async-await>`_ syntax so that code structured like synchronous code can actually be asynchronous.
+In order to make the translation process fairly direct, generated JavaScript uses `async/await <https://javascript.info/async-await>`_ syntax so that code structured like synchronous code can actually be asynchronous. This allows use of async functions to look just like the use of sync functions in Shen, but be realized however necessary in the host language.
 
 :js:`async` code generation is actually controlled by a config flag passed when the backend is created. So if your Shen code is using synchronous I/O, or if it's not going to use I/O at all, you can enjoy a significant performance boost from using faster synchronous JavaScript.
 
-Future Designs Options
-======================
+Future Design Options
+=====================
 
 Some designs are still up in the air. They either solve remaining problems like performance or provide additional capabilites.
 
@@ -192,8 +192,8 @@ String Concatenation
 
 In a much earlier version, code generation was done with JavaScript template strings and string concatenation. This was replaced with the use of the astring library since it is cleaner, more reliable and more flexible to have an AST that can undergo further manipulation as opposed to a final code string that can only be concatenated.
 
-Fabrs/Fabrications
-------------------
+Fabrications
+------------
 
 Shen's code style is very expression-oriented and is most easily translated to another expression-oriented language. Most of Shen's forms translate directly to expression syntax in JavaScript without a problem. All function calls are expressions in JavaScript, conditions can use the :js:`? :` ternary operator, etc. Two forms in particular pose a problem: :shen:`let` and :shen:`trap-error` would most naturally be represented with statements in JavaScript.
 

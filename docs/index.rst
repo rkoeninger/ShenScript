@@ -9,7 +9,7 @@ An implementation of the `Shen Language <http://shen-language.github.io>`_ by `M
 
    background
    design
-   internals
-   interop
    setup
+   interop
+   internals
    genindex

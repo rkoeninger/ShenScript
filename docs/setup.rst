@@ -9,7 +9,10 @@ The top-level module, :js:`shen`, exports a single function. That function takes
         "async": boolean // Required.
         "clock":
       }
- 
+
+The Kernel Sandwich
+===================
+
 .. danger:: need to document backend
 
 ..

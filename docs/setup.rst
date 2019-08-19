@@ -1,3 +1,5 @@
+.. include:: directives.rst
+
 Building an Environment
 =======================
 

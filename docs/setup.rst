@@ -139,9 +139,13 @@ The Node Frontend
 
 Further adds :shen:`node` package helpers for interacting with the capabilites of the Node.js runtime.
 
+Functions are described `here <interop.html#node-specific-interop>`_.
+
 The Web Frontend
 ~~~~~~~~~~~~~~~~
 
 **module** ``frontend.web``
 
 Further adds :shen:`web` package helpers for interacting with the capabilites of a web browser or electron instance.
+
+Functions are described `here <interop.html#web-specific-interop>`_.

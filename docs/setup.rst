@@ -28,7 +28,7 @@ The backend module contains the KLambda-to-JavaScript transpiler, global functio
 
 The :js:`exports` of this module is just a function that constructs a new ShenScript environment object, which is conventionally named :js:`$`.
 
-.. function:: (options = {})
+.. function:: (options = {}) => $
 
    :param Object   options:                Environment config and overrides.
    :param boolean  options.async:          Enable generation of async/promise-chaining code. Defaults to :js:`false`.
@@ -84,33 +84,35 @@ The Frontend
 
 .. module:: frontend
 
-.. danger:: need to document frontend
+The frontend module augments a ShenScript environment with JavaScript- and ShenScript-specific functionality.
 
-..
+Functionality provided includes:
 
-  /**
-   * Amends Shen environment with JavaScript- and ShenScript-specific functionality.
-   * @param {Object} $ - Shen environment object to amend.
-   * @returns {Frontend} Same object, mutated.
-   */
+  * :shen:`js` package functions that allow access to common JavaScript types, objects and functions.
+  * :shen:`js.ast` package functions that allow generation, rendering and evaluation of JavaScript code.
+  * :shen:`shen-script` package functions that allow access to ShenScript environment internals.
 
-  /**
-   * @typedef {Object} Frontend
-   * @prop {function} caller - Returns a function that invokes the function by the given name,
-   *                           settling returned Trampolines.
-   * @prop {function} define - Defines Shen function that defers to given JavaScript function.
-   * @prop {function} defineTyped - Defines Shen function that defers to given JavaScript function and declares
-   *                                with the specified Shen type signature. Type signature has the same structure
-   *                                as in Shen source code, but in array tree form.
-   * @prop {function} defmacro - Defines a Shen macro in terms of the given JavaScript function.
-   * @prop {function} evalShen - Evaluates Shen expression tree in isolated environment.
-   * @prop {function} exec - Parses string as Shen source, evaluates each expression and returns last result.
-   * @prop {function} execEach - Parses string as Shen source, evaluates each expression and returns an array
-   *                             of the results.
-   * @prop {function} inline - Registers an inlining rule.
-   * @prop {function} load - Loads Shen code from the given file path.
-   * @prop {function} parse - Returns parsed Shen source code as a cons tree.
-   * @prop {function} pre - Registers a preprocessor function.
-   * @prop {function} symbol - Declares a global symbol with the given value and a function by the same name
-   *                           that retrieves the value.
-   */
+The :js:`exports` of this module is just a function that augments an environment and returns it.
+
+.. function:: ($) => $
+
+   :param object $: A ShenScript environment to add functions to.
+   :returns:        Same :js:`$` that was passed in, conforming to the :js:`Frontend` class.
+
+.. class:: Frontend extends Backend, Kenerl
+
+   This class is a description of object returned by the :js:`frontend` function and does not actually exist. It contains a complete ShenScript environment.
+
+   :param function caller:      Returns a function that invokes the function by the given name, settling returned Trampolines.
+   :param function define:      Defines Shen function that defers to given JavaScript function.
+   :param function defineTyped: Defines Shen function that defers to given JavaScript function and declares with the specified Shen type signature.
+   :param function defmacro:    Defines a Shen macro in terms of the given JavaScript function.
+   :param function evalShen:    Evaluates Shen expression tree in isolated environment.
+   :param function exec:        Parses string as Shen source, evaluates each expression and returns last result.
+   :param function execEach:    Parses string as Shen source, evaluates each expression and returns an array of the results.
+   :param function inline:      Registers an inlining rule.
+   :param function load:        Loads Shen code from the given file path.
+   :param function parse:       Returns parsed Shen source code as a cons tree.
+   :param function pre:         Registers a preprocessor function.
+   :param function symbol:      Declares a global symbol with the given value and a function by the same name that retrieves the value.
+   :returns:                    Same :js:`$` that was passed in.

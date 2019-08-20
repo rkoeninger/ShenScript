@@ -5,6 +5,8 @@ Building an Environment
 
 The top-level module, :js:`shen`, exports a single function. That function takes an optional :js:`options` object and returns a ShenScript environment.
 
+.. danger:: finish documenting this
+
    .. code-block:: json
 
       {
@@ -13,7 +15,7 @@ The top-level module, :js:`shen`, exports a single function. That function takes
       }
 
 The Kernel Sandwich
--------------------
+===================
 
 A full ShenScript environment is created by initialising a new backend with the options passed into the top-level, running that through the appropriate async or sync pre-rendered kernel and then applying the frontend decorator for whichever node or web environment is specified in the options. The composition looks like :js:`frontend(kernel(backend(options)))`. I call this "The Kernel Sandwich".
 
@@ -52,38 +54,23 @@ The :js:`exports` of this module is just a function that constructs a new ShenSc
 
    This class is a description of object returned by the :js:`backend` function and does not actually exist. It contains an initial ShenScript environment, without the Shen kernel loaded.
 
-   :param boolean async: Environment will generate async functions.
-
-.. danger:: Finish documenting backend
-
-..
-
-  /**
-   * @typedef {Object} Backend
-   * @prop {boolean}  async - Environment will generate async functions.
-   * @prop {function} bounce - Creates a trampoline from function and arguments.
-   * @prop {function} compile - Turns KLambda expression array tree into JavaScript AST.
-   * @prop {function} cons - Creates a Cons from a head and tail.
-   * @prop {function} defun - Adds function to the global function registry.
-   * @prop {function} equate - Determines if two values are equal according to the semantics of Shen.
-   * @prop {function} evalJs - Evalutes a JavaScript AST in isolated scope with access to $.
-   * @prop {function} evalKl - Builds and evaluates a KLambda expression tree in isolated scope with access to $.
-   * @prop {Object}   functions - Global index of functions by name. Contained functions are
-   *                            passed through fun to handle partial and curried application.
-   * @prop {function} future - Awaits argument, if value is a Trampoline, runs Trampoline and repeats. future(...) calls
-   *                           are generated around function applications in head position while in async mode.
-   * @prop {Object}   inlines - Post-processing inlines. Each accepts constructed JavaScript ASTs
-   *                            and returns another AST.
-   * @prop {function} settle - If value is a Trampoline, runs Trampoline and repeats. settle(...) calls are
-   *                           generated around function applications in head position while in sync mode.
-   * @prop {function} show - toString() function. Returns string representation of any value.
-   * @prop {Object}   symbols - Global symbol index. Keys are strings.
-   * @prop {function} trapAsync - Invoke first function, settle result and return it. If an error
-   *                              is raised, apply second function to error and return.
-   * @prop {function} trapSync - Invoke first function, settle result, await and return it. If an error
-   *                             is raised, apply second function to error and return.
-   * @prop {function} valueOf - Returns the value of the given global symbol. Raises an error if it is not defined.
-   */
+   :param boolean  async:     Environment will generate async functions.
+   :param function bounce:    Creates a trampoline from function and rest arguments.
+   :param function compile:   Turns KLambda expression array tree into JavaScript AST.
+   :param function cons:      Creates a Cons from a head and tail.
+   :param function defun:     Adds function to the global function registry.
+   :param function equate:    Determines if two values are equal according to the semantics of Shen.
+   :param function evalJs:    Evalutes a JavaScript AST in isolated scope with access to :js:`$`.
+   :param function evalKl:    Builds and evaluates a KLambda expression tree in isolated scope with access to $.
+   :param object   functions: Global function index by string name. Functions handle partial application but do not settle trampolines.
+   :param function future:    The async version of :js:`settle`.
+   :param object   inlines:   Post-processing inlines. Each accepts constructed JavaScript ASTs and returns another AST.
+   :param function settle:    If value is a Trampoline, runs Trampoline and repeats.
+   :param function show:      :js:`toString` function. Returns string representation of any value.
+   :param object   symbols:   Global symbol index by string name.
+   :param function trapAsync: The async version of :js:`trapSync`.
+   :param function trapSync:  Invoke first function, settle result and return it. If error raised, apply second function to error and return.
+   :param function valueOf:   Returns the value of the given global symbol. Raises an error if it is not defined.
 
 The Kernel
 ----------

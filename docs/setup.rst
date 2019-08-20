@@ -24,9 +24,9 @@ The Backend
 
 The backend module contains the KLambda-to-JavaScript transpiler, global function and symbol indexes and proto-primitives for conses, trampolines, equality and partial application.
 
-The :js:`exports` is just a function that constructs a new ShenScript environment object, which is conventionally named :js:`$`.
+The :js:`exports` of this module is just a function that constructs a new ShenScript environment object, which is conventionally named :js:`$`.
 
-.. function:: backend(options = {})
+.. function:: (options = {})
 
    :param Object   options:                Environment config and overrides.
    :param boolean  options.async:          Enable generation of async/promise-chaining code. Defaults to :js:`false`.
@@ -37,8 +37,8 @@ The :js:`exports` is just a function that constructs a new ShenScript environmen
    :param class    options.OutStream:      Class used for output streams. Not required if :js:`isInStream` and :js:`openRead` are specified.
    :param function options.isInStream:     Returns true if argument is an :js:`InStream`. Defaults to a function that returns false.
    :param function options.isOutStream:    Returns true if argument is an :js:`OutStream`. Defaults to a function that returns false.
-   :param function options.openRead:       Opens an InStream for the given file path. Defaults to a function that raises an error.
-   :param function options.openWrite:      Opens an OutStream for the given file path. Defaults to a function that raises an error.
+   :param function options.openRead:       Opens an :js:`InStream` for the given file path. Defaults to a function that raises an error.
+   :param function options.openWrite:      Opens an :js:`OutStream` for the given file path. Defaults to a function that raises an error.
    :param string   options.os:             Name of operating system in use. Defaults to :js:`"Unknown"`.
    :param string   options.port:           Current version of ShenScript. Defaults to :js:`"Unknown"`.
    :param string   options.porters:        Author(s) of ShenScript. Defaults to :js:`"Unknown"`.
@@ -46,11 +46,11 @@ The :js:`exports` is just a function that constructs a new ShenScript environmen
    :param string   options.sterror:        :js:`OutStream` for error messages. Defaults to :js:`stdoutput`.
    :param string   options.stinput:        :js:`InStream` for standard input. Defaults to an object that raises an error.
    :param string   options.stoutput:       :js:`OutStream` for standard output. Defaults to an object that raises an error.
-   :returns:                               A :js:`Backend` object.
+   :returns:                               An object conforming to the :js:`Backend` class description.
 
 .. class:: Backend
 
-   This class does not actually exist, it is just the type of object returned by the :js:`backend` function. It contains an initial ShenScript environment, without the Shen kernel loaded.
+   This class is a description of object returned by the :js:`backend` function and does not actually exist. It contains an initial ShenScript environment, without the Shen kernel loaded.
 
    :param boolean async: Environment will generate async functions.
 

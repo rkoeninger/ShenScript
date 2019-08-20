@@ -13,36 +13,50 @@ The top-level module, :js:`shen`, exports a single function. That function takes
       }
 
 The Kernel Sandwich
-===================
+-------------------
 
-A full ShenScript environment is created by initialising a new backend with the options passed into the top-level, running that through the appropriate async or sync pre-rendered kernel and then applying the frontend decorator for whichever node or web environment is specified in the options. The composition looks like :js:`frontend(kernel(backend(options)))`.
+A full ShenScript environment is created by initialising a new backend with the options passed into the top-level, running that through the appropriate async or sync pre-rendered kernel and then applying the frontend decorator for whichever node or web environment is specified in the options. The composition looks like :js:`frontend(kernel(backend(options)))`. I call this "The Kernel Sandwich".
 
-.. danger:: need to document backend
+The Backend
+-----------
+
+.. module:: backend
+
+The backend module contains the KLambda-to-JavaScript transpiler, global function and symbol indexes and proto-primitives for conses, trampolines, equality and partial application.
+
+The :js:`exports` is just a function that constructs a new ShenScript environment object, which is conventionally named :js:`$`.
+
+.. function:: backend(options = {})
+
+   :param Object   options:                Environment config and overrides.
+   :param boolean  options.async:          Enable generation of async/promise-chaining code. Defaults to :js:`false`.
+   :param function options.clock:          Provides current time in fractional seconds from the Unix epoch. Defaults to :js:`() => Date.now`.
+   :param string   options.homeDirectory:  Initial working directory in file system. Defaults to :js:`"/"`.
+   :param string   options.implementation: Name of JavaScript platform in use. Defaults to :js:`"Unknown"`.
+   :param class    options.InStream:       Class used for input streams. Not required if :js:`isInStream` and :js:`openRead` are specified.
+   :param class    options.OutStream:      Class used for output streams. Not required if :js:`isInStream` and :js:`openRead` are specified.
+   :param function options.isInStream:     Returns true if argument is an :js:`InStream`. Defaults to a function that returns false.
+   :param function options.isOutStream:    Returns true if argument is an :js:`OutStream`. Defaults to a function that returns false.
+   :param function options.openRead:       Opens an InStream for the given file path. Defaults to a function that raises an error.
+   :param function options.openWrite:      Opens an OutStream for the given file path. Defaults to a function that raises an error.
+   :param string   options.os:             Name of operating system in use. Defaults to :js:`"Unknown"`.
+   :param string   options.port:           Current version of ShenScript. Defaults to :js:`"Unknown"`.
+   :param string   options.porters:        Author(s) of ShenScript. Defaults to :js:`"Unknown"`.
+   :param string   options.release:        Current version of JavaScript platform in use. Defaults to :js:`"Unknown"`.
+   :param string   options.sterror:        :js:`OutStream` for error messages. Defaults to :js:`stdoutput`.
+   :param string   options.stinput:        :js:`InStream` for standard input. Defaults to an object that raises an error.
+   :param string   options.stoutput:       :js:`OutStream` for standard output. Defaults to an object that raises an error.
+   :returns:                               A :js:`Backend` object.
+
+.. class:: Backend
+
+   This class does not actually exist, it is just the type of object returned by the :js:`backend` function. It contains an initial ShenScript environment, without the Shen kernel loaded.
+
+   :param boolean async: Environment will generate async functions.
+
+.. danger:: Finish documenting backend
 
 ..
-
-  /**
-   * Shen environment creation function.
-   * @param {Object}    [options = {}] - Environment config and overrides.
-   * @param {boolean}   [options.async = false] - Enable generation of async/promise-chaining code.
-   * @param {function}  [options.clock = Date.now] - Provides current time in fractional seconds from the Unix epoch.
-   * @param {string}    [options.homeDirectory = '/'] - Working directory in file system.
-   * @param {string}    [options.implementation = 'Unknown'] - JavaScript platform in use.
-   * @param {class}     options.InStream - Class used for input streams.
-   * @param {class}     options.OutStream - Class used for output streams.
-   * @param {function}  [options.isInStream = false] - Returns true if argument is an InStream.
-   * @param {function}  [options.isOutStream = false] - Returns true if argument is an OutStream.
-   * @param {function}  [options.openRead = raise] - Opens an InStream for the given file path.
-   * @param {function}  [options.openWrite = raise] - Opens an OutStream for the given file path.
-   * @param {string}    [options.os = 'Unknown'] - Name of current operating system.
-   * @param {string}    [options.port = 'Unknown'] - The version of ShenScript.
-   * @param {string}    [options.porters = 'Unknown'] - The author of ShenScript.
-   * @param {string}    [options.release = 'Unknown'] - Version of JavaScript implementation.
-   * @param {OutStream} [options.sterror = stoutput] - OutStream for error messages.
-   * @param {InStream}  [options.stinput = raise] - InStream for standard input.
-   * @param {OutStream} [options.stoutput = raise] - OutStream for standard output.
-   * @return {Backend} Shen environment object, typically called $.
-   */
 
   /**
    * @typedef {Object} Backend
@@ -71,7 +85,17 @@ A full ShenScript environment is created by initialising a new backend with the 
    * @prop {function} valueOf - Returns the value of the given global symbol. Raises an error if it is not defined.
    */
 
+The Kernel
+----------
+
+.. module:: kernel.*
+
 .. danger:: need to document kernel
+
+The Frontend
+------------
+
+.. module:: frontend
 
 .. danger:: need to document frontend
 

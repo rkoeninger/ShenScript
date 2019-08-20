@@ -22,7 +22,7 @@ A full ShenScript environment is created by initialising a new backend with the 
 The Backend
 -----------
 
-**module ``backend``**
+**module** ``backend``
 
 The backend module contains the KLambda-to-JavaScript transpiler, global function and symbol indexes and proto-primitives for conses, trampolines, equality and partial application.
 
@@ -75,7 +75,7 @@ The :js:`exports` of this module is just a function that constructs a new ShenSc
 The Kernel
 ----------
 
-**module kernel.async**, **module kernel.sync**
+**module** ``kernel.async``, **module** ``kernel.sync``
 
 The :js:`kernel.*` modules contain a JavaScript rendering of the Shen kernel that can be loaded into a ShenScript environment.
 
@@ -97,7 +97,7 @@ The :js:`exports` of this module is just a function that augments an environment
 The Frontend
 ------------
 
-**module ``frontend``**
+**module** ``frontend``
 
 The frontend module augments a ShenScript environment with JavaScript- and ShenScript-specific functionality.
 
@@ -135,13 +135,13 @@ The :js:`exports` of this module is just a function that augments an environment
 The Node Frontend
 ~~~~~~~~~~~~~~~~~
 
-**module ``frontend.node``**
+**module** ``frontend.node``
 
 Further adds :shen:`node` package helpers for interacting with the capabilites of the Node.js runtime.
 
-**module ``frontend.web``**
-
 The Web Frontend
 ~~~~~~~~~~~~~~~~
+
+**module** ``frontend.web``
 
 Further adds :shen:`web` package helpers for interacting with the capabilites of a web browser or electron instance.

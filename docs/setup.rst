@@ -3,16 +3,17 @@
 Building an Environment
 =======================
 
-The top-level module, :js:`shen`, exports a single function. That function takes an optional :js:`options` object and returns a ShenScript environment.
+**module** ``shen``
 
-.. danger:: finish documenting this
+This is the top-level module. The :js:`exports` of this module is a function that constructs a full populated ShenScript environment object.
 
-   .. code-block::
+.. function:: (options) => $
 
-      {
-        "async": boolean // Required.
-        "clock":
-      }
+   The :js:`options` argument is required here, unlike in the :js:`backend` function. It also has two required properties.
+
+   :param boolean options.async:  Must be specified.
+   :param string  options.target: Must be :js:`"node"` or :js:`"web"`.
+   :returns:                      A complete ShenScript environment.
 
 The Kernel Sandwich
 ===================

@@ -15,6 +15,8 @@ This is the top-level module. The :js:`exports` of this module is a function tha
    :param string  options.target: Must be :js:`"node"` or :js:`"web"`.
    :returns:                      A complete ShenScript environment.
 
+The default configuration options for this environment are specified in the ``config`` module and environment-derived properties are in the ``config.node`` and ``config.web`` modules. Any of these can be overwritten by specifying them in the :js:`options` to the :js:`shen` function.
+
 The Kernel Sandwich
 ===================
 

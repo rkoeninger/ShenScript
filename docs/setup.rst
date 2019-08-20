@@ -75,9 +75,24 @@ The :js:`exports` of this module is just a function that constructs a new ShenSc
 The Kernel
 ----------
 
-.. module:: kernel.*
+.. module:: kernel
 
-.. danger:: need to document kernel
+The :js:`kernel` modules contain a JavaScript rendering of the Shen kernel that can be loaded into a ShenScript environment.
+
+:js:`kernel.sync` contains the purely synchronous version of the kernel and :js:`kernel.async` contains the asynchronous version.
+
+The :js:`exports` of this module is just a function that augments an environment and returns it.
+
+.. function:: ($) => $
+
+   :param object $: A ShenScript environment to add functions to.
+   :returns:        Same :js:`$` that was passed in, conforming to the :js:`Kernel` class.
+
+.. class:: Kernel extends Backend
+
+   This class is a description of object returned by the :js:`kernel.*` modules and does not actually exist. It contains a primitive ShenScript environment along with the Shen kernel and it adequate to run standard Shen programs.
+
+   The :js:`Kernel` virtual class adds no members, but does imply additional entries in the :js:`functions` and :js:`symbols: indexes.
 
 The Frontend
 ------------
@@ -99,7 +114,7 @@ The :js:`exports` of this module is just a function that augments an environment
    :param object $: A ShenScript environment to add functions to.
    :returns:        Same :js:`$` that was passed in, conforming to the :js:`Frontend` class.
 
-.. class:: Frontend extends Backend, Kenerl
+.. class:: Frontend extends Kernel
 
    This class is a description of object returned by the :js:`frontend` function and does not actually exist. It contains a complete ShenScript environment.
 
@@ -116,3 +131,11 @@ The :js:`exports` of this module is just a function that augments an environment
    :param function pre:         Registers a preprocessor function.
    :param function symbol:      Declares a global symbol with the given value and a function by the same name that retrieves the value.
    :returns:                    Same :js:`$` that was passed in.
+
+.. module:: frontend.node
+
+Further adds :shen:`node` package helpers for interacting with the capabilites of the Node.js runtime.
+
+.. module:: frontend.web
+
+Further adds :shen:`web` package helpers for interacting with the capabilites of a web browser or electron instance.

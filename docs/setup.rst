@@ -22,11 +22,11 @@ A full ShenScript environment is created by initialising a new backend with the 
 The Backend
 -----------
 
-.. module:: backend
+**module ``backend``**
 
-   The backend module contains the KLambda-to-JavaScript transpiler, global function and symbol indexes and proto-primitives for conses, trampolines, equality and partial application.
+The backend module contains the KLambda-to-JavaScript transpiler, global function and symbol indexes and proto-primitives for conses, trampolines, equality and partial application.
 
-   The :js:`exports` of this module is just a function that constructs a new ShenScript environment object, which is conventionally named :js:`$`.
+The :js:`exports` of this module is just a function that constructs a new ShenScript environment object, which is conventionally named :js:`$`.
 
 .. function:: (options = {}) => $
 
@@ -75,13 +75,13 @@ The Backend
 The Kernel
 ----------
 
-.. module:: kernel
+**module kernel.async**, **module kernel.sync**
 
-   The :js:`kernel` modules contain a JavaScript rendering of the Shen kernel that can be loaded into a ShenScript environment.
+The :js:`kernel.*` modules contain a JavaScript rendering of the Shen kernel that can be loaded into a ShenScript environment.
 
-   :js:`kernel.sync` contains the purely synchronous version of the kernel and :js:`kernel.async` contains the asynchronous version.
+:js:`kernel.sync` contains the purely synchronous version of the kernel and :js:`kernel.async` contains the asynchronous version.
 
-   The :js:`exports` of this module is just a function that augments an environment and returns it.
+The :js:`exports` of this module is just a function that augments an environment and returns it.
 
 .. function:: ($) => $
 
@@ -97,17 +97,17 @@ The Kernel
 The Frontend
 ------------
 
-.. module:: frontend
+**module ``frontend``**
 
-   The frontend module augments a ShenScript environment with JavaScript- and ShenScript-specific functionality.
+The frontend module augments a ShenScript environment with JavaScript- and ShenScript-specific functionality.
 
-   Functionality provided includes:
+Functionality provided includes:
 
-     * :shen:`js` package functions that allow access to common JavaScript types, objects and functions.
-     * :shen:`js.ast` package functions that allow generation, rendering and evaluation of JavaScript code.
-     * :shen:`shen-script` package functions that allow access to ShenScript environment internals.
+  * :shen:`js` package functions that allow access to common JavaScript types, objects and functions.
+  * :shen:`js.ast` package functions that allow generation, rendering and evaluation of JavaScript code.
+  * :shen:`shen-script` package functions that allow access to ShenScript environment internals.
 
-   The :js:`exports` of this module is just a function that augments an environment and returns it.
+The :js:`exports` of this module is just a function that augments an environment and returns it.
 
 .. function:: ($) => $
 
@@ -132,10 +132,16 @@ The Frontend
    :param function symbol:      Declares a global symbol with the given value and a function by the same name that retrieves the value.
    :returns:                    Same :js:`$` that was passed in.
 
-.. module:: frontend.node
+The Node Frontend
+~~~~~~~~~~~~~~~~~
 
-   Further adds :shen:`node` package helpers for interacting with the capabilites of the Node.js runtime.
+**module ``frontend.node``**
 
-.. module:: frontend.web
+Further adds :shen:`node` package helpers for interacting with the capabilites of the Node.js runtime.
 
-   Further adds :shen:`web` package helpers for interacting with the capabilites of a web browser or electron instance.
+**module ``frontend.web``**
+
+The Web Frontend
+~~~~~~~~~~~~~~~~
+
+Further adds :shen:`web` package helpers for interacting with the capabilites of a web browser or electron instance.

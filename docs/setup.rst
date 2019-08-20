@@ -7,7 +7,7 @@ The top-level module, :js:`shen`, exports a single function. That function takes
 
 .. danger:: finish documenting this
 
-   .. code-block:: json
+   .. code-block::
 
       {
         "async": boolean // Required.
@@ -24,9 +24,9 @@ The Backend
 
 .. module:: backend
 
-The backend module contains the KLambda-to-JavaScript transpiler, global function and symbol indexes and proto-primitives for conses, trampolines, equality and partial application.
+   The backend module contains the KLambda-to-JavaScript transpiler, global function and symbol indexes and proto-primitives for conses, trampolines, equality and partial application.
 
-The :js:`exports` of this module is just a function that constructs a new ShenScript environment object, which is conventionally named :js:`$`.
+   The :js:`exports` of this module is just a function that constructs a new ShenScript environment object, which is conventionally named :js:`$`.
 
 .. function:: (options = {}) => $
 
@@ -77,11 +77,11 @@ The Kernel
 
 .. module:: kernel
 
-The :js:`kernel` modules contain a JavaScript rendering of the Shen kernel that can be loaded into a ShenScript environment.
+   The :js:`kernel` modules contain a JavaScript rendering of the Shen kernel that can be loaded into a ShenScript environment.
 
-:js:`kernel.sync` contains the purely synchronous version of the kernel and :js:`kernel.async` contains the asynchronous version.
+   :js:`kernel.sync` contains the purely synchronous version of the kernel and :js:`kernel.async` contains the asynchronous version.
 
-The :js:`exports` of this module is just a function that augments an environment and returns it.
+   The :js:`exports` of this module is just a function that augments an environment and returns it.
 
 .. function:: ($) => $
 
@@ -92,22 +92,22 @@ The :js:`exports` of this module is just a function that augments an environment
 
    This class is a description of object returned by the :js:`kernel.*` modules and does not actually exist. It contains a primitive ShenScript environment along with the Shen kernel and it adequate to run standard Shen programs.
 
-   The :js:`Kernel` virtual class adds no members, but does imply additional entries in the :js:`functions` and :js:`symbols: indexes.
+   The :js:`Kernel` virtual class adds no members, but does imply additional entries in the :js:`functions` and :js:`symbols` indexes.
 
 The Frontend
 ------------
 
 .. module:: frontend
 
-The frontend module augments a ShenScript environment with JavaScript- and ShenScript-specific functionality.
+   The frontend module augments a ShenScript environment with JavaScript- and ShenScript-specific functionality.
 
-Functionality provided includes:
+   Functionality provided includes:
 
-  * :shen:`js` package functions that allow access to common JavaScript types, objects and functions.
-  * :shen:`js.ast` package functions that allow generation, rendering and evaluation of JavaScript code.
-  * :shen:`shen-script` package functions that allow access to ShenScript environment internals.
+     * :shen:`js` package functions that allow access to common JavaScript types, objects and functions.
+     * :shen:`js.ast` package functions that allow generation, rendering and evaluation of JavaScript code.
+     * :shen:`shen-script` package functions that allow access to ShenScript environment internals.
 
-The :js:`exports` of this module is just a function that augments an environment and returns it.
+   The :js:`exports` of this module is just a function that augments an environment and returns it.
 
 .. function:: ($) => $
 
@@ -134,8 +134,8 @@ The :js:`exports` of this module is just a function that augments an environment
 
 .. module:: frontend.node
 
-Further adds :shen:`node` package helpers for interacting with the capabilites of the Node.js runtime.
+   Further adds :shen:`node` package helpers for interacting with the capabilites of the Node.js runtime.
 
 .. module:: frontend.web
 
-Further adds :shen:`web` package helpers for interacting with the capabilites of a web browser or electron instance.
+   Further adds :shen:`web` package helpers for interacting with the capabilites of a web browser or electron instance.

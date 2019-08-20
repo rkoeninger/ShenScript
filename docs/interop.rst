@@ -23,7 +23,7 @@ Exported Functions
 
    :param any x: Any Shen or JavaScript value.
    :param any y: Any Shen or JavaScript value.
-   :returns      A new :js:`Cons`.
+   :returns:     A new :js:`Cons`.
 
 .. function:: define(name, f)
 

@@ -203,7 +203,7 @@ ShenScript provides functions in the :code:`js` namespace to access JavaScript s
 Raw Operators
 -------------
 
-Functions starting with :shen:`js.raw` allow access to underlying JavaScript operators without any additional typechecks or conversions.
+Functions starting with :shen:`js.raw` allow access to underlying JavaScript operators without any additional typechecks or conversions. Operations are inlined when fully applied but can still be partially applied or passed as arguments like any other function.
 
 .. function:: (js.raw.== X Y)
 

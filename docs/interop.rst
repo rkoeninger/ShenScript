@@ -290,11 +290,11 @@ Functions starting with :shen:`js.raw` allow access to underlying JavaScript ope
 
 .. function:: (js.raw./ X Y)
 
-   Applies the JavaScript :js:`\/` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+   Applies the JavaScript :js:`/` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
    :param any X: Whatever.
    :param any Y: Whatever.
-   :returns:     Whatever :js:`\/` does based on JavaScript-specific behavior.
+   :returns:     Whatever :js:`/` does based on JavaScript-specific behavior.
 
 .. function:: (js.raw.** X Y)
 

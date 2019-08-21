@@ -669,8 +669,8 @@ Idle symbols can be used for property names, but they will represented with inte
    :param any Value:     Value to assign.
    :returns:             :code:`Value`, just like the JavaScript assignment operator.
 
-Global Functions
-----------------
+Recognisor Functions
+--------------------
 
 .. function:: (js.array? X)
 
@@ -841,8 +841,8 @@ Parallel Functions
    :param list Xs:    A Shen list of whatever values.
    :returns:          A list of transformed results.
 
-Global Classes, Values and Functions
-------------------------------------
+Global Classes, Objects and Values
+----------------------------------
 
 Functions to retrieve common JavaScript globals. All take zero arguments and return what they're called. They Shen global symbols name with additional earmuffs (e.g. :shen:`js.*Array*`) where the value is actually held.
 

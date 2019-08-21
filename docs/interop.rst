@@ -200,12 +200,12 @@ Interop from Shen to JavaScript
 
 ShenScript provides functions in the :code:`js` namespace to access JavaScript standard classes and functionality.
 
-Unchecked Operators
--------------------
+Raw Operators
+-------------
 
-Functions starting with :shen:`js.unchecked` allow access to underlying JavaScript operators without any additional typechecks or conversions.
+Functions starting with :shen:`js.raw` allow access to underlying JavaScript operators without any additional typechecks or conversions.
 
-.. function:: (js.unchecked.== X Y)
+.. function:: (js.raw.== X Y)
 
    Applies the JavaScript :js:`==` operator to arguments without additional typechecks or conversions.
 
@@ -213,7 +213,7 @@ Functions starting with :shen:`js.unchecked` allow access to underlying JavaScri
    :param any Y: Whatever.
    :returns:     A JavaScript boolean.
 
-.. function:: (js.unchecked.=== X Y)
+.. function:: (js.raw.=== X Y)
 
    Applies the JavaScript :js:`===` operator to arguments without additional typechecks or conversions.
 
@@ -221,7 +221,7 @@ Functions starting with :shen:`js.unchecked` allow access to underlying JavaScri
    :param any Y: Whatever.
    :returns:     A JavaScript boolean.
 
-.. function:: (js.unchecked.!= X Y)
+.. function:: (js.raw.!= X Y)
 
    Applies the JavaScript :js:`!=` operator to arguments without additional typechecks or conversions.
 
@@ -229,7 +229,7 @@ Functions starting with :shen:`js.unchecked` allow access to underlying JavaScri
    :param any Y: Whatever.
    :returns:     A JavaScript boolean.
 
-.. function:: (js.unchecked.!== X Y)
+.. function:: (js.raw.!== X Y)
 
    Applies the JavaScript :js:`!==` operator to arguments without additional typechecks or conversions.
 
@@ -237,7 +237,7 @@ Functions starting with :shen:`js.unchecked` allow access to underlying JavaScri
    :param any Y: Whatever.
    :returns:     A JavaScript boolean.
 
-.. function:: (js.unchecked.and X Y)
+.. function:: (js.raw.and X Y)
 
    Applies the JavaScript :js:`&&` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -247,7 +247,7 @@ Functions starting with :shen:`js.unchecked` allow access to underlying JavaScri
    :param any Y: Whatever.
    :returns:     Whatever :js:`&&` does based on JavaScript-specific behavior.
 
-.. function:: (js.unchecked.or X Y)
+.. function:: (js.raw.or X Y)
 
    Applies the JavaScript :js:`||` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -257,14 +257,14 @@ Functions starting with :shen:`js.unchecked` allow access to underlying JavaScri
    :param any Y: Whatever.
    :returns:     Whatever :js:`||` does based on JavaScript-specific behavior.
 
-.. function:: (js.unchecked.not X)
+.. function:: (js.raw.not X)
 
    Performs JavaScript boolean inversion.
 
    :param any X: Value to invert.
    :returns:     A JavaScript boolean.
 
-.. function:: (js.unchecked.+ X Y)
+.. function:: (js.raw.+ X Y)
 
    Applies the JavaScript :js:`+` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -272,7 +272,7 @@ Functions starting with :shen:`js.unchecked` allow access to underlying JavaScri
    :param any Y: Whatever.
    :returns:     Whatever :js:`+` does based on JavaScript-specific behavior.
 
-.. function:: (js.unchecked.- X Y)
+.. function:: (js.raw.- X Y)
 
    Applies the JavaScript :js:`-` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -280,7 +280,7 @@ Functions starting with :shen:`js.unchecked` allow access to underlying JavaScri
    :param any Y: Whatever.
    :returns:     Whatever :js:`-` does based on JavaScript-specific behavior.
 
-.. function:: (js.unchecked.* X Y)
+.. function:: (js.raw.* X Y)
 
    Applies the JavaScript :js:`*` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -288,7 +288,7 @@ Functions starting with :shen:`js.unchecked` allow access to underlying JavaScri
    :param any Y: Whatever.
    :returns:     Whatever :js:`*` does based on JavaScript-specific behavior.
 
-.. function:: (js.unchecked./ X Y)
+.. function:: (js.raw./ X Y)
 
    Applies the JavaScript :js:`/` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -296,7 +296,7 @@ Functions starting with :shen:`js.unchecked` allow access to underlying JavaScri
    :param any Y: Whatever.
    :returns:     Whatever :js:`/` does based on JavaScript-specific behavior.
 
-.. function:: (js.unchecked.** X Y)
+.. function:: (js.raw.** X Y)
 
    Applies the JavaScript :js:`**` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -304,14 +304,14 @@ Functions starting with :shen:`js.unchecked` allow access to underlying JavaScri
    :param any Y: Whatever.
    :returns:     Whatever :js:`**` does based on JavaScript-specific behavior.
 
-.. function:: (js.unchecked.bitwise.not X)
+.. function:: (js.raw.bitwise.not X)
 
    Applies the JavaScript :js:`!` operator to argument without additional typechecks, perserving JavaScript coercion behavior.
 
    :param any X: Whatever.
    :returns:     Whatever :js:`!` does based on JavaScript-specific behavior.
 
-.. function:: (js.unchecked.bitwise.and X Y)
+.. function:: (js.raw.bitwise.and X Y)
 
    Applies the JavaScript :js:`&` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -319,7 +319,7 @@ Functions starting with :shen:`js.unchecked` allow access to underlying JavaScri
    :param any Y: Whatever.
    :returns:     Whatever :js:`&` does based on JavaScript-specific behavior.
 
-.. function:: (js.unchecked.bitwise.or X Y)
+.. function:: (js.raw.bitwise.or X Y)
 
    Applies the JavaScript :js:`|` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -327,7 +327,7 @@ Functions starting with :shen:`js.unchecked` allow access to underlying JavaScri
    :param any Y: Whatever.
    :returns:     Whatever :js:`|` does based on JavaScript-specific behavior.
 
-.. function:: (js.unchecked.bitwise.xor X Y)
+.. function:: (js.raw.bitwise.xor X Y)
 
    Applies the JavaScript :js:`^` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -335,7 +335,7 @@ Functions starting with :shen:`js.unchecked` allow access to underlying JavaScri
    :param any Y: Whatever.
    :returns:     Whatever :js:`^` does based on JavaScript-specific behavior.
 
-.. function:: (js.unchecked.bitwise.left-shift X Y)
+.. function:: (js.raw.bitwise.left-shift X Y)
 
    Applies the JavaScript :js:`<<` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -343,7 +343,7 @@ Functions starting with :shen:`js.unchecked` allow access to underlying JavaScri
    :param any Y: Amount to shift by.
    :returns:     Whatever :js:`<<` does based on JavaScript-specific behavior.
 
-.. function:: (js.unchecked.bitwise.right-shift X Y)
+.. function:: (js.raw.bitwise.right-shift X Y)
 
    Applies the JavaScript :js:`>>` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -351,7 +351,7 @@ Functions starting with :shen:`js.unchecked` allow access to underlying JavaScri
    :param any Y: Amount to shift by.
    :returns:     Whatever :js:`>>` does based on JavaScript-specific behavior.
 
-.. function:: (js.unchecked.bitwise.right-shift-unsigned X Y)
+.. function:: (js.raw.bitwise.right-shift-unsigned X Y)
 
    Applies the JavaScript :js:`>>>` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 

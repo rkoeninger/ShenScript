@@ -180,6 +180,12 @@ These functions are callable from Shen to give access to the implementation deta
 
    :returns: ShenScript environment object.
 
+.. function:: (shen-script.ast)
+
+   Returns a JavaScript object with all the JavaScript AST constructor functions.
+
+   :returns: The :js:`exports` of the :js:`ast` module.
+
 .. function:: (shen-script.lookup-function Name)
 
    Allows lookup of global function by name instead of building wrapper lambdas or the like.

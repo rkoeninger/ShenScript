@@ -391,6 +391,29 @@ Functions starting with :shen:`js.raw` allow access to underlying JavaScript ope
    :param any Y: Amount to shift by.
    :returns:     Whatever :js:`>>>` does based on JavaScript-specific behavior.
 
+.. function:: (js.raw.delete Object Key)
+
+   Removes a key from an object.
+
+   :param object Object: Object to remove key from.
+   :param any Key:       String or symbol name of key to remove.
+   :returns:             JavaScript :js:`true` if the delete was successful.
+
+.. function:: (js.raw.eval Code)
+
+   .. warning::
+
+      Using :js:`eval` is even more dangerous than usual in ShenScript because it will be difficult to know what indentifiers will be in scope and how their names might have been aliased when code is evaluated.
+
+   .. note::
+
+      With :shen:`js.raw.eval`, the call does get inlined when fully applied, which might help a bit with the scoping issues.
+
+   Calls the built-in JavaScript :js:`eval` function.
+
+   :param string Code: JavaScript code in string form.
+   :returns:           The result of evaluating the code.
+
 .. function:: (js.raw.in Key Object)
 
    Determines if value is a key in an object.
@@ -558,6 +581,22 @@ Typed Standard Functions
    :param string Uri: URI component to encode.
    :returns:          Encoded URI.
 
+.. function:: js.eval : string --> A
+
+   .. warning:: Using :js:`eval` is even more dangerous than usual in ShenScript because it will be difficult to know what indentifiers will be in scope and how their names might have been aliased when code is evaluated.
+
+   Calls the built-in JavaScript :js:`eval` function, asserting argument is a string.
+
+   :param string Code: JavaScript code in string form.
+   :returns:           The result of evaluating the code.
+
+.. function:: js.log : A --> unit
+
+   Logs given value using :js:`console.log`.
+
+   :param any X: Value to log
+   :returns:     Empty list.
+
 .. function:: js.parse-float : string --> number
 
    Parses a floating-point number.
@@ -661,23 +700,6 @@ Global Functions
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: (js.delete Object Key)
-
-   Removes a key from an object.
-
-   :param object Object: Object to remove key from.
-   :param any Key:       String or symbol name of key to remove.
-   :returns:             JavaScript :js:`true` if the delete was successful.
-
-.. function:: (js.eval Code)
-
-   .. warning:: Using :js:`eval` is even more dangerous than usual in ShenScript because it will be difficult to know what indentifiers will be in scope and how their names might have been aliased when code is evaluated.
-
-   Calls the built-in JavaScript :js:`eval` function.
-
-   :param string Code: JavaScript code in string form.
-   :returns:           The result of evaluating the code.
-
 .. function:: (js.falsy? X)
 
    Determines if value is coercible to :js:`false` by JavaScript standards.
@@ -747,13 +769,6 @@ Global Functions
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
-
-.. function:: (js.log X)
-
-   Logs given value using :js:`console.log`.
-
-   :param any X: Value to log
-   :returns:     :js:`undefined`.
 
 .. function:: (js.nan? X)
 

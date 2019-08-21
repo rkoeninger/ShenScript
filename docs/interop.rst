@@ -672,145 +672,159 @@ Idle symbols can be used for property names, but they will represented with inte
 Recognisor Functions
 --------------------
 
-.. function:: (js.array? X)
+.. function:: js.array? : A --> boolean
 
    Determines if value is a JavaScript array.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.async? X)
+.. function:: js.async? : A --> boolean
 
    Determines if value is an asynchronous function.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.boolean? X)
+.. function:: js.boolean? : A --> boolean
 
    Determines if value is a JavaScript boolean.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.defined? X)
+.. function:: js.defined? : A --> boolean
 
    Determines if value is *not* :js:`undefined`.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.falsy? X)
+.. function:: js.false? : A --> boolean
+
+   Determines if value is the JavaScript :js:`false` value.
+
+   :param any X: Value to inspect.
+   :returns:     A Shen boolean.
+
+.. function:: js.falsy? : A --> boolean
 
    Determines if value is coercible to :js:`false` by JavaScript standards.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.finite? X)
+.. function:: js.finite? : A --> boolean
 
    Determines if value is a finite number.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.function? X)
+.. function:: js.function? : A --> boolean
 
    Determines if value is a function. This test will also work for Shen functions.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.generator? X)
+.. function:: js.generator? : A --> boolean
 
    Determines if value is a generator function.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.infinite? X)
+.. function:: js.infinite? : A --> boolean
 
    Determines if value is positive or negative infinity.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.+infinity? X)
+.. function:: js.+infinity? : A --> boolean
 
    Determines if value is positive infinity.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.-infinity? X)
+.. function:: js.-infinity? : A --> boolean
 
    Determines if value is negative infinity.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.integer? X)
+.. function:: js.integer? : A --> boolean
 
    Determines if value is an integer.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.+integer? X)
+.. function:: js.+integer? : A --> boolean
 
    Determines if value is a positive integer.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.-integer? X)
+.. function:: js.-integer? : A --> boolean
 
    Determines if value is a negative integer.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.nan? X)
+.. function:: js.nan? : A --> boolean
 
    Determines if value is :js:`NaN` (not-a-number) which will normally not be equal to itself according to the :js:`===` operator.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.null? X)
+.. function:: js.null? : A --> boolean
 
    Determines if value is :js:`null`.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.object? X)
+.. function:: js.object? : A --> boolean
 
    Determines if value is an object with the direct protoype :js:`Object` which means it is probably the product of object literal syntax.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.symbol? X)
+.. function:: js.symbol? : A --> boolean
 
    Determines if a value is a JavaScript symbol. Shen symbols are represented with JS symbols, so this test will pass for idle symbols as well.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.truthy? X)
+.. function:: js.true? : A --> boolean
+
+   Determines if value is the JavaScript :js:`true` value.
+
+   :param any X: Value to inspect.
+   :returns:     A Shen boolean.
+
+.. function:: js.truthy? : A --> boolean
 
    Determines if value is coercible to :js:`true` by JavaScript standards.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
-.. function:: (js.undefined? X)
+.. function:: js.undefined? : A --> boolean
 
    Determines if value is :js:`undefined`.
 
    :param any X: Value to inspect.
-   :returns:     A JavaScript boolean.
+   :returns:     A Shen boolean.
 
 Parallel Functions
 ------------------

@@ -409,6 +409,8 @@ Functions starting with :shen:`js.raw` allow access to underlying JavaScript ope
 
       With :shen:`js.raw.eval`, the call does get inlined when fully applied, which might help a bit with the scoping issues.
 
+      So, for instance, :shen:`(let X 2 (js.raw.eval "1 + X"))` would successfully evaluate to :shen:`3` with :shen:`js.raw.eval` where it would fail with :shen:`js.eval`.
+
    Calls the built-in JavaScript :js:`eval` function.
 
    :param string Code: JavaScript code in string form.
@@ -583,7 +585,15 @@ Typed Standard Functions
 
 .. function:: js.eval : string --> A
 
-   .. warning:: Using :js:`eval` is even more dangerous than usual in ShenScript because it will be difficult to know what indentifiers will be in scope and how their names might have been aliased when code is evaluated.
+   .. warning::
+
+      Using :js:`eval` is even more dangerous than usual in ShenScript because it will be difficult to know what indentifiers will be in scope and how their names might have been aliased when code is evaluated.
+
+   .. note::
+
+      Unlike :shen:`js.raw.eval`, the never gets inlined, so the code gets evaluated in another scope.
+
+      So, for instance, :shen:`(let X 2 (js.eval "1 + X"))` would fail with :code:`X is not defined` where with :shen:`js.raw.eval`, it would work.
 
    Calls the built-in JavaScript :js:`eval` function, asserting argument is a string.
 

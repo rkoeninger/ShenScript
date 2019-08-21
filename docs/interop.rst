@@ -200,8 +200,65 @@ Interop from Shen to JavaScript
 
 ShenScript provides functions in the :code:`js` namespace to access JavaScript standard classes and functionality.
 
-Unchecked Math Operators
-------------------------
+Unchecked Operators
+-------------------
+
+Functions starting with :shen:`js.unchecked` allow access to underlying JavaScript operators without any additional typechecks or conversions.
+
+.. function:: (js.unchecked.== X Y)
+
+   Applies the JavaScript :js:`==` operator to arguments without additional typechecks or conversions.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     A JavaScript boolean.
+
+.. function:: (js.unchecked.=== X Y)
+
+   Applies the JavaScript :js:`===` operator to arguments without additional typechecks or conversions.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     A JavaScript boolean.
+
+.. function:: (js.unchecked.!= X Y)
+
+   Applies the JavaScript :js:`!=` operator to arguments without additional typechecks or conversions.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     A JavaScript boolean.
+
+.. function:: (js.unchecked.!== X Y)
+
+   Applies the JavaScript :js:`!==` operator to arguments without additional typechecks or conversions.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     A JavaScript boolean.
+
+.. function:: (js.unchecked.and X Y)
+
+   Applies the JavaScript :js:`&&` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     Whatever :js:`&&` does based on JavaScript-specific behavior.
+
+.. function:: (js.unchecked.or X Y)
+
+   Applies the JavaScript :js:`||` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     Whatever :js:`||` does based on JavaScript-specific behavior.
+
+.. function:: (js.unchecked.not X)
+
+   Performs JavaScript boolean inversion.
+
+   :param any X: Value to invert.
+   :returns:     A JavaScript boolean.
 
 .. function:: (js.unchecked.+ X Y)
 
@@ -300,6 +357,38 @@ Unchecked Math Operators
 
 Typed Operators
 ---------------
+
+.. function:: js.== : A --> B --> boolean
+
+   Applies the JavaScript :js:`==` operator to arguments without additional typechecks, and converts result to a Shen boolean.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     A Shen boolean.
+
+.. function:: js.=== : A --> B --> boolean
+
+   Applies the JavaScript :js:`===` operator to arguments without additional typechecks, and converts result to a Shen boolean.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     A Shen boolean.
+
+.. function:: js.!= : A --> B --> boolean
+
+   Applies the JavaScript :js:`!=` operator to arguments without additional typechecks, and converts result to a Shen boolean.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     A Shen boolean.
+
+.. function:: js.!== : A --> B --> boolean
+
+   Applies the JavaScript :js:`!==` operator to arguments without additional typechecks, and converts result to a Shen boolean.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     A Shen boolean.
 
 .. function:: js.% : number --> number --> number
 
@@ -421,46 +510,6 @@ Idle symbols can be used for property names, but they will represented with inte
 
 Global Functions
 ----------------
-
-.. function:: (js.== X Y)
-
-   Applies the JavaScript :js:`==` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
-
-   :param any X: Whatever.
-   :param any Y: Whatever.
-   :returns:     A JavaScript boolean.
-
-.. function:: (js.=== X Y)
-
-   Applies the JavaScript :js:`===` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
-
-   :param any X: Whatever.
-   :param any Y: Whatever.
-   :returns:     A JavaScript boolean.
-
-.. function:: (js.!= X Y)
-
-   Applies the JavaScript :js:`!=` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
-
-   :param any X: Whatever.
-   :param any Y: Whatever.
-   :returns:     A JavaScript boolean.
-
-.. function:: (js.!== X Y)
-
-   Applies the JavaScript :js:`!==` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
-
-   :param any X: Whatever.
-   :param any Y: Whatever.
-   :returns:     A JavaScript boolean.
-
-.. function:: (js.and X Y)
-
-   Applies the JavaScript :js:`&&` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
-
-   :param any X: Whatever.
-   :param any Y: Whatever.
-   :returns:     Whatever :js:`&&` does based on JavaScript-specific behavior.
 
 .. function:: (js.array? X)
 
@@ -635,13 +684,6 @@ Global Functions
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: (js.not X)
-
-   Performs JavaScript boolean inversion.
-
-   :param any X: Value to invert.
-   :returns:     A JavaScript boolean.
-
 .. function:: (js.null? X)
 
    Determines if value is :js:`null`.
@@ -655,14 +697,6 @@ Global Functions
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
-
-.. function:: (js.or X Y)
-
-   Applies the JavaScript :js:`||` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
-
-   :param any X: Whatever.
-   :param any Y: Whatever.
-   :returns:     Whatever :js:`||` does based on JavaScript-specific behavior.
 
 .. function:: (js.parseFloat String)
 

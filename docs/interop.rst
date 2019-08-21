@@ -391,6 +391,36 @@ Functions starting with :shen:`js.raw` allow access to underlying JavaScript ope
    :param any Y: Amount to shift by.
    :returns:     Whatever :js:`>>>` does based on JavaScript-specific behavior.
 
+.. function:: (js.raw.in Key Object)
+
+   Determines if value is a key in an object.
+
+   :param any Key:       String or symbol name of a property.
+   :param object Object: Object that might contain a property by that key.
+   :returns:             A JavaScript boolean.
+
+.. function:: (js.raw.instanceof X Class)
+
+   Determines if value is the product of a constructor, class or anything higher up its prototype chain.
+
+   :param any X:       The value to inspect.
+   :param class Class: A class or constructor function.
+   :returns:           A JavaScript boolean.
+
+.. function:: (js.raw.typeof X)
+
+   Applies the JavaScript :js:`typeof` operator to a value.
+
+   :param any X: Anything.
+   :returns:     A string identifying the basic type of the value: object, number, string, symbol, undefined, boolean.
+
+.. function:: (js.raw.void X)
+
+   Applies the JavaScript :js:`void` operator to argument, which will always return :js:`undefined`.
+
+   :param any X: Anything.
+   :returns:     :js:`undefined`.
+
 Typed Operators
 ---------------
 
@@ -676,14 +706,6 @@ Global Functions
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: (js.in Key Object)
-
-   Determines if value is a key in an object.
-
-   :param any Key:       String or symbol name of a property.
-   :param object Object: Object that might contain a property by that key.
-   :returns:             A JavaScript boolean.
-
 .. function:: (js.infinite? X)
 
    Determines if value is positive or negative infinity.
@@ -725,14 +747,6 @@ Global Functions
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
-
-.. function:: (js.instanceof X Class)
-
-   Determines if value is the product of a constructor, class or anything higher up its prototype chain.
-
-   :param any X:       The value to inspect.
-   :param class Class: A class or constructor function.
-   :returns:           A JavaScript boolean.
 
 .. function:: (js.log X)
 
@@ -776,13 +790,6 @@ Global Functions
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: (js.typeof X)
-
-   Applies the JavaScript :js:`typeof` operator to a value.
-
-   :param any X: Anything.
-   :returns: A string identifying the basic type of the value: object, number, string, symbol, undefined, boolean.
-
 .. function:: (js.undefined? X)
 
    Determines if value is :js:`undefined`.
@@ -790,17 +797,18 @@ Global Functions
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: (js.void X)
-
-   Applies the JavaScript :js:`void` operator to argument, which will always return :js:`undefined`.
-
-   :param any X: Anything.
-   :returns: :js:`undefined`.
-
 Parallel Functions
 ------------------
 
-.. important:: These are only usable in async mode as they parallelize by starting an array of promises.
+.. important::
+
+   These are really only usable in async mode as they parallelize by starting an array of promises.
+
+   They could be used in sync mode, but interop functions would have to be used to chain a call off of the returned promise like:
+
+   .. code-block:: lisp
+
+      ((. (parallel.map F Xs) "then") (/. X (continuation X)))
 
 .. function:: parallel.filter : (A --> boolean) --> (list A) --> (list A)
 

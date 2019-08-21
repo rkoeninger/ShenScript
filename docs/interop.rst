@@ -241,6 +241,8 @@ Functions starting with :shen:`js.unchecked` allow access to underlying JavaScri
 
    Applies the JavaScript :js:`&&` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
+   Operator is inlined when fully applied.
+
    :param any X: Whatever.
    :param any Y: Whatever.
    :returns:     Whatever :js:`&&` does based on JavaScript-specific behavior.
@@ -248,6 +250,8 @@ Functions starting with :shen:`js.unchecked` allow access to underlying JavaScri
 .. function:: (js.unchecked.or X Y)
 
    Applies the JavaScript :js:`||` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+
+   Operator is inlined when fully applied.
 
    :param any X: Whatever.
    :param any Y: Whatever.

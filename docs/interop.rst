@@ -465,6 +465,62 @@ Typed Operators
    :param number Y: Amount to shift by.
    :returns:        A Shen number.
 
+Typed Standard Functions
+------------------------
+
+.. function:: js.decode-uri : string --> string
+
+   Decodes a URI by un-escaping special characters.
+
+   :param string Uri: URI to decode.
+   :returns:          Decoded URI.
+
+.. function:: js.decode-uri-component : string --> string
+
+   Decodes a URI component by un-escaping special characters.
+
+   :param string Uri: URI component to decode.
+   :returns:          Decoded URI.
+
+.. function:: js.encode-uri : string --> string
+
+   Encodes a URI by escaping special characters.
+
+   :param string Uri: URI to encode.
+   :returns:          Encoded URI.
+
+.. function:: js.encode-uri-component : string --> string
+
+   Encodes a URI component by escaping special characters.
+
+   :param string Uri: URI component to encode.
+   :returns:          Encoded URI.
+
+.. function:: js.parse-float : string --> number
+
+   Parses a floating-point number.
+
+   :param string String: Numeric string to parse.
+   :returns:             Parsed number.
+   :throws:              If string does not represent a valid number.
+
+.. function:: js.parse-int : string --> number
+
+   Parses an integral number with radix specified to be 10 to avoid unusual parsing behavior.
+
+   :param string String: Numeric string to parse.
+   :returns:             Parsed number.
+   :throws:              If string does not represent a valid number.
+
+.. function:: js.parse-int-with-radix : string --> number --> number
+
+   Parses an integral number with the given radix.
+
+   :param string String: Numeric string to parse.
+   :param number Radix:  Radix to parse the number with, an integer 2 or greater.
+   :returns:             Parsed number.
+   :throws:              If string does not represent a valid number or invalid radix is passed.
+
 Object Construction, Member Access
 ----------------------------------
 
@@ -536,20 +592,6 @@ Global Functions
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: (js.decode-uri Uri)
-
-   Decodes a URI by un-escaping special characters.
-
-   :param string Uri: URI to decode.
-   :returns:          Decoded URI.
-
-.. function:: (js.decode-uri-component Uri)
-
-   Decodes a URI component by un-escaping special characters.
-
-   :param string Uri: URI component to decode.
-   :returns:          Decoded URI.
-
 .. function:: (js.defined? X)
 
    Determines if value is *not* :js:`undefined`.
@@ -564,20 +606,6 @@ Global Functions
    :param object Object: Object to remove key from.
    :param any Key:       String or symbol name of key to remove.
    :returns:             JavaScript :js:`true` if the delete was successful.
-
-.. function:: (js.encode-uri Uri)
-
-   Encodes a URI by escaping special characters.
-
-   :param string Uri: URI to encode.
-   :returns:          Encoded URI.
-
-.. function:: (js.encode-uri-component Uri)
-
-   Encodes a URI component by escaping special characters.
-
-   :param string Uri: URI component to encode.
-   :returns:          Encoded URI.
 
 .. function:: (js.eval Code)
 
@@ -701,28 +729,6 @@ Global Functions
 
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
-
-.. function:: (js.parse-float String)
-
-   Parses a floating-point number.
-
-   :param string String: Numeric string to parse.
-   :returns:             Parsed number.
-
-.. function:: (js.parse-int String)
-
-   Parses an integral number with radix specified to be 10 to avoid unusual parsing behavior.
-
-   :param string String: Numeric string to parse.
-   :returns:             Parsed number.
-
-.. function:: (js.parse-int-with-radix String Radix)
-
-   Parses an integral number with the given.
-
-   :param string String: Numeric string to parse.
-   :param number Radix:  Radix to parse the number with.
-   :returns:             Parsed number.
 
 .. function:: (js.symbol? X)
 

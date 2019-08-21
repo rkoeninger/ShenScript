@@ -721,6 +721,17 @@ Global Functions
    :param any X: Anything.
    :returns: :js:`undefined`.
 
+Parallel Functions
+------------------
+
+.. function:: js.parallel.map : (A --> B) --> (list A) --> (list B)
+
+   Maps function to elements of list in parallel and gathers results as they complete in resulting list.
+
+   :param function F: Function to transform each element in the list.
+   :param list Xs:    A Shen list of whatever values.
+   :returns:          A list of results.
+
 Global Classes, Values and Functions
 ------------------------------------
 

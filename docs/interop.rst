@@ -335,7 +335,7 @@ Functions starting with :shen:`js.raw` allow access to underlying JavaScript ope
    :param any Y: Whatever.
    :returns:     Whatever :js:`^` does based on JavaScript-specific behavior.
 
-.. function:: (js.raw.bitwise.left-shift X Y)
+.. function:: (js.raw.<< X Y)
 
    Applies the JavaScript :js:`<<` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -343,7 +343,7 @@ Functions starting with :shen:`js.raw` allow access to underlying JavaScript ope
    :param any Y: Amount to shift by.
    :returns:     Whatever :js:`<<` does based on JavaScript-specific behavior.
 
-.. function:: (js.raw.bitwise.right-shift X Y)
+.. function:: (js.raw.>> X Y)
 
    Applies the JavaScript :js:`>>` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -351,7 +351,7 @@ Functions starting with :shen:`js.raw` allow access to underlying JavaScript ope
    :param any Y: Amount to shift by.
    :returns:     Whatever :js:`>>` does based on JavaScript-specific behavior.
 
-.. function:: (js.raw.bitwise.right-shift-unsigned X Y)
+.. function:: (js.raw.>>> X Y)
 
    Applies the JavaScript :js:`>>>` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
 
@@ -441,7 +441,7 @@ Typed Operators
    :param number Y: A Shen number.
    :returns:        A Shen number.
 
-.. function:: js.bitwise.left-shift : number --> number --> number
+.. function:: js.<< : number --> number --> number
 
    Checks arguments are numbers and then applies the JavaScript :js:`<<` operator.
 
@@ -449,7 +449,7 @@ Typed Operators
    :param number Y: Amount to shift by.
    :returns:        A Shen number.
 
-.. function:: js.bitwise.right-shift : number --> number --> number
+.. function:: js.>> : number --> number --> number
 
    Checks arguments are numbers and then applies the JavaScript :js:`>>` operator.
 
@@ -457,7 +457,7 @@ Typed Operators
    :param number Y: Amount to shift by.
    :returns:        A Shen number.
 
-.. function:: js.bitwise.right-shift-unsigned : number --> number --> number
+.. function:: js.>>> : number --> number --> number
 
    Checks arguments are numbers and then applies the JavaScript :js:`>>>` operator.
 

@@ -724,13 +724,21 @@ Global Functions
 Parallel Functions
 ------------------
 
+.. function:: js.parallel.filter : (A --> boolean) --> (list A) --> (list A)
+
+   Tests each element in a list and gathers elements that pass the test in resulting list.
+
+   :param function F: Function to test each element in the list for inclusion in the result.
+   :param list Xs:    A Shen list of whatever values.
+   :returns:          A list of filtered results.
+
 .. function:: js.parallel.map : (A --> B) --> (list A) --> (list B)
 
    Maps function to elements of list in parallel and gathers results as they complete in resulting list.
 
    :param function F: Function to transform each element in the list.
    :param list Xs:    A Shen list of whatever values.
-   :returns:          A list of results.
+   :returns:          A list of transformed results.
 
 Global Classes, Values and Functions
 ------------------------------------

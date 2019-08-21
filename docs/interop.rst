@@ -724,7 +724,9 @@ Global Functions
 Parallel Functions
 ------------------
 
-.. function:: js.parallel.filter : (A --> boolean) --> (list A) --> (list A)
+.. note:: These return JavaScript promises.
+
+.. function:: parallel.filter : (A --> boolean) --> (list A) --> (list A)
 
    Tests each element in a list and gathers elements that pass the test in resulting list.
 
@@ -732,7 +734,7 @@ Parallel Functions
    :param list Xs:    A Shen list of whatever values.
    :returns:          A list of filtered results.
 
-.. function:: js.parallel.map : (A --> B) --> (list A) --> (list B)
+.. function:: parallel.map : (A --> B) --> (list A) --> (list B)
 
    Maps function to elements of list in parallel and gathers results as they complete in resulting list.
 

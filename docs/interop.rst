@@ -724,7 +724,7 @@ Global Functions
 Parallel Functions
 ------------------
 
-.. note:: These return JavaScript promises.
+.. important:: These are only usable in async mode as they parallelize by starting an array of promises.
 
 .. function:: parallel.filter : (A --> boolean) --> (list A) --> (list A)
 

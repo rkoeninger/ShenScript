@@ -304,6 +304,38 @@ Functions starting with :shen:`js.raw` allow access to underlying JavaScript ope
    :param any Y: Whatever.
    :returns:     Whatever :js:`**` does based on JavaScript-specific behavior.
 
+.. function:: (js.raw.< X Y)
+
+   Applies the JavaScript :js:`<` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     Whatever :js:`<` does based on JavaScript-specific behavior.
+
+.. function:: (js.raw.> X Y)
+
+   Applies the JavaScript :js:`>` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     Whatever :js:`>` does based on JavaScript-specific behavior.
+
+.. function:: (js.raw.<= X Y)
+
+   Applies the JavaScript :js:`<=` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     Whatever :js:`<=` does based on JavaScript-specific behavior.
+
+.. function:: (js.raw.>= X Y)
+
+   Applies the JavaScript :js:`>=` operator to arguments without additional typechecks, perserving JavaScript coercion behavior.
+
+   :param any X: Whatever.
+   :param any Y: Whatever.
+   :returns:     Whatever :js:`>=` does based on JavaScript-specific behavior.
+
 .. function:: (js.raw.bitwise.not X)
 
    Applies the JavaScript :js:`!` operator to argument without additional typechecks, perserving JavaScript coercion behavior.

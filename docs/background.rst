@@ -15,9 +15,9 @@ Before going into detail on ShenScript, I wanted to highlight and say thank you 
 shen-js
 -------
 
-This library is attempt to improve on the existing `shen-js <https://github.com/gravicappa/shen-js>`_ project by `Ramil Farkhshatov <https://github.com/gravicappa>`_. shen-js implements its own KLVM on top of JS, allowing it to handle deep recursion without stack overflow and make asynchronous I/O transparent to Shen code. However, it outputs a large deployable (\~12MB uncompressed) and it's generated code is inscrutible (but generating idiomatic JS is no longer a primary goal of this project, either). ShenScript is intended to improve on shen-js by using more recent JS features, building a smaller deployable and providing more facilities for web development.
+Shen has previously been brought to JavaScript by way of the `shen-js <https://github.com/gravicappa/shen-js>`_ project by `Ramil Farkhshatov <https://github.com/gravicappa>`_. shen-js implements its own KLVM on top of JS, allowing it to handle deep recursion without stack overflow and make asynchronous I/O transparent to Shen code. I wanted to make a JavaScript port that is built more directly on JavaScript and makes use on newer features. ShenScript is also intended to produce a smaller deployable (\<1MB vs \~12MB for shen-cl) that is retrievable from npm.
 
 shen-cl
 -------
 
-ShenScript also takes inspiration from the original Shen port, `shen-cl <https://github.com/Shen-Language/shen-cl>`_. Shen for Common Lisp offers a good demonstration of how to embed Shen's semantics in another dynamic language. This port also learns some negative lessons from shen-cl like the need to properly segregate reference scope between Shen code and the host language and still allow for easy, effective interop between the two.
+ShenScript also takes inspiration from the original Shen port, `shen-cl <https://github.com/Shen-Language/shen-cl>`_. Shen for Common Lisp offers a good demonstration of how to embed Shen's semantics in another dynamic language. shen-cl also has good native interop which this port has attempted to replicate.

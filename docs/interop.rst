@@ -536,14 +536,14 @@ Global Functions
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: (js.decodeURI Uri)
+.. function:: (js.decode-uri Uri)
 
    Decodes a URI by un-escaping special characters.
 
    :param string Uri: URI to decode.
    :returns:          Decoded URI.
 
-.. function:: (js.decodeURIComponent Uri)
+.. function:: (js.decode-uri-component Uri)
 
    Decodes a URI component by un-escaping special characters.
 
@@ -565,14 +565,14 @@ Global Functions
    :param any Key:       String or symbol name of key to remove.
    :returns:             JavaScript :js:`true` if the delete was successful.
 
-.. function:: (js.encodeURI Uri)
+.. function:: (js.encode-uri Uri)
 
    Encodes a URI by escaping special characters.
 
    :param string Uri: URI to encode.
    :returns:          Encoded URI.
 
-.. function:: (js.encodeURIComponent Uri)
+.. function:: (js.encode-uri-component Uri)
 
    Encodes a URI component by escaping special characters.
 
@@ -702,21 +702,21 @@ Global Functions
    :param any X: Value to inspect.
    :returns:     A JavaScript boolean.
 
-.. function:: (js.parseFloat String)
+.. function:: (js.parse-float String)
 
    Parses a floating-point number.
 
    :param string String: Numeric string to parse.
    :returns:             Parsed number.
 
-.. function:: (js.parseInt String)
+.. function:: (js.parse-int String)
 
    Parses an integral number with radix specified to be 10 to avoid unusual parsing behavior.
 
    :param string String: Numeric string to parse.
    :returns:             Parsed number.
 
-.. function:: (js.parseIntRadix String Radix)
+.. function:: (js.parse-int-with-radix String Radix)
 
    Parses an integral number with the given.
 

@@ -33,6 +33,8 @@ Refer to [`.travis.yml`](.travis.yml) for typical build/test process. `test-*` c
 
 ## Running
 
+### Demo Page
+
 Run the following commands in order to host a simple demo page:
 
 ```bash
@@ -52,3 +54,11 @@ shen.exec("(+ 1 1)").then(console.log);
 Chaining the `then` call is necessary because the environment will be built in `async` mode and `exec` will return a `Promise`.
 
 For more information refer to the [documentation](https://shenscript.readthedocs.io/en/latest/interop.html).
+
+### REPL
+
+Run `npm run repl` to run a command-line REPL. It should have the same behavior as the `shen-cl` REPL. `node.` functions will be available.
+
+Execute `(node.exit)` to exit the REPL.
+
+Command-line options not yet implemented.

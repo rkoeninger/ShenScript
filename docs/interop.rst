@@ -839,6 +839,10 @@ Recognisor Functions
 Parallel Functions
 ------------------
 
+.. danger::
+
+   There are going to be replaced with :shen:`web.fetch*` and such functions as they don't have general-purpose utility.
+
 .. important::
 
    These are really only usable in async mode as they parallelize by starting an array of promises.
@@ -997,6 +1001,10 @@ Web-specific Interop
 
 Only available when running in a browser or browser-based environment like Electron.
 
+.. function:: (web.atob String)
+
+.. function:: (web.btoa Base64)
+
 .. function:: (web.confirm? Message)
 
    Shows a synchronous web confirm pop-up with the given message. Returns Shen :shen:`true` or :shen:`false` depending on whether the user hit "OK" or "Cancel".
@@ -1032,6 +1040,16 @@ Only available when running in a browser or browser-based environment like Elect
 .. function:: (web.window)
 
    Returns the global :js:`window`.
+
+.. function:: (web.worker Param Body)
+
+   :shen:`web.worker-macro`.
+
+.. function:: (web.workers.listen Worker Callback)
+
+.. function:: (web.workers.new Code)
+
+.. function:: (web.workers.send Worker Message)
 
 Node-specific Interop
 ---------------------

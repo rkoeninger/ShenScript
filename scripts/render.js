@@ -2,12 +2,25 @@ const fs              = require('fs');
 const { parseKernel } = require('./parser');
 const { produce, s }  = require('../lib/utils');
 const backend         = require('../lib/backend');
-const {
-  Arrow, Assign, Block, Call, Const, Id, Literal,
-  Member, Program, Return, SafeId, Statement,
-  generate
-} = require('../lib/ast');
+const { Arrow, Assign, Block, Id, Member, Program, Return, Statement, generate } = require('../lib/ast');
 const { defuns, statements } = parseKernel();
+
+const systemFunctions = [];
+const externalsStatement = statements.some(s =>
+  Array.isArray(s) &&
+  s.length === 4 &&
+  s[0] === Symbol.for('put') &&
+  Array.isArray(s[1]) &&
+  s[1].length === 2 &&
+  s[1][0].length === Symbol.for('intern') &&
+  s[1][1].length === 'shen' &&
+  s[2] === Symbol.for('shen.*external-symbols*'));
+
+const isConsExpr = x => Array.isArray(x) && x.length === 3 && x === Symbol.for('cons');
+
+for (let x = externalsStatement[3]; isConsExpr(x); x = x[2]) {
+  systemFunctions.push(x[1]);
+}
 
 const findFirstIndex = (array, f) => array.findIndex(f);
 const findLastIndex  = (array, f) => {
@@ -70,9 +83,7 @@ const render = async => {
   // TODO: nonAwaits need to be passed in here, propogated to build function
   //       so when we call a nonAwait, it's not awaited
   //       and when we build a function with no awaits, it's not async
-  const sysDefuns = defuns.filter(x => sysFuncs.includes(x[1]));
-  const nonSysDefuns = defuns.filter(x => !sysFuncs.includes(x[1]));
-  const { compile, compileLambda } = backend({ async, sysFuncs: sysFuncs.filter(x => sysDefuns.some(y => y[1] === x)) });
+  const { compile } = backend({ async });
   const syntax = generate(
     Program([Statement(Assign(
       Member(Id('module'), Id('exports')),
@@ -81,17 +92,11 @@ const render = async => {
         // TODO: each function whose name is in systemFunctions,
         //       convert (define F ...)
         //       to
-        //       const F = (...) => ...;
-        //       $.d('F', F);
+        //       const F = () => ...
+        //       $.f['F'] = F;
         //       from
-        //       $.d('F', (...) => ...);
-        Block(
-          ...sysDefuns.map(x => Const(SafeId(Symbol.keyFor(x[1])), compileLambda(x[2], x[3]))),
-          ...sysDefuns.map(x => Statement(Call(Member(Id('$'), Id('d')), [Literal(Symbol.keyFor(x[1])), SafeId(Symbol.keyFor(x[1]))]))),
-          ...nonSysDefuns.map(x => Statement(compile(x))),
-          //...defuns.map(x => Statement(compile(x))),
-          ...statements.map(x => Statement(compile(x))),
-          Return(Id('$'))),
+        //       $.f['F'] = () => ...
+        Block(...[...sortedDefuns, ...statements].map(compile).map(Statement), Return(Id('$'))),
         async)))]));
 
   console.log(`${async ? 'async' : 'sync '} kernel: ${syntax.length} chars`);

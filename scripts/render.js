@@ -70,9 +70,13 @@ const render = async => {
   // TODO: nonAwaits need to be passed in here, propogated to build function
   //       so when we call a nonAwait, it's not awaited
   //       and when we build a function with no awaits, it's not async
-  const sysDefuns = defuns.filter(x => sysFuncs.includes(x[1]));
-  const nonSysDefuns = defuns.filter(x => !sysFuncs.includes(x[1]));
-  const { compile, compileLambda } = backend({ async, sysFuncs: sysFuncs.filter(x => sysDefuns.some(y => y[1] === x)) });
+  const sysDefuns = defuns;
+  const nonSysDefuns = [];
+  const sysFuncs = defuns.map(x => x[1]);
+  const { compile, compileLambda } = backend({ async, sysFuncs });
+  //const sysDefuns = defuns.filter(x => sysFuncs.includes(x[1]));
+  //const nonSysDefuns = defuns.filter(x => !sysFuncs.includes(x[1]));
+  //const { compile, compileLambda } = backend({ async, sysFuncs: sysFuncs.filter(x => sysDefuns.some(y => y[1] === x)) });
   const syntax = generate(
     Program([Statement(Assign(
       Member(Id('module'), Id('exports')),

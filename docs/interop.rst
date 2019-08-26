@@ -836,39 +836,6 @@ Recognisor Functions
    :param any X: Value to inspect.
    :returns:     A Shen boolean.
 
-Parallel Functions
-------------------
-
-.. danger::
-
-   There are going to be replaced with :shen:`web.fetch*` and such functions as they don't have general-purpose utility.
-
-.. important::
-
-   These are really only usable in async mode as they parallelize by starting an array of promises.
-
-   They could be used in sync mode, but interop functions would have to be used to chain a call off of the returned promise like:
-
-   .. code-block:: lisp
-
-      ((. (parallel.map F Xs) "then") (/. X (continuation X)))
-
-.. function:: parallel.filter : (A --> boolean) --> (list A) --> (list A)
-
-   Tests each element in a list asynchronously in parallel and gathers elements that pass the test in resulting list.
-
-   :param function F: Function to test each element in the list for inclusion in the result.
-   :param list Xs:    A Shen list of whatever values.
-   :returns:          A list of filtered results.
-
-.. function:: parallel.map : (A --> B) --> (list A) --> (list B)
-
-   Maps function to elements of list asynchronously in parallel and gathers results as they complete in resulting list.
-
-   :param function F: Function to transform each element in the list.
-   :param list Xs:    A Shen list of whatever values.
-   :returns:          A list of transformed results.
-
 Global Classes, Objects and Values
 ----------------------------------
 

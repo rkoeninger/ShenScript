@@ -1,6 +1,5 @@
 const fs              = require('fs');
 const { parseKernel } = require('./parser');
-const { produce, s }  = require('../lib/utils');
 const backend         = require('../lib/backend');
 const { Arrow, Assign, Block, Id, Member, Program, Return, Statement, generate } = require('../lib/ast');
 const { defuns, statements } = parseKernel();

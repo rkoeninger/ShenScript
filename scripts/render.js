@@ -5,6 +5,23 @@ const backend         = require('../lib/backend');
 const { Arrow, Assign, Block, Id, Member, Program, Return, Statement, generate } = require('../lib/ast');
 const { defuns, statements } = parseKernel();
 
+const systemFunctions = [];
+const externalsStatement = statements.some(s =>
+  Array.isArray(s) &&
+  s.length === 4 &&
+  s[0] === Symbol.for('put') &&
+  Array.isArray(s[1]) &&
+  s[1].length === 2 &&
+  s[1][0].length === Symbol.for('intern') &&
+  s[1][1].length === 'shen' &&
+  s[2] === Symbol.for('shen.*external-symbols*'));
+
+const isConsExpr = x => Array.isArray(x) && x.length === 3 && x === Symbol.for('cons');
+
+for (let x = externalsStatement[3]; isConsExpr(x); x = x[2]) {
+  systemFunctions.push(x[1]);
+}
+
 const findFirstIndex = (array, f) => array.findIndex(f);
 const findLastIndex  = (array, f) => {
   for (let i = array.length - 1; i >= 0; --i) {
@@ -72,6 +89,13 @@ const render = async => {
       Member(Id('module'), Id('exports')),
       Arrow(
         [Id('$')],
+        // TODO: each function whose name is in systemFunctions,
+        //       convert (define F ...)
+        //       to
+        //       const F = () => ...
+        //       $.f['F'] = F;
+        //       from
+        //       $.f['F'] = () => ...
         Block(...[...sortedDefuns, ...statements].map(compile).map(Statement), Return(Id('$'))),
         async)))]));
 

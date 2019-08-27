@@ -71,8 +71,6 @@ The :js:`exports` of this module is just a function that constructs a new ShenSc
    :param function settle:    If value is a Trampoline, runs Trampoline and repeats.
    :param function show:      :js:`toString` function. Returns string representation of any value.
    :param object   symbols:   Global symbol index by string name.
-   :param function trapAsync: The async version of :js:`trapSync`.
-   :param function trapSync:  Invoke first function, settle result and return it. If error raised, apply second function to error and return.
    :param function valueOf:   Returns the value of the given global symbol. Raises an error if it is not defined.
 
 The Kernel

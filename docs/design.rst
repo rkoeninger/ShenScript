@@ -35,7 +35,7 @@ if, and, or, cond
 simple-error, trap-error
   Error handling works just like JavaScript, using the :js:`throw` and :js:`try-catch` constructs.
 
-  Since both :js:`throw` and :js:`try` are statements in JavaScript, there are the functions :js:`raise` and :js:`trap` which contain these JavaScript constructs so they can be invoked as an expression. This does require the cost of an additional function call and instantiation of additional lambdas.
+  Both :js:`throw` and :js:`try` are statement syntax in JavaScript, so to make them expressions, there is the :js:`raise` function for throwing errors and :js:`try-catch` is wrapped in an `iife <https://javascript.info/closure#iife>`_ so it can be embedded in expressions. That iife is async and its invocation is awaited when in async mode.
 
 defun, lambda, freeze
   All function forms build and return JavaScript functions.

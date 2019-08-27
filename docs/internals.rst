@@ -148,22 +148,6 @@ Functions
    :param string name: Symbol name.
    :returns:           Symbol by that name.
 
-.. function:: trapAsync(body, handler)
-
-   Invokes :js:`body` with no arguments and awaits the result. If it raises an error, invokes :js:`handler`, passing it the error, and returns the result.
-
-   :param function body:    Zero-parameter function.
-   :param function handler: One-parameter function.
-   :returns:                The result of calling :js:`body` or the result of :js:`handler` if :js:`body` failed, wrapped in a :js:`Promise`.
-
-.. function:: trapSync(body, handler)
-
-   Invokes :js:`body` with no arguments. If it raises an error, invokes :js:`handler`, passing it the error, and returns the result.
-
-   :param function body:    Zero-parameter function.
-   :param function handler: One-parameter function.
-   :returns:                The result of calling :js:`body` or the result of :js:`handler` if :js:`body` failed.
-
 Accessing ShenScript Internals from Shen
 ========================================
 

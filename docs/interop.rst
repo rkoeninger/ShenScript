@@ -555,6 +555,12 @@ Typed Operators
 Typed Standard Functions
 ------------------------
 
+.. function:: js.clear : js.timeout --> unit
+
+   Cancels or discontinues a task scheduled by :shen:`js.delay` or :shen:`js.repeat`.
+
+   :param js.timeout Timeout: A timeout handle returned by :shen:`js.delay` or :shen:`js.repeat`.
+
 .. function:: js.decode-uri : string --> string
 
    Decodes a URI by un-escaping special characters.
@@ -568,6 +574,14 @@ Typed Standard Functions
 
    :param string Uri: URI component to decode.
    :returns:          Decoded URI.
+
+.. function:: js.delay : number --> (lazy A) --> js.timeout
+
+   Calls standard JavaScript :js:`setTimeout` function, but with arguments reversed.
+
+   :param number Duration:       Time in milliseconds to delay running continuation.
+   :param function Continuation: Function to run. Expected to take 0 arguments.
+   :returns:                     A timeout handle.
 
 .. function:: js.encode-uri : string --> string
 
@@ -631,6 +645,22 @@ Typed Standard Functions
    :param number Radix:  Radix to parse the number with, an integer 2 or greater.
    :returns:             Parsed number.
    :throws:              If string does not represent a valid number or invalid radix is passed.
+
+.. function:: js.repeat : number --> (lazy A) --> js.timeout
+
+   Calls standard JavaScript :js:`setInterval` function, but with arguments reversed.
+
+   :param number Duration:       Time in milliseconds to between calls of continuation.
+   :param function Continuation: Function to run. Expected to take 0 arguments.
+   :returns:                     A timeout handle.
+
+.. function:: js.sleep : number --> unit
+
+   Simulates a blocking :code:`Thread.sleep` by awaiting a promise resolved with :js:`setTimeout`.
+
+   Returns a promise so only works neatly in async mode.
+
+   :param number Duration: Time in milliseconds to sleep.
 
 Object Construction, Member Access
 ----------------------------------

@@ -14,17 +14,12 @@ const InStream = class {
 };
 
 const OutStream = class {
-  constructor(stream) { this.stream = stream; }
-  write(b) { return this.stream.write(String.fromCharCode(b)); }
-};
-
-const OutBuffer = class {
-  constructor() { this.buffer = Buffer.alloc(24 * 1024); }
+  constructor() { this.buffer = []; }
   write(b) {
-    this.buffer.writeInt8(b);
+    this.buffer.push(b);
     return b;
   }
-  toString() { return this.buffer.toString(); }
+  fromCharCodes() { return String.fromCharCode(...this.buffer); }
 };
 
 const formatDuration = x =>
@@ -36,7 +31,7 @@ const formatDuration = x =>
 const runTests = async async => {
   const start = Date.now();
   console.log(`creating kernel in ${async ? 'async' : 'sync'} mode...`);
-  const stoutput = new OutBuffer();
+  const stoutput = new OutStream();
   const { evalKl, s, valueOf } = await (async ? asyncKernel : syncKernel)(backend({
     ...config,
     async,
@@ -53,8 +48,14 @@ const runTests = async async => {
   const duration = Date.now() - start;
   console.log(`total time elapsed: ${formatDuration(duration)}`);
 
-  if (valueOf('test-harness.*failed*') > 0) {
-    console.log(stoutput.toString());
+  // FIXME: this doesn't work so long as tests.shen resets counters at the end of the run
+
+  const failures = valueOf('test-harness.*failed*');
+
+  if (failures > 0) {
+    console.error(`${failures} tests failed.`);
+    console.error('test output:');
+    console.error(stoutput.fromCharCodes());
   } else {
     console.log(`all tests passed.`);
   }

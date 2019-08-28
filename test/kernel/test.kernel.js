@@ -28,6 +28,16 @@ const formatDuration = x =>
     .map(([n, l]) => `${Math.floor(n)}${l}`)
     .join(', ');
 
+// TODO: this can be removed when tests.shen doesn't end with (reset)
+const unbreakTestsDotShen = () => {
+  const path = config.testsPath + '/tests.shen';
+  const text = fs.readFileSync(path, 'utf8');
+  if (text.trimEnd().endsWith('(reset)')) {
+    fs.writeFileSync(path, text.replace('(reset)', ''), 'utf8');
+  }
+};
+unbreakTestsDotShen();
+
 const runTests = async async => {
   const start = Date.now();
   console.log(`creating kernel in ${async ? 'async' : 'sync'} mode...`);
@@ -46,10 +56,6 @@ const runTests = async async => {
   await evalKl([s`load`, 'README.shen']);
   await evalKl([s`load`, 'tests.shen']);
   const duration = Date.now() - start;
-  console.log(`total time elapsed: ${formatDuration(duration)}`);
-
-  // FIXME: this doesn't work so long as tests.shen resets counters at the end of the run
-
   const failures = valueOf('test-harness.*failed*');
 
   if (failures > 0) {
@@ -60,6 +66,7 @@ const runTests = async async => {
     console.log(`all tests passed.`);
   }
 
+  console.log(`total time elapsed: ${formatDuration(duration)}`);
   return duration;
 };
 

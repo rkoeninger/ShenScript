@@ -67,18 +67,18 @@ const runTests = async async => {
   }
 
   console.log(`total time elapsed: ${formatDuration(duration)}`);
-  return duration;
+  return [failures, duration];
 };
 
 const pad = (len, fill, s) => s + fill.repeat(len - s.length);
 
 (async () => {
-  const syncDuration = await runTests(false);
-  const asyncDuration = await runTests(true);
+  const [syncFailures, syncDuration] = await runTests(false);
+  const [asyncFailures, asyncDuration] = await runTests(true);
   console.log();
-  console.log('--------------------------------');
-  console.log(`| sync  | ${pad(20, ' ', formatDuration(syncDuration))} |`);
-  console.log(`| async | ${pad(20, ' ', formatDuration(asyncDuration))} |`);
-  console.log(`| both  | ${pad(20, ' ', formatDuration(syncDuration + asyncDuration))} |`);
-  console.log('--------------------------------');
+  console.log('-------------------------------------------');
+  console.log(`| sync  | ${pad(12, ' ', syncFailures > 0 ? `${syncFailures} failed` : 'all passed')} | ${pad(16, ' ', formatDuration(syncDuration))} |`);
+  console.log(`| async | ${pad(12, ' ', asyncFailures > 0 ? `${asyncFailures} failed` : 'all passed')} | ${pad(16, ' ', formatDuration(asyncDuration))} |`);
+  console.log(`| both  |              | ${pad(16, ' ', formatDuration(syncDuration + asyncDuration))} |`);
+  console.log('-------------------------------------------');
 })();

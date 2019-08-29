@@ -214,7 +214,7 @@ Since every fabr needs a result expression, for statement syntax, an additional 
 
 An example like :shen:`(+ (let X 3 (* X 2)) (trap-error (whatever) (/. _ 0)))` would get rendered like this. The :shen:`(let X 3 (* X 2))` expression becomes:
 
-   .. code-block::
+   .. code-block:: none
 
       {
         "statements": [
@@ -225,7 +225,7 @@ An example like :shen:`(+ (let X 3 (* X 2)) (trap-error (whatever) (/. _ 0)))` w
 
 The :shen:`(trap-error (whatever) (/. _ 0))` becomes:
 
-   .. code-block::
+   .. code-block:: none
 
       {
         "statements": [
@@ -243,7 +243,7 @@ The :shen:`(trap-error (whatever) (/. _ 0))` becomes:
 
 And composed together, they are:
 
-   .. code-block::
+   .. code-block:: none
 
       {
         "statements": [

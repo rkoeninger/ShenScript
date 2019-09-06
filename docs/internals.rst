@@ -362,6 +362,17 @@ Functions in the `js.ast` namespace are used to construct, emit and evaluate arb
    :param ast Body:   Block of statements to run each time the loop repeats.
    :returns:          A :code:`ForStatement` AST Node.
 
+.. function:: (js.ast.for-await-of Left Right Body)
+
+   Constructs an asynchronous for-of loop. Each value iterated from :shen:`Right` gets awaited before being bound to the variable or pattern declared in :shen:`Left`.
+
+   Example: :js:`for await (let x of xs) { ... }`
+
+   :param ast Left:  Declaration of local variable that each value from the iterable on the right side gets assigned to.
+   :param ast Right: Expression that evaluates to an iterable value.
+   :param ast Body:  Block of statements to run each time the loop repeats.
+   :returns:         A :code:`ForOfStatement` AST Node.
+
 .. function:: (js.ast.for-in Left Right Body)
 
    Constructs a for-in loop.

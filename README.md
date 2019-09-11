@@ -18,9 +18,8 @@ An implementation of the [Shen Language](http://www.shenlanguage.org) by [Mark T
 
 Still in progress:
 
-  * Speed up async performance (sync test suite time: \~24s, async: \~72s).
-    * Web startup time is \~2s on Chrome, \~75s on Firefox in async mode.
-  * Speed up web load time (current \~2s). Disable `declare` type checks?
+  * Speed up async performance (sync test suite time: \~12s, async: \~64s).
+    * Web startup time is \~1200ms on Chrome, \~15s on Firefox in async mode.
   * Pre-supply helpful async I/O implementations for loading in WebWorker, command line, etc.
 
 ## Prerequisites

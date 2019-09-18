@@ -1,7 +1,7 @@
 const fs              = require('fs');
 const { parseKernel } = require('./parser');
 const backend         = require('../lib/backend');
-const { Arrow, Assign, Block, Id, Member, Program, Return, Statement, generate } = require('../lib/ast');
+const { Arrow, Assign, Block, Const, Id, Member, Program, Return, Statement, generate } = require('../lib/ast');
 const { defuns, statements } = parseKernel();
 
 const formatDuration = x =>
@@ -13,15 +13,21 @@ const formatDuration = x =>
 const render = async => {
   const start = Date.now();
   console.log(`creating backend in ${async ? 'async' : 'sync'} mode...`);
-  const { compile } = backend({ async });
+  const { assemble, construct } = backend({ async });
   console.log(`backend ready: ${formatDuration(Date.now() - start)}`);
   const renderStart = Date.now();
+  const body = assemble(
+    (...asts) => Block(...asts.map(Statement)),
+    ...[...defuns, ...statements].map(construct));
   const syntax = generate(
     Program([Statement(Assign(
       Member(Id('module'), Id('exports')),
       Arrow(
         [Id('$')],
-        Block(...[...defuns, ...statements].map(compile).map(Statement), Return(Id('$'))),
+        Block(
+          ...Object.entries(body.subs).map(([key, value]) => Const(Id(key), value)),
+          ...body.ast.body,
+          Return(Id('$'))),
         async)))]));
   const renderTime = Date.now() - renderStart;
   console.log(`kernel rendered: ${formatDuration(renderTime)}`);

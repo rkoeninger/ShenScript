@@ -102,6 +102,20 @@ ShenScript code generation is built on rendering objects rendering a JavaScript 
 
 The Function constructor acts as a kind of isolated-scope version of eval. When a Function is created this way, it does not capture local variables like eval does. This prevents odd behavior from cropping up where Shen code uses a variable or function name that matches some local variable.
 
+Hoisting Globals and Idle Symbols
+---------------------------------
+
+Lookups of global functions, global symbol values (:shen:`set`/:shen:`value`) and idle symbols (:js:`Symbol.for`) don't take up much time, but when done repeatedly are wasteful. To prevent repeated lookups, references to the aforementioned are hoisted to the top of each expression tree evaluated by :shen:`eval-kl` and to the top of the pre-rendered kernel. This way, they only get fetched once and are enclosed over so each time a function is called that depends on one of these, it only needs to access a local variable in scope.
+
+Global functions and global symbol values with the same name are both attached to the same eternal Cells and those Cells get assigned to escaped local variables with :js:`$e$` appended to the end. Idle symbols get assigned to escaped local variables with :js:`$s$` appended to the end.
+
+Fabrications
+------------
+
+Just as the :js:`Context` object carries contextual information downward while building an expression tree into a JavaScript AST, Fabrications carry resulting context back upward. A Fabrication 
+
+.. danger:: TODO: not done writing this
+
 Escaping Special Variable Names
 -------------------------------
 
@@ -189,7 +203,9 @@ Instead, the environment could load a kernel with both versions of each function
 
 For example, if we have Shen code like :shen:`(map F Xs)` and :shen:`F` is known not to be async, we can call the sync version of :shen:`map` which is tail-recursive or is a simple for-loop by way of a pinhole optimisation. This way, we won't have to evaluate the long chain of promises and trampolines the async version would result in for any list of decent length.
 
-If we think of the dependencies between functions in the kernel and user code as a tree or a graph, there is one leg going down the side of it that actually needs to be async and the rest of it can remain sync. Detecting and isolating that sub-graph allows for plentiful optimisation.
+The transpiler would have to keep track of additional information like which functions are always sync, which are always async and which can be one or the other and based on what criteria.
+
+Now that fabrs have been re-introduced, they could be used to carry result context information like whether there are any async calls down a branch of an AST.
 
 Historical and Abandoned Design
 ===============================
@@ -199,10 +215,8 @@ String Concatenation
 
 In a much earlier version, code generation was done with JavaScript template strings and string concatenation. This was replaced with the use of the astring library since it is cleaner, more reliable and more flexible to have an AST that can undergo further manipulation as opposed to a final code string that can only be concatenated.
 
-Fabrications
-------------
-
-TODO: this has been adopted again, but to carry substitutions and not statements, could also carry async
+Using Fabrications for Statement-oriented Syntax
+------------------------------------------------
 
 Shen's code style is very expression-oriented and is most easily translated to another expression-oriented language. Most of Shen's forms translate directly to expression syntax in JavaScript without a problem. All function calls are expressions in JavaScript, conditions can use the :js:`? :` ternary operator, etc. Two forms in particular pose a problem: :shen:`let` and :shen:`trap-error` would most naturally be represented with statements in JavaScript.
 
@@ -263,3 +277,5 @@ And composed together, they are:
       }
 
 This whole approach was attempted on the premise that using more idiomatic JavaScript syntax would give the runtime more opportunities to identify optimisations vs using :js:`trap` and immediately-invoked lambdas. Turns out using fabrs produced about twice the code volume and benchmarks took 3-4 times as long to run. I guess V8 is really good at optimising IIFEs. So fabrs were reverted. The design is documented here for historical reasons.
+
+This approach could be brought back in order to better handle :shen:`trap-error` at the root of a lambda, avoiding an additional iife.

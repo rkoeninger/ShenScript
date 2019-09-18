@@ -53,26 +53,26 @@ The :js:`exports` of this module is just a function that constructs a new ShenSc
    :param string   options.stoutput:       :js:`OutStream` for standard output. Defaults to an object that raises an error.
    :returns:                               An object conforming to the :js:`Backend` class description.
 
-TODO: eternal, e, globals, construct, assemble
-
 .. class:: Backend
 
    This class is a description of object returned by the :js:`backend` function and does not actually exist. It contains an initial ShenScript environment, without the Shen kernel loaded.
 
+   :param function assemble:  Composes a sequence of JavaScript ASTs and Fabrications into a single Fabrication.
    :param boolean  async:     Environment will generate async functions.
    :param function bounce:    Creates a trampoline from function and rest arguments.
    :param function compile:   Turns KLambda expression array tree into JavaScript AST.
+   :param function construct: Turns KLambda expression array tree into Fabrication.
    :param function cons:      Creates a Cons from a head and tail.
    :param function defun:     Adds function to the global function registry.
    :param function equate:    Determines if two values are equal according to the semantics of Shen.
+   :param function eternal:   Looks up Cell in :js:`globals`, adding one if it doesn't exist yet.
    :param function evalJs:    Evalutes a JavaScript AST in isolated scope with access to :js:`$`.
    :param function evalKl:    Builds and evaluates a KLambda expression tree in isolated scope with access to $.
-   :param object   functions: Global function index by string name. Functions handle partial application but do not settle trampolines.
    :param function future:    The async version of :js:`settle`.
+   :param Map      globals:   Map of symbol names to eternal Cells.
    :param object   inlines:   Post-processing inlines. Each accepts constructed JavaScript ASTs and returns another AST.
    :param function settle:    If value is a Trampoline, runs Trampoline and repeats.
    :param function show:      :js:`toString` function. Returns string representation of any value.
-   :param object   symbols:   Global symbol index by string name.
    :param function valueOf:   Returns the value of the given global symbol. Raises an error if it is not defined.
 
 The Kernel

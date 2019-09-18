@@ -28,16 +28,6 @@ const formatDuration = x =>
     .map(([n, l]) => `${Math.floor(n)}${l}`)
     .join(', ');
 
-// TODO: this can be removed when tests.shen doesn't end with (reset)
-const unbreakTestsDotShen = () => {
-  const path = config.testsPath + '/tests.shen';
-  const text = fs.readFileSync(path, 'utf8');
-  if (text.trimEnd().endsWith('(reset)')) {
-    fs.writeFileSync(path, text.replace('(reset)', ''), 'utf8');
-  }
-};
-unbreakTestsDotShen();
-
 const runTests = async async => {
   const start = Date.now();
   console.log(`creating kernel in ${async ? 'async' : 'sync'} mode...`);

@@ -202,6 +202,8 @@ In a much earlier version, code generation was done with JavaScript template str
 Fabrications
 ------------
 
+TODO: this has been adopted again, but to carry substitutions and not statements, could also carry async
+
 Shen's code style is very expression-oriented and is most easily translated to another expression-oriented language. Most of Shen's forms translate directly to expression syntax in JavaScript without a problem. All function calls are expressions in JavaScript, conditions can use the :js:`? :` ternary operator, etc. Two forms in particular pose a problem: :shen:`let` and :shen:`trap-error` would most naturally be represented with statements in JavaScript.
 
 We could just emit :code:`VariableDeclaration` and :code:`TryStatement` AST nodes for these forms, but that causes a compilication when either a statement or an expression might be emitted by the transpiler at any point in the code. And while it's easy to embed an expression in a statement construct - just by wrapping in an :code:`ExpressionStatement` - it's harder to embed a statement in an expression.

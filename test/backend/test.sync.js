@@ -6,7 +6,7 @@ const backend               = require('../../lib/backend');
 const { cons, eternal, evalKl, s, settle, valueOf } = backend();
 const exec = s => settle(evalKl(parseForm(s)));
 const values = [12, null, undefined, 'abc', s`asd`, 0, Infinity, [], cons(1, 2)];
-const getFunction = name => eternal(name).f;
+const getFunction = name => eternal(name).f; // TODO: don't like this name
 
 describe('sync', () => {
   describe('evaluation', () => {

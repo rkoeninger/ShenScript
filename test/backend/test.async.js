@@ -5,7 +5,7 @@ const backend                = require('../../lib/backend');
 
 const { cons, eternal, evalKl, future, s, valueOf } = backend({ async: true });
 const exec = s => future(evalKl(parseForm(s)));
-const getFunction = name => eternal(name).f;
+const getFunction = name => eternal(name).f; // TODO: don't like this name
 
 describe('async', () => {
   describe('evaluation', () => {

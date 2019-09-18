@@ -8,6 +8,8 @@ Accessing ShenScript Internals from JavaScript
 Data
 ----
 
+TODO: remove functions, symbols; add globals
+
 .. warning:: These objects are not meant to be tampered with by user or client code. Tinker with them if you must, but it will void the warranty.
 
 .. data:: awaitedInlines
@@ -62,8 +64,12 @@ Classes
    :param function f: A JavaScript function.
    :param array args: A JavaScript array of arguments that :code:`f` will get applied to.
 
+TODO: Cell, Fabr
+
 Functions
 ---------
+
+TODO: add eternal, e
 
 .. function:: as___(x)
 
@@ -82,6 +88,8 @@ Functions
    :param function f: A JavaScript function.
    :param args:       A variadic parameter containing any values.
    :returns:          A :js:`Trampoline`.
+
+TODO: assemble, construct
 
 .. function:: compile(expr)
 

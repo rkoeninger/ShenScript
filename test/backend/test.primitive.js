@@ -5,7 +5,7 @@ const backend               = require('../../lib/backend');
 const { asString, cons, isCons, isString, eternal, evalKl, s, equate } = backend();
 const isShenBool = x => x === s`true` || x === s`false`;
 const values = [12, null, undefined, 'abc', s`asd`, 0, Infinity, [], cons(1, 2)];
-const getFunction = name => eternal(name).f;
+const getFunction = name => eternal(name).f; // TODO: don't like this name
 
 describe('primitive', () => {
   describe('math', () => {

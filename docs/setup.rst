@@ -53,6 +53,8 @@ The :js:`exports` of this module is just a function that constructs a new ShenSc
    :param string   options.stoutput:       :js:`OutStream` for standard output. Defaults to an object that raises an error.
    :returns:                               An object conforming to the :js:`Backend` class description.
 
+TODO: eternal, e, globals, construct, assemble
+
 .. class:: Backend
 
    This class is a description of object returned by the :js:`backend` function and does not actually exist. It contains an initial ShenScript environment, without the Shen kernel loaded.

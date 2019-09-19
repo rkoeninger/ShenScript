@@ -3,16 +3,17 @@ const forEach               = require('mocha-each');
 const { parseForm }         = require('../../scripts/parser');
 const backend               = require('../../lib/backend');
 
-const { cons, evalKl, f, s, settle, valueOf } = backend();
+const { cons, eternal, evalKl, s, settle, valueOf } = backend();
 const exec = s => settle(evalKl(parseForm(s)));
 const values = [12, null, undefined, 'abc', s`asd`, 0, Infinity, [], cons(1, 2)];
+const f = name => eternal(name).f;
 
 describe('sync', () => {
   describe('evaluation', () => {
     it('eval-kl', () => {
       equal(5, exec('(eval-kl (cons + (cons 2 (cons 3 ()))))'));
-      equal(5, f['eval-kl'](cons(s`+`, cons(2, cons(3, null)))));
-      equal(5, f['eval-kl']([s`+`, 2, 3]));
+      equal(5, f('eval-kl')(cons(s`+`, cons(2, cons(3, null)))));
+      equal(5, f('eval-kl')([s`+`, 2, 3]));
       equal(5, evalKl(cons(s`+`, cons(2, cons(3, null)))));
       equal(5, evalKl([s`+`, 2, 3]));
     });
@@ -131,7 +132,7 @@ describe('sync', () => {
     });
     describe('error-to-string', () => {
       forEach(values).it('should raise error when given non-error', x => {
-        throws(() => f['error-to-string'](x));
+        throws(() => f('error-to-string')(x));
       });
     });
   });
@@ -139,7 +140,7 @@ describe('sync', () => {
   describe('recursion', () => {
     forEach([[0, 1], [5, 120], [7, 5040]]).it('functions should be able to call themselves', (n, r) => {
       exec('(defun fac (N) (if (= 0 N) 1 (* N (fac (- N 1)))))');
-      equal(r, settle(f.fac(n)));
+      equal(r, settle(f('fac')(n)));
     });
     describe('tail recursion', () => {
       const countDown = body => {

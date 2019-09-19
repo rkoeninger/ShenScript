@@ -1000,7 +1000,15 @@ Only available when running in a browser or browser-based environment like Elect
 
 .. function:: (web.atob String)
 
+   Converts a string to a base64-encoded string.
+
+   :param string String: Any string.
+
 .. function:: (web.btoa Base64)
+
+   Converts a base64-encoded string to a string.
+
+   :param string String: Any base64 string.
 
 .. function:: (web.confirm? Message)
 
@@ -1044,9 +1052,15 @@ Only available when running in a browser or browser-based environment like Elect
 
 .. function:: (web.workers.listen Worker Callback)
 
+   .. danger:: This is not properly implemented.
+
 .. function:: (web.workers.new Code)
 
+   .. danger:: This is not properly implemented.
+
 .. function:: (web.workers.send Worker Message)
+
+   .. danger:: This is not properly implemented.
 
 Node-specific Interop
 ---------------------

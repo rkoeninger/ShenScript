@@ -10,15 +10,9 @@ Data
 
 .. warning:: These objects are not meant to be tampered with by user or client code. Tinker with them if you must, but it will void the warranty.
 
-.. data:: awaitedInlines
+.. data:: globals
 
-   Collection of inlined functions that must be awaited.
-
-.. data:: functions
-
-   Collection of Shen functions, indexed by string name.
-
-   Aliased as :js:`f` for brevity in generated code.
+   A :js:`Map` of :js:`Cell` objects, indexed by string name. Used to hold references to both global functions and global symbol values. If a function and a global symbol have the same name, they will be referred to by the same entry in this map.
 
 .. data:: inlines
 
@@ -28,12 +22,16 @@ Data
 
    Code pre-processor rules, indexed by the string name of the symbol that triggers them.
 
-.. data:: symbols
-
-   Collection of Shen global symbols, indexed by string name.
-
 Classes
 -------
+
+.. class:: Cell(name)
+
+   Contains mutable pointers to the function and/or the global symbol value by the given name. Should only be created by the :js:`eternal` function.
+
+   Because cells are created upon first retrieval and there is only ever one per name, they are described as "eternal".
+
+   :param string name: The name of the global.
 
 .. class:: Cons(head, tail)
 
@@ -55,6 +53,13 @@ Classes
    :param object  options.inlines:       Object containing code inlining rules.
    :param object  options.preprocessors: Object containing code pre-processing rules.
 
+.. class:: Fabrication(ast, subs)
+
+   Returned by the :js:`build` function, containing the resulting AST and a substitution map of hoisted references.
+
+   :param ast    ast:  The AST result of building a KL expression.
+   :param object subs: Has string keys and AST values.
+
 .. class:: Trampoline(f, args)
 
    A :js:`Trampoline` represents a deferred tail call.
@@ -73,6 +78,14 @@ Functions
    :returns:     The same value.
    :throws:      If argument does not pass the type check.
 
+.. function:: assemble(f, ...xs)
+
+   Composes a series of fabrications into a single fabrication.
+
+   :param function f:  A function that combines a sequence of ASTs into an AST (or fabrication).
+   :param array    xs: A sequence of fabrications/ASTs.
+   :returns:           The composed fabrication.
+
 .. function:: bounce(f, args)
 
    Creates a :js:`Trampoline`.
@@ -89,6 +102,22 @@ Functions
 
    :param expr expr: Expression to build.
    :returns:         Rendered JavaScript AST.
+
+.. function:: construct(expr)
+
+   Like :js:`compile`, but returns a fabrication, not an AST.
+
+   :param expr expr: Expression to build.
+   :returns:         Rendered fabrication.
+
+.. function:: eternal(name)
+
+   Retrieves the "eternal" :js:`Cell` for the given name, creating it and adding it to :js:`globals` if it did not already exist.
+
+   Aliased as :js:`e` for brevity in generated code.
+
+   :param string name: Name of a global function or symbol.
+   :returns:           A :js:`Cell` for that name.
 
 .. function:: fun(f)
 
@@ -674,7 +703,7 @@ AST Evaluation Functions
 
 .. function:: (js.ast.compile Expr)
 
-   Builds a JavaScript AST from given KLambda expression.
+   Builds a JavaScript AST from given KLambda expression. Any hoisted references will be enclosed per the backend :js:`hoist` function.
 
    :param expr Ast: KLambda expression.
    :returns:        JavaScript AST.

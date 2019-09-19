@@ -112,9 +112,11 @@ Global functions and global symbol values with the same name are both attached t
 Fabrications
 ------------
 
-Just as the :js:`Context` object carries contextual information downward while building an expression tree into a JavaScript AST, Fabrications carry resulting context back upward. A Fabrication 
+Just as a :js:`Context` carries information downward while building an AST, a :js:`Fabrication` carries resulting context back upward. A fabrication contains the subsection of the AST that was built, along with the results of decisions that were made down in that tree so it doesn't have to be scanned again.
 
-.. danger:: TODO: not done writing this
+Fabrications are useful because they are easily composible. There is a composition function for fabrications called :js:`assemble` which takes a function to combine ASTs and a list of fabrications as arguments. The combining function gets us a single AST and the rest of the metadata being carried by the fabrications has a known means of combination. The result is a single AST and a single body of metadata out of which a single fabrication is made.
+
+At the moment, the only additional information fabrications carry is a substitution map of variable names and the expressions that they will need to be initialized with. The substitution map is used to "hoist" global references to the top of the scope being constructed. When an AST is constructed that depends on one of these substitutions, it refers to a variable by the name specified as a key in the map.
 
 Escaping Special Variable Names
 -------------------------------
@@ -205,7 +207,7 @@ For example, if we have Shen code like :shen:`(map F Xs)` and :shen:`F` is known
 
 The transpiler would have to keep track of additional information like which functions are always sync, which are always async and which can be one or the other and based on what criteria.
 
-Now that fabrs have been re-introduced, they could be used to carry result context information like whether there are any async calls down a branch of an AST.
+Now that fabrications have been re-introduced, they could be used to carry other construction result metadata like whether an AST needs to be in an async function or calls async functions.
 
 Historical and Abandoned Design
 ===============================

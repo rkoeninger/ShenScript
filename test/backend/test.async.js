@@ -5,14 +5,14 @@ const backend                = require('../../lib/backend');
 
 const { cons, eternal, evalKl, future, s, valueOf } = backend({ async: true });
 const exec = s => future(evalKl(parseForm(s)));
-const getFunction = name => eternal(name).f; // TODO: don't like this name
+const f = name => eternal(name).f;
 
 describe('async', () => {
   describe('evaluation', () => {
     it('eval-kl', async () => {
       equal(5, await exec('(eval-kl (cons + (cons 2 (cons 3 ()))))'));
-      equal(5, await getFunction('eval-kl')(cons(s`+`, cons(2, cons(3, null)))));
-      equal(5, await getFunction('eval-kl')([s`+`, 2, 3]));
+      equal(5, await f('eval-kl')(cons(s`+`, cons(2, cons(3, null)))));
+      equal(5, await f('eval-kl')([s`+`, 2, 3]));
       equal(5, await evalKl(cons(s`+`, cons(2, cons(3, null)))));
       equal(5, await evalKl([s`+`, 2, 3]));
     });
@@ -129,7 +129,7 @@ describe('async', () => {
   describe('recursion', () => {
     forEach([[0, 1], [5, 120], [7, 5040]]).it('functions should be able to call themselves', async (n, r) => {
       await exec('(defun fac (N) (if (= 0 N) 1 (* N (fac (- N 1)))))');
-      equal(r, await future(getFunction('fac')(n)));
+      equal(r, await future(f('fac')(n)));
     });
     describe('tail recursion', () => {
       const countDown = async body => {

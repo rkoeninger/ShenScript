@@ -21,6 +21,7 @@
     "parsimmon": "^1.12.1",
     "rimraf": "^2.6.3",
     "tar": "^4.4.10",
+    "tempfile": "^3.0.0",
     "webpack": "^4.35.3",
     "webpack-cli": "^3.3.5"
   },

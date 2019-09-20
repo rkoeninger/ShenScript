@@ -1,9 +1,13 @@
+const dump = process.argv.includes('dump');
+
 const fs            = require('fs');
+const tempfile      = require('tempfile');
 const config        = require('../../lib/config.node');
 const backend       = require('../../lib/backend');
 const asyncKernel   = require('../../dist/kernel.async');
 const syncKernel    = require('../../dist/kernel.sync');
 const { testsPath } = require('../../scripts/config');
+const { formatDuration, formatGrid, measure } = require('../../scripts/utils');
 
 const InStream = class {
   constructor(buf) {
@@ -23,25 +27,23 @@ const OutStream = class {
   fromCharCodes() { return String.fromCharCode(...this.buffer); }
 };
 
-const formatDuration = x =>
-  [[x / 60000, 'm'], [x / 1000 % 60, 's'], [x % 1000, 'ms']]
-    .filter(([n, _]) => n >= 1)
-    .map(([n, l]) => `${Math.floor(n)}${l}`)
-    .join(', ');
-
-const isSingleSyncStackOverflow = (async, failures, stoutput) => {
-  const text = stoutput.fromCharCodes();
+const isSingleSyncStackOverflow = (async, failures, outputLog) => {
   const message = 'Maximum call stack size exceeded';
-  const firstIndex = text.indexOf(message);
-  const lastIndex = text.lastIndexOf(message);
-  return !async && failures === 1 && firstIndex >= 0 && firstIndex === lastIndex;
+  const firstIndex = outputLog.indexOf(message);
+  const lastIndex = outputLog.lastIndexOf(message);
+  return !async && failures === 1 && firstIndex >= 0 && firstIndex === lastIndex ? 1 : 0;
 };
 
-const runTests = async async => {
-  const start = Date.now();
-  console.log(`creating kernel in ${async ? 'async' : 'sync'} mode...`);
+const formatResult = (failures, ignored) =>
+    failures > ignored ? `${failures - ignored} (${ignored} ignored)` :
+    ignored > 0 ? `success (${ignored} failures ignored)` :
+    'success';
+
+const run = async async => {
   const stoutput = new OutStream();
-  const { evalKl, s, valueOf } = await (async ? asyncKernel : syncKernel)(backend({
+
+  console.log(`- creating backend in ${async ? 'async' : 'sync'} mode...`);
+  const measureBackend = measure(() => backend({
     ...config,
     async,
     InStream,
@@ -49,39 +51,55 @@ const runTests = async async => {
     openRead: path => new InStream(fs.readFileSync(path)),
     stoutput
   }));
-  console.log(`kernel ready: ${formatDuration(Date.now() - start)}`);
-  console.log('running test suite...');
-  await evalKl([s`cd`, testsPath]);
-  await evalKl([s`load`, 'README.shen']);
-  await evalKl([s`load`, 'tests.shen']);
-  const duration = Date.now() - start;
-  const failures = valueOf('test-harness.*failed*');
-  const ignored = isSingleSyncStackOverflow(async, failures, stoutput);
+  const $ = measureBackend.result;
+  console.log(`  created in ${formatDuration(measureBackend.duration)}`);
 
-  if (ignored) {
-    console.log(`${failures} failures ignored.`);
-  } else if (failures > 0) {
-    console.error(`${failures} tests failed.`);
-    console.error('test output:');
-    console.error(stoutput.fromCharCodes());
-  } else {
-    console.log(`all tests passed.`);
+  console.log(`- creating kernel in ${async ? 'async' : 'sync'} mode...`);
+  const measureCreate = await measure(() => (async ? asyncKernel : syncKernel)($));
+  const { evalKl, s, valueOf } = measureCreate.result;
+  console.log(`  created in ${formatDuration(measureCreate.duration)}`);
+
+  console.log('- running test suite...');
+  const measureRun = await measure(async () => {
+    await evalKl([s`cd`, testsPath]);
+    await evalKl([s`load`, 'README.shen']);
+    await evalKl([s`load`, 'tests.shen']);
+  });
+  const outputLog = stoutput.fromCharCodes();
+  const failures = valueOf('test-harness.*failed*');
+  const ignored = isSingleSyncStackOverflow(async, failures, outputLog);
+  console.log(`  ran in ${formatDuration(measureRun.duration)}, ${formatResult(failures, ignored)}`);
+
+  if (failures > ignored) {
+    if (dump) {
+      console.log();
+      console.log(outputLog);
+    } else {
+      const outputPath = tempfile('.log');
+      fs.writeFileSync(outputPath, outputLog);
+      console.log(`  output log written to ${outputPath}`);
+    }
   }
 
-  console.log(`total time elapsed: ${formatDuration(duration)}`);
-  return [failures, ignored, duration];
+  console.log();
+  return { failures, ignored, duration: measureRun.duration };
 };
 
-const pad = (len, fill, s) => s + fill.repeat(len - s.length);
-
 (async () => {
-  const [syncFailures, syncIgnored, syncDuration] = await runTests(false);
-  const [asyncFailures, asyncIgnored, asyncDuration] = await runTests(true);
-  console.log();
-  console.log('---------------------------------------------------');
-  console.log(`| sync  | ${pad(20, ' ', syncFailures > 0 ? `${syncFailures} failed${syncIgnored ? ' (ignored)' : ''}` : 'all passed')} | ${pad(16, ' ', formatDuration(syncDuration))} |`);
-  console.log(`| async | ${pad(20, ' ', asyncFailures > 0 ? `${asyncFailures} failed${asyncIgnored ? ' (ignored)' : ''}` : 'all passed')} | ${pad(16, ' ', formatDuration(asyncDuration))} |`);
-  console.log(`| both  |                      | ${pad(16, ' ', formatDuration(syncDuration + asyncDuration))} |`);
-  console.log('---------------------------------------------------');
-  process.exit((syncFailures === 0 || syncIgnored) && (asyncFailures === 0 || asyncIgnored) ? 0 : 1);
+  const sync = await run(false);
+  const async = await run(true);
+  const total = {
+    failures: sync.failures + async.failures,
+    ignored: sync.ignored + async.ignored,
+    duration: sync.duration + async.duration
+  };
+
+  console.log(formatGrid(
+    ['sync',  formatResult(sync.failures,  sync.ignored),   formatDuration(sync.duration)],
+    ['async', formatResult(async.failures, async.ignored),  formatDuration(async.duration)],
+    ['total', formatResult(total.failures,  total.ignored), formatDuration(total.duration)]));
+
+  if (total.failures > total.ignored) {
+    process.exit(1);
+  }
 })();

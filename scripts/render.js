@@ -3,52 +3,55 @@ const { parseKernel } = require('./parser');
 const backend         = require('../lib/backend');
 const { Arrow, Assign, Block, Const, Id, Member, Program, Return, Statement, generate } = require('../lib/ast');
 const { defuns, statements } = parseKernel();
-
-const formatDuration = x =>
-  [[x / 60000, 'm'], [x / 1000 % 60, 's'], [x % 1000, 'ms']]
-    .filter(([n, _]) => n >= 1)
-    .map(([n, l]) => `${Math.floor(n)}${l}`)
-    .join(', ');
+const { formatDuration, formatGrid, measure } = require('./utils');
 
 const render = async => {
-  const start = Date.now();
-  console.log(`creating backend in ${async ? 'async' : 'sync'} mode...`);
-  const { assemble, construct } = backend({ async });
-  console.log(`backend ready: ${formatDuration(Date.now() - start)}`);
-  const renderStart = Date.now();
-  const body = assemble(
-    (...asts) => Block(...asts.map(Statement)),
-    ...[...defuns, ...statements].map(construct));
-  const syntax = generate(
-    Program([Statement(Assign(
-      Member(Id('module'), Id('exports')),
-      Arrow(
-        [Id('$')],
-        Block(
-          ...Object.entries(body.subs).map(([key, value]) => Const(Id(key), value)),
-          ...body.ast.body,
-          Return(Id('$'))),
-        async)))]));
-  const renderTime = Date.now() - renderStart;
-  console.log(`kernel rendered: ${formatDuration(renderTime)}`);
-  console.log(`${async ? 'async' : 'sync '} kernel: ${syntax.length} chars`);
-  console.log('writing file...');
+  console.log(`- creating backend in ${async ? 'async' : 'sync'} mode...`);
+  const measureBackend = measure(() => backend({ async }));
+  const { assemble, construct } = measureBackend.result;
+  console.log(`  created in ${formatDuration(measureBackend.duration)}`);
 
-  if (!fs.existsSync('dist')) {
-    fs.mkdirSync('dist');
-  }
+  console.log('- rendering kernel...');
+  const measureRender = measure(() => {
+    const body = assemble(
+      (...asts) => Block(...asts.map(Statement)),
+      ...[...defuns, ...statements].map(construct));
+    return generate(
+      Program([Statement(Assign(
+        Member(Id('module'), Id('exports')),
+        Arrow(
+          [Id('$')],
+          Block(
+            ...Object.entries(body.subs).map(([key, value]) => Const(Id(key), value)),
+            ...body.ast.body,
+            Return(Id('$'))),
+          async)))]));
+  });
+  const syntax = measureRender.result;
+  console.log(`  rendered in ${formatDuration(measureRender.duration)}, ${syntax.length} chars`);
 
-  fs.writeFileSync(`dist/kernel.${async ? 'async' : 'sync'}.js`, syntax);
-  return [syntax.length, renderTime];
+  console.log('- writing file...');
+  const measureWrite = measure(() => {
+    if (!fs.existsSync('dist')) {
+      fs.mkdirSync('dist');
+    }
+
+    fs.writeFileSync(`dist/kernel.${async ? 'async' : 'sync'}.js`, syntax);
+  });
+  console.log(`  written in ${formatDuration(measureWrite.duration)}`);
+  console.log();
+
+  return { size: syntax.length, duration: measureRender.duration };
 };
 
-const pad = (len, fill, s) => s + fill.repeat(len - s.length);
+const sync = render(false);
+const async = render(true);
+const total = {
+  size: sync.size + async.size,
+  duration: sync.duration + async.duration
+};
 
-const [syncSize, syncDuration] = render(false);
-const [asyncSize, asyncDuration] = render(true);
-console.log();
-console.log('-----------------------------------------');
-console.log(`| sync  | ${pad(14, ' ', syncSize + ' chars')} | ${pad(12, ' ', formatDuration(syncDuration))} |`);
-console.log(`| async | ${pad(14, ' ', asyncSize + ' chars')} | ${pad(12, ' ', formatDuration(asyncDuration))} |`);
-console.log(`| both  | ${pad(14, ' ', syncSize + asyncSize + ' chars')} | ${pad(12, ' ', formatDuration(syncDuration + asyncDuration))} |`);
-console.log('-----------------------------------------');
+console.log(formatGrid(
+  ['sync',  `${sync.size} chars`,  formatDuration(sync.duration)],
+  ['async', `${async.size} chars`, formatDuration(async.duration)],
+  ['total', `${total.size} chars`, formatDuration(total.duration)]));

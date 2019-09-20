@@ -3,6 +3,7 @@ const fs                            = require('fs');
 const rimraf                        = require('rimraf');
 const tar                           = require('tar');
 const { kernelVersion, kernelPath } = require('./config');
+const { formatGrid }                = require('./utils');
 
 const request = url => new Promise((resolve, reject) => {
   follow[url.startsWith('https:') ? 'https' : 'http'].get(url, r => {
@@ -31,6 +32,7 @@ const fetch = async () => {
   await tar.extract({ file: kernelArchiveName, unlink: true });
   fs.renameSync(kernelFolderName, kernelPath);
   fs.unlinkSync(kernelArchiveName);
+  return formatGrid([`Shen ${kernelVersion}`, `${data.length} chars`]);
 };
 
 fetch().then(console.log, console.error);

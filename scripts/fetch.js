@@ -2,7 +2,7 @@ const follow                        = require('follow-redirects');
 const fs                            = require('fs');
 const rimraf                        = require('rimraf');
 const tar                           = require('tar');
-const { kernelVersion, kernelPath } = require('../lib/config');
+const { kernelVersion, kernelPath } = require('./config');
 
 const request = url => new Promise((resolve, reject) => {
   follow[url.startsWith('https:') ? 'https' : 'http'].get(url, r => {

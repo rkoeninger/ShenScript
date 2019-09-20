@@ -1,8 +1,9 @@
-const fs          = require('fs');
-const config      = require('../../lib/config.node');
-const backend     = require('../../lib/backend');
-const asyncKernel = require('../../dist/kernel.async');
-const syncKernel  = require('../../dist/kernel.sync');
+const fs            = require('fs');
+const config        = require('../../lib/config.node');
+const backend       = require('../../lib/backend');
+const asyncKernel   = require('../../dist/kernel.async');
+const syncKernel    = require('../../dist/kernel.sync');
+const { testsPath } = require('../../scripts/config');
 
 const InStream = class {
   constructor(buf) {
@@ -50,7 +51,7 @@ const runTests = async async => {
   }));
   console.log(`kernel ready: ${formatDuration(Date.now() - start)}`);
   console.log('running test suite...');
-  await evalKl([s`cd`, config.testsPath]);
+  await evalKl([s`cd`, testsPath]);
   await evalKl([s`load`, 'README.shen']);
   await evalKl([s`load`, 'tests.shen']);
   const duration = Date.now() - start;

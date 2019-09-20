@@ -46,13 +46,5 @@ describe('sync', () => {
         equal(3, exec('(js.ast.eval (js.ast.binary "+" (js.ast.literal 1) (js.ast.literal 2)))'));
       });
     });
-    describe('inline', () => {
-      it('should embed ast in generated code at target site', () => {
-        equal(3, exec('(js.ast.inline (js.ast.binary "+" (js.ast.literal 1) (js.ast.literal 2)))'));
-      });
-      it('should be able to refer to surrounding variables', () => {
-        equal('abcdef', exec('(let X "abc" (js.ast.inline (js.ast.binary "+" (js.ast.safe-id "X") (js.ast.literal "def"))))'));
-      });
-    });
   });
 });

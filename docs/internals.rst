@@ -715,12 +715,6 @@ AST Evaluation Functions
    :param ast Ast: JavaScript AST.
    :returns:       Whatever the code the AST represents evaluates to.
 
-.. function:: (js.ast.inline Ast)
-
-   Syntax pre-processor that evaluates Shen code provided as an argument and then inlines the resuling JavaScript AST in the surround rendered JavaScript at that location.
-
-   :param Ast: Code that will build a JavaScript AST.
-
 .. function:: (js.ast.render Ast)
 
    Renders the string source code representation of a JavaScript AST.

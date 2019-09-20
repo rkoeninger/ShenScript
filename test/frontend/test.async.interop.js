@@ -41,16 +41,5 @@ const frontend      = require('../../lib/frontend.node');
         });
       });
     });
-    describe('ast', () => {
-      describe('inline', () => {
-        it('should embed ast in generated code at target site', async () => {
-          // TODO: these don't work in async mode for some reason
-          // equal(3, await exec('(js.ast.inline (js.ast.binary "+" (js.ast.literal 1) (js.ast.literal 2)))'));
-        });
-        it('should be able to refer to surrounding variables', async () => {
-          // equal('abcdef', await exec('(let X "abc" (js.ast.inline (js.ast.binary "+" (js.ast.safe-id "X") (js.ast.literal "def"))))'));
-        });
-      });
-    });
   });
 })();

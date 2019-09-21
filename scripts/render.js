@@ -1,7 +1,10 @@
 const fs              = require('fs');
 const { parseKernel } = require('./parser');
 const backend         = require('../lib/backend');
-const { Arrow, Assign, Block, Const, Id, Member, Program, Return, Statement, generate } = require('../lib/ast');
+const {
+  Arrow, Assign, Block, Call, Const, Id, Literal, Member, Program, Return, Statement,
+  generate
+} = require('../lib/ast');
 const { defuns, statements } = parseKernel();
 const { formatDuration, formatGrid, measure } = require('./utils');
 
@@ -14,8 +17,10 @@ const render = async => {
   console.log('- rendering kernel...');
   const measureRender = measure(() => {
     const body = assemble(
-      (...asts) => Block(...asts.map(Statement)),
-      ...[...defuns, ...statements].map(construct));
+      Block,
+      ...defuns.map(construct),
+      Assign(Id('$'), Call(Call(Id('require'), [Literal('../lib/overrides')]), [Id('$')])),
+      ...statements.map(construct));
     return generate(
       Program([Statement(Assign(
         Member(Id('module'), Id('exports')),

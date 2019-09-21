@@ -31,12 +31,12 @@
   },
   "scripts": {
     "lint": "eslint index.js lib/**/*.js scripts/**/*.js test/**/*.js",
-    "test": "mocha test/backend/test.*.js test/frontend/test.*.js --reporter dot",
+    "test": "mocha test/backend/test.*.js test/frontend/test.*.js --reporter dot --timeout 5000",
     "fetch-kernel": "node scripts/fetch.js",
-    "test-backend": "mocha test/backend/test.*.js --reporter dot",
+    "test-backend": "mocha test/backend/test.*.js --reporter dot --timeout 5000",
     "render-kernel": "node scripts/render.js",
     "test-kernel": "node test/kernel/test.kernel.js",
-    "test-frontend": "mocha test/frontend/test.*.js --reporter dot",
+    "test-frontend": "mocha test/frontend/test.*.js --reporter dot --timeout 5000",
     "repl": "node scripts/repl.js",
     "start": "webpack-cli --watch",
     "bundle": "webpack-cli"

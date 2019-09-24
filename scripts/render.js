@@ -5,13 +5,13 @@ const {
   Arrow, Assign, Block, Call, Const, Id, Literal, Member, Program, Return, Statement,
   generate
 } = require('../lib/ast');
-const { defuns, statements } = parseKernel();
+const defuns = parseKernel();
 const { formatDuration, formatGrid, measure } = require('./utils');
 
 const render = async => {
   console.log(`- creating backend in ${async ? 'async' : 'sync'} mode...`);
   const measureBackend = measure(() => backend({ async }));
-  const { assemble, construct } = measureBackend.result;
+  const { assemble, construct, s } = measureBackend.result;
   console.log(`  created in ${formatDuration(measureBackend.duration)}`);
 
   console.log('- rendering kernel...');
@@ -20,7 +20,7 @@ const render = async => {
       Block,
       ...defuns.map(construct),
       Assign(Id('$'), Call(Call(Id('require'), [Literal('../lib/overrides')]), [Id('$')])),
-      ...statements.map(construct));
+      assemble(Statement, construct([s`shen.initialize`])));
     return generate(
       Program([Statement(Assign(
         Member(Id('module'), Id('exports')),

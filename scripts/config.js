@@ -7,6 +7,6 @@ module.exports = {
   klFiles: [
     'toplevel', 'core',   'sys',          'dict',  'sequent',
     'yacc',     'reader', 'prolog',       'track', 'load',
-    'writer',   'macros', 'declarations', 'types', 't-star'
+    'writer',   'macros', 'declarations', 'types', 't-star', 'init'
   ]
 };

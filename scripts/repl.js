@@ -32,7 +32,7 @@ const OutStream = class {
 };
 
 (async () => {
-  const { caller, toList } = frontend(await kernel(backend({
+  const { caller, toList } = await frontend(await kernel(backend({
     ...config,
     async: true,
     InStream,

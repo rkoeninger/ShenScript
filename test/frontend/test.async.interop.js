@@ -4,7 +4,7 @@ const kernel        = require('../../dist/kernel.async');
 const frontend      = require('../../lib/frontend.node');
 
 (async () => {
-  const $ = frontend(await kernel(backend({ async: true })));
+  const $ = await frontend(await kernel(backend({ async: true })));
   const { caller, equate, exec, isArray, toList } = $;
 
   describe('async', () => {

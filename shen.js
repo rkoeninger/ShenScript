@@ -13,6 +13,8 @@ module.exports = (options = {}) => {
   const config = require(`./lib/config.${target}`);
   const kernel = require(`./dist/kernel.${async ? 'async' : 'sync'}`);
   const frontend = require(`./lib/frontend.${target}`);
-  const $ = kernel(backend({ ...config, ...options }));
-  return async ? $.then(frontend) : frontend($);
+
+  return async
+    ? (async () => await frontend(await kernel(backend({ ...config, ...options }))))()
+    : frontend(kernel(backend({ ...config, ...options })));
 };

@@ -7,7 +7,7 @@ const {
 } = require('../lib/ast');
 const { formatDuration, formatGrid, measure } = require('./utils');
 
-const render = async => {
+const render = (async, defuns) => {
   console.log(`- creating backend in ${async ? 'async' : 'sync'} mode...`);
   const measureBackend = measure(() => backend({ async }));
   const { assemble, construct, s } = measureBackend.result;
@@ -49,12 +49,12 @@ const render = async => {
 };
 
 console.log('- parsing kernel...');
-const { duration: parseDuration, result: defuns } = measure(parseKernel);
-console.log(`  parsed in ${formatDuration(parseDuration)}`);
+const measureParse = measure(parseKernel);
+console.log(`  parsed in ${formatDuration(measureParse.duration)}`);
 console.log();
 
-const sync = render(false);
-const async = render(true);
+const sync = render(false, measureParse.result);
+const async = render(true, measureParse.result);
 const total = {
   size: sync.size + async.size,
   duration: sync.duration + async.duration

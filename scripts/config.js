@@ -21,6 +21,7 @@ module.exports = {
     'types',
     'writer',
     'yacc',
-    'extension-features'
+    'extension-features',
+    'extension-launcher'
   ]
 };

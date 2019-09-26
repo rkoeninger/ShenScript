@@ -20,6 +20,7 @@ module.exports = {
     'track',
     'types',
     'writer',
-    'yacc'
+    'yacc',
+    'extension-features'
   ]
 };

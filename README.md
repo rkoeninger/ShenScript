@@ -14,13 +14,17 @@ An implementation of the [Shen Language](http://www.shenlanguage.org) by [Mark T
   * Async operations are transparent to written Shen code.
   * Easy interop: JS can be called from Shen, Shen can be called from JS.
   * REPL works on command line in Node.js.
-  * Fairly small deployable (\~633KB uncompressed, \~76KB compressed).
+  * Fairly small bundle (\~1.2MB uncompressed, \~170KB compressed).
+  * Decent web startup time (\~50ms in Chromium, \~180ms in Firefox).
 
 Still in progress:
 
-  * Speed up async performance (sync test suite time: \~12s, async: \~64s).
-    * Web startup time is \~1200ms on Chrome, \~15s on Firefox in async mode.
-  * Pre-supply helpful async I/O implementations for loading in WebWorker, command line, etc.
+  * Web workers:
+    * Startup runtime in a worker.
+    * Be able to create a new environment in a separate worker (`shen-script.new`).
+  * Continue to improve async performance.
+    * Or if overall perf improves enough, remove sync version of kernel.
+  * Interactive in-browser environment with UI.
 
 ## Prerequisites
 

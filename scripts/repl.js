@@ -43,5 +43,5 @@ const OutStream = class {
     stoutput: new OutStream(process.stdout, 'stoutput'),
     sterror:  new OutStream(process.stderr, 'sterror')
   })));
-  await evalShen([s`shen.shen`]);
+  await evalShen([s`shen.repl`]);
 })();

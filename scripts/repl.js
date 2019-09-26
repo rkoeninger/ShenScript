@@ -32,7 +32,7 @@ const OutStream = class {
 };
 
 (async () => {
-  const { evalShen, s } = frontend(await kernel(backend({
+  const { caller, toList } = frontend(await kernel(backend({
     ...config,
     async: true,
     InStream,
@@ -43,5 +43,5 @@ const OutStream = class {
     stoutput: new OutStream(process.stdout, 'stoutput'),
     sterror:  new OutStream(process.stderr, 'sterror')
   })));
-  await evalShen([s`shen.shen`]);
+  await caller('shen.x.launcher.main')(toList(['shen', 'repl']));
 })();

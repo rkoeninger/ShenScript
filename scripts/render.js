@@ -5,13 +5,12 @@ const {
   Arrow, Assign, Block, Call, Const, Id, Literal, Member, Program, Return, Statement,
   generate
 } = require('../lib/ast');
-const { defuns, statements } = parseKernel();
 const { formatDuration, formatGrid, measure } = require('./utils');
 
-const render = async => {
+const render = (async, defuns) => {
   console.log(`- creating backend in ${async ? 'async' : 'sync'} mode...`);
   const measureBackend = measure(() => backend({ async }));
-  const { assemble, construct } = measureBackend.result;
+  const { assemble, construct, s } = measureBackend.result;
   console.log(`  created in ${formatDuration(measureBackend.duration)}`);
 
   console.log('- rendering kernel...');
@@ -20,7 +19,7 @@ const render = async => {
       Block,
       ...defuns.map(construct),
       Assign(Id('$'), Call(Call(Id('require'), [Literal('../lib/overrides')]), [Id('$')])),
-      ...statements.map(construct));
+      assemble(Statement, construct([s`shen.initialise`])));
     return generate(
       Program([Statement(Assign(
         Member(Id('module'), Id('exports')),
@@ -49,8 +48,13 @@ const render = async => {
   return { size: syntax.length, duration: measureRender.duration };
 };
 
-const sync = render(false);
-const async = render(true);
+console.log('- parsing kernel...');
+const measureParse = measure(parseKernel);
+console.log(`  parsed in ${formatDuration(measureParse.duration)}`);
+console.log();
+
+const sync = render(false, measureParse.result);
+const async = render(true, measureParse.result);
 const total = {
   size: sync.size + async.size,
   duration: sync.duration + async.duration

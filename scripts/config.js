@@ -1,12 +1,25 @@
 module.exports = {
-  kernelVersion: '21.2',
+  kernelVersion: '22.0',
   kernelPath:    'kernel',
   testsPath:     'kernel/tests',
   klPath:        'kernel/klambda',
   klExt:         '.kl',
   klFiles: [
-    'toplevel', 'core',   'sys',          'dict',  'sequent',
-    'yacc',     'reader', 'prolog',       'track', 'load',
-    'writer',   'macros', 'declarations', 'types', 't-star', 'init'
+    'core',
+    'declarations',
+    'dict',
+    'init',
+    'load',
+    'macros',
+    'prolog',
+    'reader',
+    'sequent',
+    'sys',
+    't-star',
+    'toplevel',
+    'track',
+    'types',
+    'writer',
+    'yacc'
   ]
 };

@@ -5,7 +5,6 @@ const {
   Arrow, Assign, Block, Call, Const, Id, Literal, Member, Program, Return, Statement,
   generate
 } = require('../lib/ast');
-const defuns = parseKernel();
 const { formatDuration, formatGrid, measure } = require('./utils');
 
 const render = async => {
@@ -20,7 +19,7 @@ const render = async => {
       Block,
       ...defuns.map(construct),
       Assign(Id('$'), Call(Call(Id('require'), [Literal('../lib/overrides')]), [Id('$')])),
-      assemble(Statement, construct([s`shen.initialize`])));
+      assemble(Statement, construct([s`shen.initialise`])));
     return generate(
       Program([Statement(Assign(
         Member(Id('module'), Id('exports')),
@@ -48,6 +47,11 @@ const render = async => {
 
   return { size: syntax.length, duration: measureRender.duration };
 };
+
+console.log('- parsing kernel...');
+const { duration: parseDuration, result: defuns } = measure(parseKernel);
+console.log(`  parsed in ${formatDuration(parseDuration)}`);
+console.log();
 
 const sync = render(false);
 const async = render(true);

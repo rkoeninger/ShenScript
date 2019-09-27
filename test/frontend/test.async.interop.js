@@ -3,6 +3,8 @@ const backend       = require('../../lib/backend');
 const kernel        = require('../../dist/kernel.async');
 const frontend      = require('../../lib/frontend.node');
 
+describe('hack', () => it('dummy test so mocha runs the others', () => ok(true)));
+
 (async () => {
   const $ = await frontend(await kernel(backend({ async: true })));
   const { caller, equate, exec, isArray, toList } = $;

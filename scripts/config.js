@@ -1,5 +1,5 @@
 module.exports = {
-  kernelVersion: '22.0',
+  kernelVersion: '22.1',
   kernelPath:    'kernel',
   testsPath:     'kernel/tests',
   klPath:        'kernel/klambda',

@@ -1,9 +1,9 @@
 const fs                    = require('fs');
 const { addAsyncFunctions } = require('awaitify-stream');
-const config                = require('../lib/config.node');
-const backend               = require('../lib/backend');
-const kernel                = require('../kernel/js/kernel.async');
-const frontend              = require('../lib/frontend.node');
+const config                = require('../lib/config.node.js');
+const backend               = require('../lib/backend.js');
+const kernel                = require('../kernel/js/kernel.async.js');
+const frontend              = require('../lib/frontend.node.js');
 
 const InStream = class {
   constructor(stream, name) {

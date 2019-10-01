@@ -1,11 +1,11 @@
 const fs              = require('fs');
-const { parseKernel } = require('./parser');
-const backend         = require('../lib/backend');
+const { parseKernel } = require('./parser.js');
+const backend         = require('../lib/backend.js');
 const {
   Arrow, Assign, Block, Call, Const, Id, Literal, Member, Program, Return, Statement,
   generate
-} = require('../lib/ast');
-const { formatDuration, formatGrid, measure } = require('./utils');
+} = require('../lib/ast.js');
+const { formatDuration, formatGrid, measure } = require('./utils.js');
 
 const render = (async, defuns) => {
   console.log(`- creating backend in ${async ? 'async' : 'sync'} mode...`);

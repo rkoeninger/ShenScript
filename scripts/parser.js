@@ -1,7 +1,7 @@
 const fs                                      = require('fs');
 const { alt, createLanguage, regexp, string } = require('parsimmon');
-const { klPath, klFiles, klExt }              = require('./config');
-const { flatMap }                             = require('../lib/utils');
+const { klPath, klFiles, klExt }              = require('./config.js');
+const { flatMap }                             = require('../lib/utils.js');
 
 const language = createLanguage({
   whitespace: _ => regexp(/\s*/m),

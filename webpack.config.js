@@ -1,13 +1,13 @@
 const path = require('path');
 
-module.exports = {
-  mode: 'development',
-  entry: './index.js',
+module.exports = env => ({
+  mode: env.mode,
+  entry: env && env.node ? './shen.js' : './index.js',
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'index.js'
+    path: path.resolve(__dirname, env && env.node ? 'dist/node' : 'dist/web'),
+    filename: env && env.node ? 'shen.js' : 'index.js'
   },
   stats: {
     warningsFilter: w => w.includes('the request of a dependency is an expression')
   }
-};
+});

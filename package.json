@@ -38,7 +38,8 @@
     "test-kernel": "node test/kernel/test.kernel.js",
     "test-frontend": "mocha test/frontend/test.*.js --reporter dot --timeout 5000",
     "repl": "node scripts/repl.js",
-    "start": "webpack-cli --watch",
-    "bundle": "webpack-cli"
+    "start": "webpack-cli --watch --env.web --env.mode=development",
+    "bundle-web": "webpack-cli --env.web --env.mode=development",
+    "bundle-node": "webpack-cli --env.node --env.mode=development"
   }
 }

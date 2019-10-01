@@ -1,6 +1,6 @@
 const { equal, ok } = require('assert');
 const backend       = require('../../lib/backend');
-const kernel        = require('../../dist/kernel.sync');
+const kernel        = require('../../kernel/js/kernel.sync');
 const frontend      = require('../../lib/frontend.node');
 
 (async () => {

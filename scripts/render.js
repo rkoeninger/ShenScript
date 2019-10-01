@@ -18,7 +18,7 @@ const render = (async, defuns) => {
     const body = assemble(
       Block,
       ...defuns.map(construct),
-      Assign(Id('$'), Call(Call(Id('require'), [Literal('../lib/overrides')]), [Id('$')])),
+      Assign(Id('$'), Call(Call(Id('require'), [Literal('../../lib/overrides')]), [Id('$')])),
       assemble(Statement, construct([s`shen.initialise`])));
     return generate(
       Program([Statement(Assign(
@@ -36,11 +36,11 @@ const render = (async, defuns) => {
 
   console.log('- writing file...');
   const measureWrite = measure(() => {
-    if (!fs.existsSync('dist')) {
-      fs.mkdirSync('dist');
+    if (!fs.existsSync('kernel/js')) {
+      fs.mkdirSync('kernel/js');
     }
 
-    fs.writeFileSync(`dist/kernel.${async ? 'async' : 'sync'}.js`, syntax);
+    fs.writeFileSync(`kernel/js/kernel.${async ? 'async' : 'sync'}.js`, syntax);
   });
   console.log(`  written in ${formatDuration(measureWrite.duration)}`);
   console.log();

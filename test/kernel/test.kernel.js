@@ -4,8 +4,8 @@ const fs            = require('fs');
 const tempfile      = require('tempfile');
 const config        = require('../../lib/config.node');
 const backend       = require('../../lib/backend');
-const asyncKernel   = require('../../dist/kernel.async');
-const syncKernel    = require('../../dist/kernel.sync');
+const asyncKernel   = require('../../kernel/js/kernel.async');
+const syncKernel    = require('../../kernel/js/kernel.sync');
 const { testsPath } = require('../../scripts/config');
 const { formatDuration, formatGrid, measure } = require('../../scripts/utils');
 

@@ -11,7 +11,7 @@ module.exports = (options = {}) => {
 
   const backend = require('./lib/backend');
   const config = require(`./lib/config.${target}`);
-  const kernel = require(`./dist/kernel.${async ? 'async' : 'sync'}`);
+  const kernel = require(`./kernel/js/kernel.${async ? 'async' : 'sync'}`);
   const frontend = require(`./lib/frontend.${target}`);
 
   return async

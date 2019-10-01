@@ -1,4 +1,4 @@
-const shen = require('./shen');
+const shen = require('./lib/shen');
 
 (async () => {
   try {

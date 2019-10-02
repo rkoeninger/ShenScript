@@ -25,7 +25,7 @@
     "awaitify-stream": "^1.0.2"
   },
   "scripts": {
-    "lint": "eslint index.js lib/**/*.js scripts/**/*.js test/**/*.js",
+    "lint": "eslint index.*.js lib/**/*.js scripts/**/*.js test/**/*.js",
     "test": "npm run test-backend && npm run test-frontend && npm run test-kernel",
     "fetch-kernel": "node scripts/fetch.js",
     "test-backend": "mocha test/backend/test.*.js --reporter dot --timeout 5000",

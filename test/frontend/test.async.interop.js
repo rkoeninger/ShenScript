@@ -1,7 +1,7 @@
 const { equal, ok } = require('assert');
-const backend       = require('../../lib/backend');
-const kernel        = require('../../kernel/js/kernel.async');
-const frontend      = require('../../lib/frontend.node');
+const backend       = require('../../lib/backend.js');
+const kernel        = require('../../kernel/js/kernel.async.js');
+const frontend      = require('../../lib/frontend.node.js');
 
 describe('hack', () => it('dummy test so mocha runs the others', () => ok(true)));
 

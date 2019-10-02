@@ -1,6 +1,6 @@
 const { equal, ok, throws } = require('assert');
 const forEach               = require('mocha-each');
-const backend               = require('../../lib/backend');
+const backend               = require('../../lib/backend.js');
 
 const { asString, cons, isCons, isString, eternal, evalKl, s, equate } = backend();
 const isShenBool = x => x === s`true` || x === s`false`;

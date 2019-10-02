@@ -1,7 +1,7 @@
 const { equal, ok } = require('assert');
-const backend       = require('../../lib/backend');
-const kernel        = require('../../kernel/js/kernel.sync');
-const frontend      = require('../../lib/frontend.node');
+const backend       = require('../../lib/backend.js');
+const kernel        = require('../../kernel/js/kernel.sync.js');
+const frontend      = require('../../lib/frontend.node.js');
 
 (async () => {
   const $ = await frontend(await kernel(backend()));

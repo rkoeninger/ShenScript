@@ -2,12 +2,12 @@ const dump = process.argv.includes('dump');
 
 const fs            = require('fs');
 const tempfile      = require('tempfile');
-const config        = require('../../lib/config.node');
-const backend       = require('../../lib/backend');
-const asyncKernel   = require('../../kernel/js/kernel.async');
-const syncKernel    = require('../../kernel/js/kernel.sync');
-const { testsPath } = require('../../scripts/config');
-const { formatDuration, formatGrid, measure } = require('../../scripts/utils');
+const config        = require('../../lib/config.node.js');
+const backend       = require('../../lib/backend.js');
+const asyncKernel   = require('../../kernel/js/kernel.async.js');
+const syncKernel    = require('../../kernel/js/kernel.sync.js');
+const { testsPath } = require('../../scripts/config.js');
+const { formatDuration, formatGrid, measure } = require('../../scripts/utils.js');
 
 const InStream = class {
   constructor(buf) {

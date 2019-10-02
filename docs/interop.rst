@@ -998,6 +998,68 @@ Web-specific Interop
 
 Only available when running in a browser or browser-based environment like Electron.
 
+.. function:: (dom.append Parent Child)
+
+   Appends :shen:`Child` as the last child node of :shen:`Parent`.
+
+   :param node Parent: DOM Node to append :shen:`Child` to.
+   :param node Child:  DOM Node to append to :shen:`Parent`.
+   :returns:           Empty list.
+
+.. function:: (dom.query Selector)
+
+   Finds an element matching the given CSS selector in the :js:`document`.
+
+   :param string Selector: CSS selector to match with.
+   :returns:               Returns matching node or empty list if not found.
+
+.. function:: (dom.query* Selector)
+
+   Finds all elements matching the given CSS selector in the :js:`document`.
+
+   :param string Selector: CSS selector to match with.
+   :returns:               A Shen list of matching elements.
+
+.. function:: (dom.remove Node)
+
+   Removes :shen:`Node` from its parent. Does nothing if :shen:`Node` has no parent.
+
+   :param node Node: DOM Node to remove.
+   :returns:         Empty list.
+
+.. function:: (dom.replace Target Child)
+
+   Removes :shen:`Target` from its parent and appends :shen:`Child` in its place. Does nothing if :shen:`Target` has no parent.
+
+   :param node Target: DOM Node to replace with :shen:`Child`.
+   :param node Child:  DOM Node to replace :shen:`Target` with.
+   :returns:           Empty list.
+
+.. function:: (dom.tree Tree)
+
+   Builds a DOM Node out of a Shen list tree. Each node in the tree is represented by a list starting with a key symbol. That symbol is the name of the HTML element to be built (e.g. :shen:`div`, :shen:`span`), with the following exceptions:
+
+   :shen:`attr` - Creates a DOM Attribute that will get set on the enclosing element. Must have 2 remaining elements, name and value.
+
+   :shen:`comment` - Builds a :code:`<!-- comment -->` node.
+
+   :shen:`text` - Creates a text node with the string value of the remaining elements concatenated with spaces.
+
+   Child elements are all appended or set on enclosing parents in respective order.
+
+   .. code:: shen
+
+      [div [attr "thing" "whatever"] [p [text "hello!"]]]
+
+   gets built to:
+
+   .. code:: html
+
+      <div thing="whatever"><p>hello!</p></div>
+
+   :param any Tree: Tree of Shen lists.
+   :returns:        DOM Node built from :shen:`Tree`.
+
 .. function:: (web.atob String)
 
    Converts a string to a base64-encoded string.

@@ -1089,12 +1089,26 @@ Only available when running in a browser or browser-based environment like Elect
    :param string Url: URL to GET from.
    :returns:          A string wrapped in a :js:`Promise`.
 
+.. function:: (web.fetch* Urls)
+
+   Does concurrent HTTP GETs on the given URLs and returns the results as a list of strings. Only available when ShenScript is in async mode.
+
+   :param list Urls: A Shen list of URLs to GET from.
+   :returns:         A Shen list of strings wrapped in :js:`Promise`s.
+
 .. function:: (web.fetch-json Url)
 
    Same as web.fetch, but parses received value as JSON.
 
    :param string Url: URL to GET from.
    :returns:          A JSON object wrapped in a :js:`Promise`.
+
+.. function:: (web.fetch-json* Url)
+
+   Same as web.fetch*, but parses received values as JSON.
+
+   :param list Urls: A Shen list of URLs to GET from.
+   :returns:         A Shen list of JSON objects wrapped in :js:`Promise`s.
 
 .. function:: (web.navigator)
 

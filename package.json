@@ -2,17 +2,12 @@
   "name": "ShenScript",
   "version": "0.6.0",
   "description": "Shen for JavaScript",
+  "keywords": ["shen", "language"],
   "author": "Robert Koeninger",
   "license": "BSD-3-Clause",
-  "homepage": "https://github.com/rkoeninger/ShenScript",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/rkoeninger/ShenScript.git"
-  },
-  "bugs": {
-    "url": "https://github.com/rkoeninger/ShenScript/issues"
-  },
-  "main": "shen.js",
+  "repository": "github:rkoeninger/ShenScript",
+  "main": "lib/shen.js",
+  "files": ["lib/*.js", "kernel/js/*.js"],
   "devDependencies": {
     "eslint": "^5.16.0",
     "follow-redirects": "^1.7.0",
@@ -31,15 +26,15 @@
   },
   "scripts": {
     "lint": "eslint index.js lib/**/*.js scripts/**/*.js test/**/*.js",
-    "test": "mocha test/backend/test.*.js test/frontend/test.*.js --reporter dot --timeout 5000 && node test/kernel/test.kernel.js",
+    "test": "npm run test-backend && npm run test-frontend && npm run test-kernel",
     "fetch-kernel": "node scripts/fetch.js",
     "test-backend": "mocha test/backend/test.*.js --reporter dot --timeout 5000",
     "render-kernel": "node scripts/render.js",
     "test-kernel": "node test/kernel/test.kernel.js",
     "test-frontend": "mocha test/frontend/test.*.js --reporter dot --timeout 5000",
     "repl": "node scripts/repl.js",
-    "start": "webpack-cli --watch --env.web --env.mode=development",
-    "bundle-web": "webpack-cli --env.web --env.mode=development",
-    "bundle-node": "webpack-cli --env.node --env.mode=development"
+    "start": "webpack-cli --watch --env.mode=development",
+    "bundle": "webpack-cli --env.mode=development",
+    "bundle-prod": "webpack-cli --env.mode=production"
   }
 }

@@ -14,7 +14,7 @@ An implementation of the [Shen Language](http://www.shenlanguage.org) by [Mark T
   * Async operations are transparent to written Shen code.
   * Easy interop: JS can be called from Shen, Shen can be called from JS.
   * REPL works on command line in Node.js.
-  * Fairly small bundle (\~1.2MB uncompressed, \~170KB compressed).
+  * Fairly small production webpack bundle (\~640KB uncompressed, \~100KB gzip compressed).
   * Decent web startup time (\~50ms in Chromium, \~180ms in Firefox).
 
 Still in progress:
@@ -28,7 +28,7 @@ Still in progress:
 
 ## Prerequisites
 
-Requires recent version (10+) of [Node.js and npm](https://nodejs.org/en/download/) as well as [webpack-cli](https://www.npmjs.com/package/webpack-cli) locally installed and [http-server](https://www.npmjs.com/package/http-server) if you want to run the demo.
+Requires recent version (10+) of [Node.js and npm](https://nodejs.org/en/download/).
 
 ## Building and Testing
 
@@ -41,12 +41,11 @@ Refer to [`.travis.yml`](.travis.yml) for typical build/test process. `test-*` c
 Run the following commands in order to host a simple demo page:
 
 ```bash
-npm install           # Get npm dependencies
-npm start             # Start webpack watch
-http-server -p 8080   # Host the page
+npm install    # Get npm dependencies
+npm start      # Start webpack watch
 ```
 
-If you open a browser on [localhost:8080](http://localhost:8080) a basic webpage will load, and when ready, it will display the load time.
+If you open `index.html` in your browser a basic webpage will load, and when ready, it will display the load time.
 
 If you open the JavaScript console in the developer tools, it is possible to access to the `shen` global object and execute commands:
 

@@ -1043,7 +1043,7 @@ Only available when running in a browser or browser-based environment like Elect
 
    :shen:`comment` - Builds a :code:`<!-- comment -->` node.
 
-   :shen:`text` - Creates a text node with the string value of the remaining elements concatenated with spaces.
+   :shen:`text` - Creates a text node with the string value of the remaining elements concatenated with spaces. Display text must be contained in a text node; "dangling" strings will raise an error.
 
    Child elements are all appended or set on enclosing parents in respective order.
 
@@ -1107,22 +1107,6 @@ Only available when running in a browser or browser-based environment like Elect
 .. function:: (web.window)
 
    Returns the global :js:`window`.
-
-.. function:: (web.worker Param Body)
-
-   :shen:`web.worker-macro`.
-
-.. function:: (web.workers.listen Worker Callback)
-
-   .. danger:: This is not properly implemented.
-
-.. function:: (web.workers.new Code)
-
-   .. danger:: This is not properly implemented.
-
-.. function:: (web.workers.send Worker Message)
-
-   .. danger:: This is not properly implemented.
 
 Node-specific Interop
 ---------------------

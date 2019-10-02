@@ -5,7 +5,7 @@ module.exports = env => ({
   entry: './index.js',
   output: {
     path: path.resolve(__dirname, 'dist/' + env.mode),
-    filename: 'index.js'
+    filename: 'shenScript.js'
   },
   stats: {
     warningsFilter: w => w.includes('the request of a dependency is an expression')

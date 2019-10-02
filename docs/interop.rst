@@ -1006,6 +1006,13 @@ Only available when running in a browser or browser-based environment like Elect
    :param node Child:  DOM Node to append to :shen:`Parent`.
    :returns:           Empty list.
 
+.. function:: (dom.on-ready F)
+
+   Calls the function :shen:`F` when the DOM is loaded and ready. Value returned by callback is ignored.
+
+   :param function F: Function that performs operations requiring the DOM.
+   :returns:          Empty list.
+
 .. function:: (dom.query Selector)
 
    Finds an element matching the given CSS selector in the :js:`document`.

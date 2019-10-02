@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = env => ({
   mode: env.mode,
-  entry: './index.js',
+  entry: `./index.${env.mode}.js`,
   output: {
     path: path.resolve(__dirname, 'dist/' + env.mode),
     filename: 'shenScript.js'

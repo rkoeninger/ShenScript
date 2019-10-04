@@ -10,14 +10,14 @@ const { formatDuration, formatGrid, measure } = require('./utils.js');
 const render = (async, defuns) => {
   console.log(`- creating backend in ${async ? 'async' : 'sync'} mode...`);
   const measureBackend = measure(() => backend({ async }));
-  const { assemble, construct, s } = measureBackend.result;
+  const { assemble, construct, isArray, s } = measureBackend.result;
   console.log(`  created in ${formatDuration(measureBackend.duration)}`);
 
   console.log('- rendering kernel...');
   const measureRender = measure(() => {
     const body = assemble(
       Block,
-      ...defuns.map(construct),
+      ...defuns.filter(isArray).map(construct),
       Assign(Id('$'), Call(Call(Id('require'), [Literal('../../lib/overrides')]), [Id('$')])),
       assemble(Statement, construct([s`shen.initialise`])));
     return generate(

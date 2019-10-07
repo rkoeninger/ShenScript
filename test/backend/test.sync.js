@@ -3,10 +3,10 @@ const forEach               = require('mocha-each');
 const { parseForm }         = require('../../scripts/parser.js');
 const backend               = require('../../lib/backend.js');
 
-const { cons, eternal, evalKl, s, settle, valueOf } = backend();
+const { cons, evalKl, lookup, s, settle, valueOf } = backend();
 const exec = s => settle(evalKl(parseForm(s)));
 const values = [12, null, undefined, 'abc', s`asd`, 0, Infinity, [], cons(1, 2)];
-const f = name => eternal(name).f;
+const f = name => lookup(name).f;
 
 describe('sync', () => {
   describe('evaluation', () => {

@@ -27,9 +27,7 @@ Classes
 
 .. class:: Cell(name)
 
-   Contains mutable pointers to the function and/or the global symbol value by the given name. Should only be created by the :js:`eternal` function.
-
-   Because cells are created upon first retrieval and there is only ever one per name, they are described as "eternal".
+   Contains mutable pointers to the function and/or the global symbol value by the given name. Should only be created by the :js:`lookup` function.
 
    :param string name: The name of the global.
 
@@ -110,11 +108,11 @@ Functions
    :param expr expr: Expression to build.
    :returns:         Rendered fabrication.
 
-.. function:: eternal(name)
+.. function:: lookup(name)
 
-   Retrieves the "eternal" :js:`Cell` for the given name, creating it and adding it to :js:`globals` if it did not already exist.
+   Retrieves the :js:`Cell` for the given name, creating it and adding it to :js:`globals` if it did not already exist.
 
-   Aliased as :js:`e` for brevity in generated code.
+   Aliased as :js:`c` for brevity in generated code.
 
    :param string name: Name of a global function or symbol.
    :returns:           A :js:`Cell` for that name.

@@ -2,10 +2,10 @@ const { equal, ok, throws } = require('assert');
 const forEach               = require('mocha-each');
 const backend               = require('../../lib/backend.js');
 
-const { asString, cons, isCons, isString, eternal, evalKl, s, equate } = backend();
+const { asString, cons, isCons, isString, evalKl, lookup, s, equate } = backend();
 const isShenBool = x => x === s`true` || x === s`false`;
 const values = [12, null, undefined, 'abc', s`asd`, 0, Infinity, [], cons(1, 2)];
-const f = name => eternal(name).f;
+const f = name => lookup(name).f;
 
 describe('primitive', () => {
   describe('math', () => {

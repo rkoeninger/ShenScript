@@ -3,9 +3,9 @@ const forEach                = require('mocha-each');
 const { parseForm }          = require('../../scripts/parser.js');
 const backend                = require('../../lib/backend.js');
 
-const { cons, eternal, evalKl, future, s, valueOf } = backend({ async: true });
+const { cons, evalKl, future, lookup, s, valueOf } = backend({ async: true });
 const exec = s => future(evalKl(parseForm(s)));
-const f = name => eternal(name).f;
+const f = name => lookup(name).f;
 
 describe('async', () => {
   describe('evaluation', () => {

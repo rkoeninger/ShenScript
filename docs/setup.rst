@@ -65,12 +65,12 @@ The :js:`exports` of this module is just a function that constructs a new ShenSc
    :param function cons:      Creates a Cons from a head and tail.
    :param function defun:     Adds function to the global function registry.
    :param function equate:    Determines if two values are equal according to the semantics of Shen.
-   :param function eternal:   Looks up Cell in :js:`globals`, adding one if it doesn't exist yet.
    :param function evalJs:    Evalutes a JavaScript AST in isolated scope with access to :js:`$`.
    :param function evalKl:    Builds and evaluates a KLambda expression tree in isolated scope with access to $.
    :param function future:    The async version of :js:`settle`.
-   :param Map      globals:   Map of symbol names to eternal Cells.
+   :param Map      globals:   Map of symbol names to lookup Cells.
    :param object   inlines:   Post-processing inlines. Each accepts constructed JavaScript ASTs and returns another AST.
+   :param function lookup:    Looks up Cell in :js:`globals`, adding one if it doesn't exist yet.
    :param function settle:    If value is a Trampoline, runs Trampoline and repeats.
    :param function show:      :js:`toString` function. Returns string representation of any value.
    :param function valueOf:   Returns the value of the given global symbol. Raises an error if it is not defined.

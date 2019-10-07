@@ -47,10 +47,10 @@ npm start      # Start webpack watch
 
 If you open `index.html` in your browser a basic webpage will load, and when ready, it will display the load time. (The production webpack bundle does not log anything)
 
-If you open the JavaScript console in the developer tools, it is possible to access to the `shen` global object and execute commands:
+If you open the JavaScript console in the developer tools, it is possible to access to the `$` global object and execute commands:
 
 ```javascript
-shen.exec("(+ 1 1)").then(console.log);
+$.exec("(+ 1 1)").then(console.log);
 ```
 
 Chaining the `then` call is necessary because the environment will be built in `async` mode and `exec` will return a `Promise`.

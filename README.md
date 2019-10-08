@@ -27,10 +27,10 @@ Requires recent version (10+) of [Node.js and npm](https://nodejs.org/en/downloa
 
 ## Building and Testing
 
-Once you've checked out the code, run `npm install` (`npm i`) as you would with any other Node project. The following scripts build and test the project:
+First, run `npm install` as you would with any other Node project. Then run the following scripts build and test the project. Steps need to be run in order - steps after `fetch-kernel` won't work if the kernel hasn't been fetched.
 
   - `test-backend` - Runs `mocha` tests for the basic environment and compiler.
-  - `fetch-kernel` - Downloads the kernel sources from the [shen-sources](https://github.com/Shen-Language/shen-sources.git) project and extract them under `kernel/`.
+  - `fetch-kernel` - Downloads the kernel sources from [shen-sources](https://github.com/Shen-Language/shen-sources.git) to `kernel/`.
   - `render-kernel` - Translates the kernel sources to JavaScript and stores under `kernel/js/`.
   - `test-kernel` - Runs the test suite that comes with the Shen kernel.
   - `test-frontend` - Runs `mocha` tests for helper and interop functions.

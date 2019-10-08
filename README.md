@@ -13,18 +13,13 @@ An implementation of the [Shen Language](http://www.shenlanguage.org) by [Mark T
   * Allows integration with arbitrary I/O.
   * Async operations are transparent to written Shen code.
   * Easy interop: JS can be called from Shen, Shen can be called from JS.
-  * REPL works on command line in Node.js.
   * Fairly small production webpack bundle (\~640KB uncompressed, \~100KB gzip compressed).
-  * Decent web startup time (\~50ms in Chromium, \~180ms in Firefox).
+  * Decent web startup time (\~50ms in Chromium, \~100ms in Firefox).
 
 Still in progress:
 
-  * Web workers:
-    * Startup runtime in a worker.
-    * Be able to create a new environment in a separate worker (`shen-script.new`).
-  * Continue to improve async performance.
-    * Or if overall perf improves enough, remove sync version of kernel.
-  * Interactive in-browser environment with UI.
+  * Continue to improve async performance, ultimately removing the sync version of the kernel.
+  * Interactive in-browser environment with UI in `index.html`.
 
 ## Prerequisites
 
@@ -32,20 +27,23 @@ Requires recent version (10+) of [Node.js and npm](https://nodejs.org/en/downloa
 
 ## Building and Testing
 
-Refer to [`.travis.yml`](.travis.yml) for typical build/test process. `test-*` commands are optional.
+Once you've checked out the code, the following command sequence will get the project built and verified:
+
+  - `npm install` - Retrieve npm packages as you would with any other project.
+  - `npm run test-backend` - The basic environment and compiler is testable out of the box.
+  - `npm run fetch-kernel` - If this is a fresh checkout, or if the Shen kernel version has been updated, running this command will pull the kernel sources from the [shen-sources](https://github.com/Shen-Language/shen-sources.git) project and extract them under `kernel/`.
+  - `npm run render-kernel` - Uses the backend compiler to translate the kernel sources to JavaScript and stores the generated code under `kernel/js/`.
+  - `npm run test-kernel` - Runs the test suite that comes with the Shen kernel.
+  - `npm run test-frontend` - Runs unit tests for helper and interop functions provided by ShenScript.
+  - `npm run lint` - If you make changes, run `lint` to check adherence to style and code quality.
 
 ## Running
 
 ### Demo Page
 
-Run the following commands in order to host a simple demo page:
+Run `npm start` to start webpack watch.
 
-```bash
-npm install    # Get npm dependencies
-npm start      # Start webpack watch
-```
-
-If you open `index.html` in your browser a basic webpage will load, and when ready, it will display the load time. (The production webpack bundle does not log anything)
+If you open `index.html` in your browser a basic webpage will load, and when ready, it will display the load time. (The production webpack bundle does not automatically create a Shen environment and does not log anything.) `index.html` should be viewable without hosting in a web server, but you will not be able to use the `load` function to load additional Shen code if opened from a `file://` path. `http-server` is adequate for hosting in a web server.
 
 If you open the JavaScript console in the developer tools, it is possible to access to the `$` global object and execute commands:
 
@@ -53,14 +51,10 @@ If you open the JavaScript console in the developer tools, it is possible to acc
 $.exec("(+ 1 1)").then(console.log);
 ```
 
-Chaining the `then` call is necessary because the environment will be built in `async` mode and `exec` will return a `Promise`.
-
-For more information refer to the [documentation](https://shenscript.readthedocs.io/en/latest/interop.html).
+Chaining the `then` call is necessary because the environment will be built in `async` mode and `exec` will return a `Promise`. For more information refer to the [documentation](https://shenscript.readthedocs.io/en/latest/interop.html).
 
 ### REPL
 
-Run `npm run repl` to run a command-line REPL. It should have the same behavior as the `shen-cl` REPL. `node.` functions will be available.
+Run `npm run repl` to run a command-line REPL. It should have the same behavior as the `shen-cl` REPL. `node.` functions will be available. Run `(node.exit)` to exit the REPL.
 
-Execute `(node.exit)` to exit the REPL.
-
-Command-line options not yet implemented.
+Neither command-line options nor the `launcher` kernel extension are implemented. ShenScript is not intended to take the form of a standalone executable.

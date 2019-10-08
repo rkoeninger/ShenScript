@@ -25,6 +25,8 @@ Still in progress:
 
 Requires recent version (10+) of [Node.js and npm](https://nodejs.org/en/download/).
 
+Works in most modern browers (Chromium, Firefox, Safari and Edge).
+
 ## Building and Testing
 
 First, run `npm install` as you would with any other Node project. Then run the following scripts build and test the project. Steps need to be run in order - steps after `fetch-kernel` won't work if the kernel hasn't been fetched.

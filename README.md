@@ -27,15 +27,14 @@ Requires recent version (10+) of [Node.js and npm](https://nodejs.org/en/downloa
 
 ## Building and Testing
 
-Once you've checked out the code, the following command sequence will get the project built and verified:
+Once you've checked out the code, run `npm install` (`npm i`) as you would with any other Node project. The following scripts build and test the project:
 
-  - `npm install` - Retrieve npm packages as you would with any other project.
-  - `npm run test-backend` - The basic environment and compiler is testable out of the box.
-  - `npm run fetch-kernel` - If this is a fresh checkout, or if the Shen kernel version has been updated, running this command will pull the kernel sources from the [shen-sources](https://github.com/Shen-Language/shen-sources.git) project and extract them under `kernel/`.
-  - `npm run render-kernel` - Uses the backend compiler to translate the kernel sources to JavaScript and stores the generated code under `kernel/js/`.
-  - `npm run test-kernel` - Runs the test suite that comes with the Shen kernel.
-  - `npm run test-frontend` - Runs unit tests for helper and interop functions provided by ShenScript.
-  - `npm run lint` - If you make changes, run `lint` to check adherence to style and code quality.
+  - `test-backend` - Runs `mocha` tests for the basic environment and compiler.
+  - `fetch-kernel` - Downloads the kernel sources from the [shen-sources](https://github.com/Shen-Language/shen-sources.git) project and extract them under `kernel/`.
+  - `render-kernel` - Translates the kernel sources to JavaScript and stores under `kernel/js/`.
+  - `test-kernel` - Runs the test suite that comes with the Shen kernel.
+  - `test-frontend` - Runs `mocha` tests for helper and interop functions.
+  - `lint` - If you make changes, run `lint` to check adherence to style and code quality.
 
 ## Running
 

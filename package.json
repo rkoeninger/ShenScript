@@ -2,13 +2,22 @@
   "name": "ShenScript",
   "version": "0.6.0",
   "description": "Shen for JavaScript",
-  "keywords": ["shen", "language"],
+  "keywords": [
+    "shen",
+    "language"
+  ],
   "author": "Robert Koeninger",
   "license": "BSD-3-Clause",
   "repository": "github:rkoeninger/ShenScript",
   "main": "lib/shen.js",
-  "files": ["lib/*.js", "kernel/js/*.js"],
+  "files": [
+    "lib/*.js",
+    "kernel/js/*.js"
+  ],
   "devDependencies": {
+    "@babel/core": "^7.6.3",
+    "@babel/preset-env": "^7.6.3",
+    "babel-loader": "^8.0.6",
     "eslint": "^5.16.0",
     "follow-redirects": "^1.7.0",
     "mocha": "^5.2.0",

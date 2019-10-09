@@ -1067,18 +1067,49 @@ Functions for building elements and interacting with the DOM.
 
 .. function:: (dom.append Parent Child)
 
-   Appends :shen:`Child` as the last child node of :shen:`Parent`.
+   Adds :shen:`Child` as the last child node of :shen:`Parent`.
 
    :param node Parent: DOM Node to append :shen:`Child` to.
    :param node Child:  DOM Node to append to :shen:`Parent`.
    :returns:           Empty list.
 
-.. function:: (dom.on-ready F)
+.. function:: (dom.build Tree)
+
+   Builds a DOM Node out of a Shen list tree. Each node in the tree is represented by a list starting with a key symbol. That symbol is the name of the HTML element to be built (e.g. :shen:`div`, :shen:`span`), with a couple of exceptions:
+
+   If the key symbol starts with a :shen:`@` or :shen:`!`, it is interpreted as an attribute (e.g. :shen:`@id`, :shen:`@class`) or an event listener (e.g. :shen:`!click`, :shen:`!mouseover`), respectively. The 2nd element in that list should be the attribute value or the event handler function. An event handler function should take a single argument, the event object.
+
+   String children get built into text nodes.
+
+   Child elements, text nodes, attributes and event handlers are all appended or set on enclosing parents in respective order.
+
+   .. code:: shen
+
+      [div [@id "example"] [p "Click Me!" [!click (/. _ (js.log "hi!"))]]]
+
+   gets built to:
+
+   .. code:: html
+
+      <div id="example"><p>hello!</p></div>
+
+   :param any Tree: Tree of Shen lists.
+   :returns:        DOM Node built from :shen:`Tree`.
+
+.. function:: (dom.onready F)
 
    Calls the function :shen:`F` when the DOM is loaded and ready. Callback takes zero arguments (is a :shen:`freeze`). Value returned by callback is ignored.
 
    :param function F: Function that performs operations requiring the DOM.
    :returns:          Empty list.
+
+.. function:: (dom.prepend Parent Child)
+
+   Adds :shen:`Child` as the first child node of :shen:`Parent`.
+
+   :param node Parent: DOM Node to prepend :shen:`Child` to.
+   :param node Child:  DOM Node to prepend to :shen:`Parent`.
+   :returns:           Empty list.
 
 .. function:: (dom.query Selector)
 
@@ -1108,31 +1139,6 @@ Functions for building elements and interacting with the DOM.
    :param node Target: DOM Node to replace with :shen:`Child`.
    :param node Child:  DOM Node to replace :shen:`Target` with.
    :returns:           Empty list.
-
-.. function:: (dom.tree Tree)
-
-   Builds a DOM Node out of a Shen list tree. Each node in the tree is represented by a list starting with a key symbol. That symbol is the name of the HTML element to be built (e.g. :shen:`div`, :shen:`span`), with the following exceptions:
-
-   :shen:`@` - Creates a DOM Attribute that will get set on the enclosing element. Must have 2 remaining elements, name and value.
-
-   :shen:`!` - Creates an event handler function for an event. Must have 2 remaining elements, event name and callback. Callback takes exactly 1 parameter, the event. Callback return value is ignored.
-
-   :shen:`$` - Creates a text node with the string value of the 1 remaining element, which must be a string. Display text must be contained in a text node; "dangling" strings will raise an error.
-
-   Child elements, attributes and event handlers are all appended or set on enclosing parents in respective order.
-
-   .. code:: shen
-
-      [div [@ "thing" "whatever"] [p [$ "Click Me!"] [! "click" (/. _ (js.log "hi!"))]]]
-
-   gets built to:
-
-   .. code:: html
-
-      <div thing="whatever"><p>hello!</p></div>
-
-   :param any Tree: Tree of Shen lists.
-   :returns:        DOM Node built from :shen:`Tree`.
 
 Node-specific Interop
 ---------------------

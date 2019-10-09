@@ -1008,7 +1008,7 @@ Only available when running in a browser or browser-based environment like Elect
 
 .. function:: (dom.on-ready F)
 
-   Calls the function :shen:`F` when the DOM is loaded and ready. Value returned by callback is ignored.
+   Calls the function :shen:`F` when the DOM is loaded and ready. Callback takes zero arguments (is a :shen:`freeze`). Value returned by callback is ignored.
 
    :param function F: Function that performs operations requiring the DOM.
    :returns:          Empty list.
@@ -1048,9 +1048,9 @@ Only available when running in a browser or browser-based environment like Elect
 
    :shen:`@` - Creates a DOM Attribute that will get set on the enclosing element. Must have 2 remaining elements, name and value.
 
-   :shen:`!` - Creates an event handler function for an event. Must have 2 remaining elements, event name and callback.
+   :shen:`!` - Creates an event handler function for an event. Must have 2 remaining elements, event name and callback. Callback takes exactly 1 parameter, the event. Callback return value is ignored.
 
-   :shen:`$` - Creates a text node with the string value of the remaining elements concatenated with spaces. Display text must be contained in a text node; "dangling" strings will raise an error.
+   :shen:`$` - Creates a text node with the string value of the 1 remaining element, which must be a string. Display text must be contained in a text node; "dangling" strings will raise an error.
 
    Child elements, attributes and event handlers are all appended or set on enclosing parents in respective order.
 

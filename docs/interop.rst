@@ -998,6 +998,73 @@ Web-specific Interop
 
 Only available when running in a browser or browser-based environment like Electron.
 
+.. function:: (web.atob String)
+
+   Converts a string to a base64-encoded string.
+
+   :param string String: Any string.
+
+.. function:: (web.btoa Base64)
+
+   Converts a base64-encoded string to a string.
+
+   :param string String: Any base64 string.
+
+.. function:: (web.confirm? Message)
+
+   Shows a synchronous web confirm pop-up with the given message. Returns Shen :shen:`true` or :shen:`false` depending on whether the user hit "OK" or "Cancel".
+
+   :param string Message: Message to show on the pop-up.
+
+.. function:: (web.document)
+
+   Returns the global :js:`document`.
+
+.. function:: (web.fetch-json Url)
+
+   Same as :shen:`web.fetch-text`, but parses received value as JSON.
+
+   :param string Url: URL to GET from.
+   :returns:          A JSON object wrapped in a :js:`Promise`.
+
+.. function:: (web.fetch-json* Url)
+
+   Same as :shen:`web.fetch-text*`, but parses received values as JSON.
+
+   :param list Urls: A Shen list of URLs to GET from.
+   :returns:         A Shen list of JSON objects wrapped in :js:`Promise`s.
+
+.. function:: (web.fetch-text Url)
+
+   Does an HTTP GET on the given url and returns the result as a string. Only available when ShenScript is in async mode.
+
+   :param string Url: URL to GET from.
+   :returns:          A string wrapped in a :js:`Promise`.
+
+.. function:: (web.fetch-text* Urls)
+
+   Does concurrent HTTP GETs on the given URLs and returns the results as a list of strings. Only available when ShenScript is in async mode.
+
+   :param list Urls: A Shen list of URLs to GET from.
+   :returns:         A Shen list of strings wrapped in :js:`Promise`s.
+
+.. function:: (web.navigator)
+
+   Returns the global :js:`navigator`.
+
+.. function:: (web.self)
+
+   Returns the value of the :js:`self` keyword.
+
+.. function:: (web.window)
+
+   Returns the global :js:`window`.
+
+DOM-specific Interop
+~~~~~~~~~~~~~~~~~~~~
+
+Functions for building elements and interacting with the DOM.
+
 .. function:: (dom.append Parent Child)
 
    Appends :shen:`Child` as the last child node of :shen:`Parent`.
@@ -1066,68 +1133,6 @@ Only available when running in a browser or browser-based environment like Elect
 
    :param any Tree: Tree of Shen lists.
    :returns:        DOM Node built from :shen:`Tree`.
-
-.. function:: (web.atob String)
-
-   Converts a string to a base64-encoded string.
-
-   :param string String: Any string.
-
-.. function:: (web.btoa Base64)
-
-   Converts a base64-encoded string to a string.
-
-   :param string String: Any base64 string.
-
-.. function:: (web.confirm? Message)
-
-   Shows a synchronous web confirm pop-up with the given message. Returns Shen :shen:`true` or :shen:`false` depending on whether the user hit "OK" or "Cancel".
-
-   :param string Message: Message to show on the pop-up.
-
-.. function:: (web.document)
-
-   Returns the global :js:`document`.
-
-.. function:: (web.fetch-json Url)
-
-   Same as :shen:`web.fetch-text`, but parses received value as JSON.
-
-   :param string Url: URL to GET from.
-   :returns:          A JSON object wrapped in a :js:`Promise`.
-
-.. function:: (web.fetch-json* Url)
-
-   Same as :shen:`web.fetch-text*`, but parses received values as JSON.
-
-   :param list Urls: A Shen list of URLs to GET from.
-   :returns:         A Shen list of JSON objects wrapped in :js:`Promise`s.
-
-.. function:: (web.fetch-text Url)
-
-   Does an HTTP GET on the given url and returns the result as a string. Only available when ShenScript is in async mode.
-
-   :param string Url: URL to GET from.
-   :returns:          A string wrapped in a :js:`Promise`.
-
-.. function:: (web.fetch-text* Urls)
-
-   Does concurrent HTTP GETs on the given URLs and returns the results as a list of strings. Only available when ShenScript is in async mode.
-
-   :param list Urls: A Shen list of URLs to GET from.
-   :returns:         A Shen list of strings wrapped in :js:`Promise`s.
-
-.. function:: (web.navigator)
-
-   Returns the global :js:`navigator`.
-
-.. function:: (web.self)
-
-   Returns the value of the :js:`self` keyword.
-
-.. function:: (web.window)
-
-   Returns the global :js:`window`.
 
 Node-specific Interop
 ---------------------

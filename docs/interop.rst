@@ -1094,7 +1094,7 @@ Functions for building elements and interacting with the DOM.
    .. code:: html
 
       <div id="example">
-        <p>hello!</p>
+        <p onclick="console.log('hi!')">Click Me!</p>
       </div>
 
    :param any Tree: Tree of Shen lists.

@@ -31,12 +31,16 @@ Works in most modern browers (Chromium, Firefox, Safari and Edge).
 
 First, run `npm install` as you would with any other Node project. Then run the following scripts build and test the project. Steps need to be run in order - steps after `fetch-kernel` won't work if the kernel hasn't been fetched.
 
-  - `test-backend` - Runs `mocha` tests for the basic environment and compiler.
-  - `fetch-kernel` - Downloads the kernel sources from [shen-sources](https://github.com/Shen-Language/shen-sources.git) to `kernel/`.
-  - `render-kernel` - Translates the kernel sources to JavaScript and stores under `kernel/js/`.
-  - `test-kernel` - Runs the test suite that comes with the Shen kernel.
-  - `test-frontend` - Runs `mocha` tests for helper and interop functions.
-  - `lint` - If you make changes, run `lint` to check adherence to style and code quality.
+| Script          | Description                                                                                                       |
+|:----------------|:------------------------------------------------------------------------------------------------------------------|
+| `test-backend`  | Runs `mocha` tests for the basic environment and compiler.                                                        |
+| `fetch-kernel`  | Downloads the kernel sources from [shen-sources](https://github.com/Shen-Language/shen-sources.git) to `kernel/`. |
+| `render-kernel` | Translates the kernel sources to JavaScript and stores under `kernel/js/`.                                        |
+| `test-kernel`   | Runs the test suite that comes with the Shen kernel.                                                              |
+| `test-frontend` | Runs `mocha` tests for helper and interop functions.                                                              |
+| `bundle`        | Applies babel transforms and webpack's into web-deployable bundle under `dist/development`.                       |
+| `bundle-prod`   | Builds minified bundle in production mode under `dist/production`.                                                |
+| `lint`          | If you make changes, run `lint` to check adherence to style and code quality.                                     |
 
 ## Running
 

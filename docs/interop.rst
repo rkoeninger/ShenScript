@@ -1046,17 +1046,17 @@ Only available when running in a browser or browser-based environment like Elect
 
    Builds a DOM Node out of a Shen list tree. Each node in the tree is represented by a list starting with a key symbol. That symbol is the name of the HTML element to be built (e.g. :shen:`div`, :shen:`span`), with the following exceptions:
 
-   :shen:`attr` - Creates a DOM Attribute that will get set on the enclosing element. Must have 2 remaining elements, name and value.
+   :shen:`@` - Creates a DOM Attribute that will get set on the enclosing element. Must have 2 remaining elements, name and value.
 
-   :shen:`comment` - Builds a :code:`<!-- comment -->` node.
+   :shen:`!` - Creates an event handler function for an event. Must have 2 remaining elements, event name and callback.
 
-   :shen:`text` - Creates a text node with the string value of the remaining elements concatenated with spaces. Display text must be contained in a text node; "dangling" strings will raise an error.
+   :shen:`$` - Creates a text node with the string value of the remaining elements concatenated with spaces. Display text must be contained in a text node; "dangling" strings will raise an error.
 
-   Child elements are all appended or set on enclosing parents in respective order.
+   Child elements, attributes and event handlers are all appended or set on enclosing parents in respective order.
 
    .. code:: shen
 
-      [div [attr "thing" "whatever"] [p [text "hello!"]]]
+      [div [@ "thing" "whatever"] [p [$ "Click Me!"] [! "click" (/. _ (js.log "hi!"))]]]
 
    gets built to:
 

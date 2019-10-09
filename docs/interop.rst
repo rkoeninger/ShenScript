@@ -1085,13 +1085,17 @@ Functions for building elements and interacting with the DOM.
 
    .. code:: shen
 
-      [div [@id "example"] [p "Click Me!" [!click (/. _ (js.log "hi!"))]]]
+      [div [@id "example"]
+           [p "Click Me!"
+              [!click (/. _ (js.log "hi!"))]]]
 
    gets built to:
 
    .. code:: html
 
-      <div id="example"><p>hello!</p></div>
+      <div id="example">
+        <p>hello!</p>
+      </div>
 
    :param any Tree: Tree of Shen lists.
    :returns:        DOM Node built from :shen:`Tree`.

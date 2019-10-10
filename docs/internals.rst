@@ -152,7 +152,7 @@ Functions
 
    If given a trampoline, runs trampoline and checks if result is a trampoline, in which case that is then run. Process repeats until result is not a trampoline. Never returns a trampoline. Potentially any function in :js:`functions` will need to be settled after being called to get a useful value.
 
-   Handles async trapolines by branching off to unexported :js:`future` function when encountering a promise.
+   Handles async trampolines by branching off to unexported :js:`future` function when encountering a promise. :js:`future` will automatically thread trampoline settling through promise chains.
 
    Aliased as :js:`t` for brevity in generated code.
 

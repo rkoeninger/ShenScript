@@ -152,9 +152,11 @@ Functions
 
    If given a trampoline, runs trampoline and checks if result is a trampoline, in which case that is then run. Process repeats until result is not a trampoline. Never returns a trampoline. Potentially any function in :js:`functions` will need to be settled after being called to get a useful value.
 
+   Handles async trapolines by branching off to unexported :js:`future` function when encountering a promise.
+
    Aliased as :js:`t` for brevity in generated code.
 
-   :param any x: May be a :js:`Trampoline`, which will be run, or any other value, which will be returned immediately.
+   :param any x: May be a :js:`Trampoline` (or a :js:`Promise`), which will be run, or any other value, which will be returned immediately.
    :returns:     Final non-trampoline result.
 
 .. function:: symbolOf(name)

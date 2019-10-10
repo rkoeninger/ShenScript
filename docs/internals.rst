@@ -126,15 +126,6 @@ Functions
    :param function f: Function wrap with partial application logic.
    :returns:          Wrapper function.
 
-.. function:: future(x)
-
-   Same purpose as :js:`settle`, but works asynchronously and will always return a :js:`Promise`, which will yield and non-trampoline value.
-
-   Aliased as :js:`u` for brevity in generated code.
-
-   :param any x: May or may not be a :js:`Promise` and may be a :js:`Trampoline`, which will be run, or any other value, which will be returned immediately.
-   :returns:     Final non-trampoline result wrapped in a :js:`Promise`.
-
 .. function:: is___(x)
 
    There are several functions following this naming pattern which checks if the argument qualifies as the type it's named for.

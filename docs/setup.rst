@@ -67,7 +67,6 @@ The :js:`exports` of this module is just a function that constructs a new ShenSc
    :param function equate:    Determines if two values are equal according to the semantics of Shen.
    :param function evalJs:    Evalutes a JavaScript AST in isolated scope with access to :js:`$`.
    :param function evalKl:    Builds and evaluates a KLambda expression tree in isolated scope with access to $.
-   :param function future:    The async version of :js:`settle`.
    :param Map      globals:   Map of symbol names to lookup Cells.
    :param object   inlines:   Post-processing inlines. Each accepts constructed JavaScript ASTs and returns another AST.
    :param function lookup:    Looks up Cell in :js:`globals`, adding one if it doesn't exist yet.

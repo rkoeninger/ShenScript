@@ -107,7 +107,7 @@ Hoisting Globals and Idle Symbols
 
 Lookups of global functions, global symbol values (:shen:`set`/:shen:`value`) and idle symbols (:js:`Symbol.for`) don't take up much time, but when done repeatedly are wasteful. To prevent repeated lookups, references to the aforementioned are hoisted to the top of each expression tree evaluated by :shen:`eval-kl` and to the top of the pre-rendered kernel. This way, they only get fetched once and are enclosed over so each time a function is called that depends on one of these, it only needs to access a local variable in scope.
 
-Global functions and global symbol values with the same name are both attached to the same lookup Cells and those Cells get assigned to escaped local variables with :js:`$c$` appended to the end. Idle symbols get assigned to escaped local variables with :js:`$s$` appended to the end.
+Global functions and global symbol values with the same name are both attached to the same lookup Cells and those Cells get assigned to escaped local variables with :js:`$c` appended to the end. Idle symbols get assigned to escaped local variables with :js:`$s` appended to the end.
 
 Fabrications
 ------------

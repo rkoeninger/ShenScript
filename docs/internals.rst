@@ -40,8 +40,7 @@ Classes
    :param boolean options.async:         :js:`true` if code should be generated in async mode.
    :param boolean options.head:          :js:`true` if current expression is in head position.
    :param Map     options.locals:        Used as an immutable map of local variables and their known types.
-   :param object  options.inlines:       Object containing code inlining rules.
-   :param object  options.preprocessors: Object containing code pre-processing rules.
+   :param object  options.inlines:       Map containing code inlining rules.
 
 .. class:: Fabrication(ast, subs)
 

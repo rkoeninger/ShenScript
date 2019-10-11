@@ -8,7 +8,15 @@ The environment object, :js:`$`, comes with additional functions to make JavaScr
 Exported Functions
 ------------------
 
-.. Important:: Some of these will return a promise if the environment was built in async mode.
+.. Important:: Some of these will return a promise if the environment was built in async mode. Recommended practice would be to await any calls made on the environment object.
+
+.. function:: assign(name, value)
+
+   Assigns a value to a global symbol, creating that global symbol if necessary.
+
+   :param string name:  Global symbol name.
+   :param any    value: The value to assign.
+   :returns:            The assigned value.
 
 .. function:: caller(name)
 
@@ -93,7 +101,7 @@ Exported Functions
    :param string syntax: Shen syntax.
    :returns:             Array of evaluation results.
 
-.. function:: inline(name, f)
+.. function:: inline(name, dataType, paramTypes, f)
 
    Registers a new inline rule for JavaScript code generation. When the KLambda-to-JavaScript transpilier encounters a form starting with a symbol named :js:`name`, it will build child forms and then pass the rendered ASTs into :js:`f`. Whatever :js:`f` returns gets inserted into the greater JavaScript AST at the relative point where the form was encountered.
 
@@ -103,11 +111,13 @@ Exported Functions
 
       // Renders a `(not X)` call with the JavaScript `!` operator
       // and inserts type conversions only as needed
-      inline('not', x => ann('JsBool', Unary('!', cast('JsBool', x))))
+      inline('not', 'JsBool', ['JsBool'], x => Unary('!', x));
 
-   :param string name: Name of symbol that triggers this rule to be applied.
-   :param function f:  Function that handles the JavaScript AST transformation for this rule.
-   :returns:           :js:`f`.
+   :param string name:       Name of symbol that triggers this rule to be applied.
+   :param string dataType:   The type of the whole expression, or :js:`null` if it is unknown.
+   :param array  paramTypes: The types of argument expressions, each can be :js:`null` if they are unknown.
+   :param function f:        Function that handles the JavaScript AST transformation for this rule.
+   :returns:                 :js:`f`.
 
 .. function:: load(path)
 

@@ -58,6 +58,7 @@ The :js:`exports` of this module is just a function that constructs a new ShenSc
    This class is a description of object returned by the :js:`backend` function and does not actually exist. It contains an initial ShenScript environment, without the Shen kernel loaded.
 
    :param function assemble:  Composes a sequence of JavaScript ASTs and Fabrications into a single Fabrication.
+   :param function assign:    Initialize or set a global symbol.
    :param boolean  async:     Environment will generate async functions.
    :param function bounce:    Creates a trampoline from function and rest arguments.
    :param function compile:   Turns KLambda expression array tree into JavaScript AST.
@@ -68,7 +69,7 @@ The :js:`exports` of this module is just a function that constructs a new ShenSc
    :param function evalJs:    Evalutes a JavaScript AST in isolated scope with access to :js:`$`.
    :param function evalKl:    Builds and evaluates a KLambda expression tree in isolated scope with access to $.
    :param Map      globals:   Map of symbol names to lookup Cells.
-   :param object   inlines:   Post-processing inlines. Each accepts constructed JavaScript ASTs and returns another AST.
+   :param function inline:      Registers an inlining rule.
    :param function lookup:    Looks up Cell in :js:`globals`, adding one if it doesn't exist yet.
    :param function settle:    If value is a Trampoline, runs Trampoline and repeats.
    :param function show:      :js:`toString` function. Returns string representation of any value.
@@ -127,7 +128,6 @@ The :js:`exports` of this module is just a function that augments an environment
    :param function evalShen:    Evaluates Shen expression tree in isolated environment.
    :param function exec:        Parses string as Shen source, evaluates each expression and returns last result.
    :param function execEach:    Parses string as Shen source, evaluates each expression and returns an array of the results.
-   :param function inline:      Registers an inlining rule.
    :param function load:        Loads Shen code from the given file path.
    :param function parse:       Returns parsed Shen source code as a cons tree.
    :param function pre:         Registers a preprocessor function.

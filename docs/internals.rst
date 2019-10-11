@@ -14,14 +14,6 @@ Data
 
    A :js:`Map` of :js:`Cell` objects, indexed by string name. Used to hold references to both global functions and global symbol values. If a function and a global symbol have the same name, they will be referred to by the same entry in this map.
 
-.. data:: inlines
-
-   Code inlining rules, indexed by the string name of the symbol that triggers them.
-
-.. data:: preprocessors
-
-   Code pre-processor rules, indexed by the string name of the symbol that triggers them.
-
 Classes
 -------
 

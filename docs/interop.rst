@@ -8,7 +8,7 @@ The environment object, :js:`$`, comes with additional functions to make JavaScr
 Exported Functions
 ------------------
 
-.. Important:: Some of these will return a promise if the environment was built in async mode. Recommended practice would be to await any calls made on the environment object.
+.. Important:: Some of these will return a promise since they invoke kernel functions. Recommended practice would be to await any calls made on the environment object.
 
 .. function:: assign(name, value)
 
@@ -23,7 +23,7 @@ Exported Functions
    Returns a handle to a function in the Shen environment which automatically performs trampoline settling.
 
    :param string name: Function name.
-   :returns:           A function to call Shen function by given name. Returned function will be async if in async mode.
+   :returns:           A function to call Shen function by given name. Returned function will be async.
 
 .. function:: cons(x, y)
 
@@ -131,7 +131,7 @@ Exported Functions
    Parses Shen syntax using the :shen:`read-from-string` function from the Shen kernel.
 
    :param string syntax: Shen syntax in string form.
-   :returns:             A Shen list of syntax forms. Wrapped in a Promise if in async mode.
+   :returns:             A Shen list of syntax forms, wrapped in a promise.
  
 .. function:: pre(name, f)
 
@@ -668,7 +668,7 @@ Typed Standard Functions
 
    Simulates a blocking :code:`Thread.sleep` by awaiting a promise resolved with :js:`setTimeout`.
 
-   Returns a promise so only works neatly in async mode.
+   Returns a promise.
 
    :param number Duration: Time in milliseconds to sleep.
 
@@ -1046,17 +1046,17 @@ Only available when running in a browser or browser-based environment like Elect
 
 .. function:: (web.fetch-text Url)
 
-   Does an HTTP GET on the given url and returns the result as a string. Only available when ShenScript is in async mode.
+   Does an HTTP GET on the given url and returns the result as a string.
 
    :param string Url: URL to GET from.
-   :returns:          A string wrapped in a :js:`Promise`.
+   :returns:          A string wrapped in a promise.
 
 .. function:: (web.fetch-text* Urls)
 
-   Does concurrent HTTP GETs on the given URLs and returns the results as a list of strings. Only available when ShenScript is in async mode.
+   Does concurrent HTTP GETs on the given URLs and returns the results as a list of strings.
 
    :param list Urls: A Shen list of URLs to GET from.
-   :returns:         A Shen list of strings wrapped in :js:`Promise`s.
+   :returns:         A Shen list of strings wrapped in a promise.
 
 .. function:: (web.navigator)
 

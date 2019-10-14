@@ -13,13 +13,8 @@ An implementation of the [Shen Language](http://www.shenlanguage.org) by [Mark T
   * Allows integration with arbitrary I/O.
   * Async operations are transparent to written Shen code.
   * Easy interop: JS can be called from Shen, Shen can be called from JS.
-  * Fairly small production webpack bundle (\~640KB uncompressed, \~100KB gzip compressed).
+  * Fairly small production webpack bundle (\~370KB uncompressed, \~60KB gzip compressed).
   * Decent web startup time (\~50ms in Chromium, \~100ms in Firefox).
-
-Still in progress:
-
-  * Continue to improve async performance, ultimately removing the sync version of the kernel.
-  * Interactive in-browser environment with UI in `index.html`.
 
 ## Prerequisites
 
@@ -38,17 +33,17 @@ First, run `npm install` as you would with any other Node project. Then run the 
 | `render-kernel` | Translates the kernel sources to JavaScript and stores under `kernel/js/`.                                        |
 | `test-kernel`   | Runs the test suite that comes with the Shen kernel.                                                              |
 | `test-frontend` | Runs `mocha` tests for helper and interop functions.                                                              |
-| `bundle`        | Applies babel transforms and webpack's into web-deployable bundle under `dist/development`.                       |
-| `bundle-prod`   | Builds minified bundle in production mode under `dist/production`.                                                |
+| `bundle-dev`    | Applies babel transforms and webpack's into web-deployable bundle under `dist/development`.                       |
+| `bundle`        | Builds minified bundle in production mode under `dist/production`.                                                |
 | `lint`          | If you make changes, run `lint` to check adherence to style and code quality.                                     |
 
 ## Running
 
 ### Demo Page
 
-Run `npm start` to start webpack watch.
+Run `npm start` to start webpack watch or `npm run bundle-dev` to do a one-time build.
 
-If you open `index.html` in your browser a basic webpage will load, and when ready, it will display the load time. (The production webpack bundle does not automatically create a Shen environment and does not log anything.) `index.html` should be viewable without hosting in a web server, but you will not be able to use the `load` function to load additional Shen code if opened from a `file://` path. `http-server` is adequate for hosting in a web server.
+If you open `index.html` in your browser a basic webpage will load, and when ready, it will display the load time. (The production webpack bundle does not automatically create a Shen environment and does not log anything.) `index.html` should be viewable without hosting in a web server, but you will not be able to use the `load` function to load additional Shen code if opened from a relative `file://` path. `http-server` is adequate for hosting in a web server.
 
 If you open the JavaScript console in the developer tools, it is possible to access to the `$` global object and execute commands:
 
@@ -56,7 +51,7 @@ If you open the JavaScript console in the developer tools, it is possible to acc
 $.exec("(+ 1 1)").then(console.log);
 ```
 
-Chaining the `then` call is necessary because the environment will be built in `async` mode and `exec` will return a `Promise`. For more information refer to the [documentation](https://shenscript.readthedocs.io/en/latest/interop.html).
+Chaining the `then` call is necessary because `exec` will return a `Promise`. For more information refer to the [documentation](https://shenscript.readthedocs.io/en/latest/interop.html).
 
 ### REPL
 

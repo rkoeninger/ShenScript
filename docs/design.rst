@@ -35,7 +35,7 @@ if, and, or, cond
 simple-error, trap-error
   Error handling works just like JavaScript, using the :js:`throw` and :js:`try-catch` constructs.
 
-  Both :js:`throw` and :js:`try` are statement syntax in JavaScript, so to make them expressions, there is the :js:`raise` function for throwing errors and :js:`try-catch` is wrapped in an `iife <https://javascript.info/closure#iife>`_ so it can be embedded in expressions. That iife is async and its invocation is awaited when in async mode.
+  Both :js:`throw` and :js:`try` are statement syntax in JavaScript, so to make them expressions, there is the :js:`raise` function for throwing errors and :js:`try-catch` is wrapped in an `iife <https://javascript.info/closure#iife>`_ so it can be embedded in expressions. That iife is async and its immediate invocation is awaited.
 
 defun, lambda, freeze
   All function forms build and return JavaScript functions.
@@ -171,8 +171,8 @@ The transpiler does this simple type inference following a few rules:
 
 More sophisticated analysis could be done, but with dimishing returns in the number of cases it actually catches. And consider that user-defined functions can be re-defined, either in a REPL session or in code loaded from a file, meaning assumptions made by optimised functions could be invalidated. When a function was re-defined, all dependent functions would have to be re-visited and potentially all functions dependent on those functions. That's why these return type assumptions are only made for primitives.
 
-Optional Pervasive Asynchronocity
----------------------------------
+Pervasive Asynchronocity
+------------------------
 
 I/O functions, including primitives like :shen:`read-byte` and :shen:`write-byte` are idiomatically synchronous in Shen. This poses a problem when porting Shen to a platform like JavaScript which pervasively uses asynchronous I/O.
 
@@ -180,12 +180,23 @@ Functions like :shen:`read-byte` and :shen:`open` are especially problematic, be
 
 In order to make the translation process fairly direct, generated JavaScript uses `async/await <https://javascript.info/async-await>`_ syntax so that code structured like synchronous code can actually be asynchronous. This allows use of async functions to look just like the use of sync functions in Shen, but be realized however necessary in the host language.
 
-:js:`async` code generation is actually controlled by a config flag passed when the backend is created. So if your Shen code is using synchronous I/O, or if it's not going to use I/O at all, you can enjoy a significant performance boost from using faster synchronous JavaScript.
+:js:`async` code generation is controlled by a flag on the :js:`Context` object that the compiler disables for functions that it is sure can be synchronous.
 
 Future Design Options
 =====================
 
 Some designs are still up in the air. They either solve remaining problems like performance or provide additional capabilites.
+
+Polychronous Functions
+----------------------
+
+Currently, it is difficult to be sure an execution path will be entirely synchronous so the compiler plays it safe and only renders functions as sync when it is sure that function and its referents are sync.
+
+Instead, the compiler could render both sync and async versions of most functions and choose which to call on a case-by-case basis. And when a referent is re-defined from sync to async or vice-versa, the environment could quickly switch the referring function from preferring one mode or the other.
+
+For example, if we have Shen code like :shen:`(map F Xs)` and :shen:`F` is known to be sync, we can call the sync version of :shen:`map` which is tail-recursive or is a simple for-loop by way of a pinhole optimisation. This way, we won't have to evaluate the long chain of promises and trampolines the async version would result in for any list of decent length.
+
+The compiler would have to keep track of additional information like which functions are always sync, which are always async and which can be one or the other and based on what criteria.
 
 KLambda-Expression Interpreter
 ------------------------------
@@ -196,18 +207,10 @@ A scratch ESTree interpreter could be written, but as it might need to support m
 
 The obvious downside is that the interpreter would be much slower that generated JavaScript which would enjoy all the optimisations built into a modern runtime like V8. The interpreter would only be used when it was absolutely necessary.
 
-Hybrid Sync-Async Kernel
+Expression Type Tracking
 ------------------------
 
-Currently, there is an option passed into the environment builder function that either loads a kernel rendered with all synchronous code or one with async/await. This results in using async functions when it isn't required and evaluating additional promise chains when a simple synchronous function call would do.
-
-Instead, the environment could load a kernel with both versions of each function and generate sync and async versions of each user-defined function and use one or the other on a case-by-case basis.
-
-For example, if we have Shen code like :shen:`(map F Xs)` and :shen:`F` is known not to be async, we can call the sync version of :shen:`map` which is tail-recursive or is a simple for-loop by way of a pinhole optimisation. This way, we won't have to evaluate the long chain of promises and trampolines the async version would result in for any list of decent length.
-
-The transpiler would have to keep track of additional information like which functions are always sync, which are always async and which can be one or the other and based on what criteria.
-
-Now that fabrications have been re-introduced, they could be used to carry other construction result metadata like whether an AST needs to be in an async function or calls async functions.
+Right now, the compiler only tracks the known types of local variables and nested expressions. It could also retain information like :shen:`(tl X)` is a cons and not just that :shen:`X` is a cons and then have to check again later when evaluating :shen:`(hd (tl X))`. This would remove plenty of :js:`asCons` calls that are not strictly necessary.
 
 Historical and Abandoned Design
 ===============================
@@ -281,3 +284,5 @@ And composed together, they are:
 This whole approach was attempted on the premise that using more idiomatic JavaScript syntax would give the runtime more opportunities to identify optimisations vs using :js:`trap` and immediately-invoked lambdas. Turns out using fabrs produced about twice the code volume and benchmarks took 3-4 times as long to run. I guess V8 is really good at optimising IIFEs. So fabrs were reverted. The design is documented here for historical reasons.
 
 This approach could be brought back in order to better handle :shen:`trap-error` at the root of a lambda, avoiding an additional iife.
+
+Another possibility is this would allow the introduction of :shen:`js.while`, :shen:`js.for`, etc. types of special forms where Shen code could directly invoke imperative syntax.

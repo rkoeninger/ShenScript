@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = env => ({
   mode: env.mode,
-  entry: `./index.${env.mode}.js`,
+  entry: env.mode === 'development' ? './index.development.js' : './index.js',
   module: {
     rules: [
       {

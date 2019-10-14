@@ -5,7 +5,7 @@ Motivation
 
 JavaScript is one of the most commonly used languages in the world, running in every browser and on almost every platform, as well as being the basis for the prolific Node.js platform. It has some built-in capabilities like dynamic expression evaluation, async/await syntax and highly optimised runtimes that make it a preferred target. It's not a perfect match, however and the details of how the gaps between JavaScript and Shen are bridged is detailed in this documentation.
 
-The purpose of building ShenScript is to bring the powerful functionality inherent in the Shen language to web development. And with the way ShenScript is implemented, asynchronous code is handled transparently so the Shen developer doesn't have to think about the distinction between a synchronous call and an async one.
+The purpose of building ShenScript is to bring the powerful functionality inherent in the Shen language to web development. And with the way ShenScript is implemented, asynchronous code is handled transparently so the Shen developer doesn't have to think about the distinction between a synchronous call and an async one. This is very helpful in the JavaScript ecosystem where asynchronous operations are everywhere.
 
 Prior Art
 =========

@@ -9,18 +9,15 @@ This is the top-level module. The :js:`exports` of this module is a function tha
 
 .. function:: (options) => $
 
-   The :js:`options` argument is required here, unlike in the :js:`backend` function. It also has two required properties.
-
-   :param boolean options.async:  Must be specified.
-   :param string  options.target: Must be :js:`"node"` or :js:`"web"`.
-   :returns:                      A complete ShenScript environment.
+   :param object options:  Can have all of the same properties as the options object accepted by the :js:`backend` function.
+   :returns:               A complete ShenScript environment.
 
 The default configuration options for this environment are specified in the ``config`` module and environment-derived properties are in the ``config.node`` and ``config.web`` modules. Any of these can be overwritten by specifying them in the :js:`options` to the :js:`shen` function.
 
 The Kernel Sandwich
 ===================
 
-A full ShenScript environment is created by initialising a new backend with the options passed into the top-level, running that through the appropriate async or sync pre-rendered kernel and then applying the frontend decorator for whichever node or web environment is specified in the options. The composition looks like :js:`frontend(kernel(backend(options)))`. I call this "The Kernel Sandwich".
+A full ShenScript environment is created by initialising a new backend with the options passed into the top-level, running that through the pre-rendered kernel and then applying the frontend decorator for whichever node or web environment is specified in the options. The composition looks like :js:`frontend(kernel(backend(options)))`. I call this "The Kernel Sandwich".
 
 The Backend
 -----------
@@ -34,7 +31,6 @@ The :js:`exports` of this module is just a function that constructs a new ShenSc
 .. function:: (options = {}) => $
 
    :param Object   options:                Environment config and overrides.
-   :param boolean  options.async:          Enable generation of async/promise-chaining code. Defaults to :js:`false`.
    :param function options.clock:          Provides current time in fractional seconds from the Unix epoch. Defaults to :js:`() => Date.now`.
    :param string   options.homeDirectory:  Initial working directory in file system. Defaults to :js:`"/"`.
    :param string   options.implementation: Name of JavaScript platform in use. Defaults to :js:`"Unknown"`.
@@ -59,7 +55,6 @@ The :js:`exports` of this module is just a function that constructs a new ShenSc
 
    :param function assemble:  Composes a sequence of JavaScript ASTs and Fabrications into a single Fabrication.
    :param function assign:    Initialize or set a global symbol.
-   :param boolean  async:     Environment will generate async functions.
    :param function bounce:    Creates a trampoline from function and rest arguments.
    :param function compile:   Turns KLambda expression array tree into JavaScript AST.
    :param function construct: Turns KLambda expression array tree into Fabrication.
@@ -78,11 +73,9 @@ The :js:`exports` of this module is just a function that constructs a new ShenSc
 The Kernel
 ----------
 
-**module** ``kernel.async``, **module** ``kernel.sync``
+**module** ``kernel``
 
-The :js:`kernel.*` modules contain a JavaScript rendering of the Shen kernel that can be loaded into a ShenScript environment.
-
-:js:`kernel.sync` contains the purely synchronous version of the kernel and :js:`kernel.async` contains the asynchronous version.
+The :js:`kernel` module contains a JavaScript rendering of the Shen kernel that can be installed into a ShenScript environment.
 
 The :js:`exports` of this module is just a function that augments an environment and returns it.
 
@@ -93,9 +86,9 @@ The :js:`exports` of this module is just a function that augments an environment
 
 .. class:: Kernel extends Backend
 
-   This class is a description of object returned by the :js:`kernel.*` modules and does not actually exist. It contains a primitive ShenScript environment along with the Shen kernel and it adequate to run standard Shen programs.
+   This class is a description of object returned by the :js:`kernel` module and does not actually exist. It contains a primitive ShenScript environment along with the Shen kernel and it adequate to run standard Shen programs.
 
-   The :js:`Kernel` virtual class adds no members, but does imply additional entries in the :js:`functions` and :js:`symbols` indexes.
+   The :js:`Kernel` virtual class adds no members, but does imply additional entries in the :js:`globals` map.
 
 The Frontend
 ------------

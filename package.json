@@ -12,7 +12,7 @@
   "main": "lib/shen.js",
   "files": [
     "lib/*.js",
-    "kernel/js/*.js"
+    "kernel/LICENSE.txt"
   ],
   "devDependencies": {
     "@babel/core": "^7.6.3",

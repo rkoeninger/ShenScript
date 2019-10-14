@@ -178,6 +178,14 @@ describe('primitive', () => {
     });
   });
 
+  describe('errors', () => {
+    describe('error-to-string', () => {
+      forEach(values).it('should raise error when given non-error', x => {
+        throws(() => f('error-to-string')(x));
+      });
+    });
+  });
+
   describe('recognisors', () => {
     forEach(['cons?', 'number?', 'string?', 'absvector?']).describe('%s', op => {
       forEach(values).it('should return a Shen boolean', x => {
@@ -188,11 +196,11 @@ describe('primitive', () => {
 
   describe('equality', () => {
     describe('=', () => {
-      it('should compare booleans', () => {
-        equal(s`true`,  evalKl([s`=`, s`true`, [s`and`, s`true`, s`true`]]));
-        equal(s`false`, evalKl([s`=`, s`true`, [s`and`, s`true`, s`false`]]));
-        equal(s`true`,  evalKl([s`=`, [s`number?`, 746], [s`number?`, 419]]));
-        equal(s`true`,  evalKl([s`=`, 25, [s`+`, 11, 14]]));
+      it('should compare booleans', async () => {
+        equal(s`true`,  await evalKl([s`=`, s`true`, [s`and`, s`true`, s`true`]]));
+        equal(s`false`, await evalKl([s`=`, s`true`, [s`and`, s`true`, s`false`]]));
+        equal(s`true`,  await evalKl([s`=`, [s`number?`, 746], [s`number?`, 419]]));
+        equal(s`true`,  await evalKl([s`=`, 25, [s`+`, 11, 14]]));
       });
     });
     describe('equal', () => {
@@ -201,9 +209,9 @@ describe('primitive', () => {
         ok(equate(-Infinity, -Infinity));
         ok(!equate(-Infinity, Infinity));
       });
-      it('should compare functions based on reference equality', () => {
-        const u = evalKl([s`lambda`, s`X`, 0]);
-        const v = evalKl([s`lambda`, s`X`, 0]);
+      it('should compare functions based on reference equality', async () => {
+        const u = await evalKl([s`lambda`, s`X`, 0]);
+        const v = await evalKl([s`lambda`, s`X`, 0]);
         ok(equate(u, u));
         ok(!equate(u, v));
       });

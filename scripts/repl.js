@@ -1,9 +1,6 @@
 const fs                    = require('fs');
 const { addAsyncFunctions } = require('awaitify-stream');
-const config                = require('../lib/config.node.js');
-const backend               = require('../lib/backend.js');
-const kernel                = require('../kernel/js/kernel.async.js');
-const frontend              = require('../lib/frontend.node.js');
+const Shen                  = require('../lib/shen.js');
 
 const InStream = class {
   constructor(stream, name) {
@@ -32,9 +29,7 @@ const OutStream = class {
 };
 
 (async () => {
-  const { caller, toList } = await frontend(await kernel(backend({
-    ...config,
-    async: true,
+  const { caller, toList } = await new Shen({
     InStream,
     OutStream,
     openRead:  path => new InStream(fs.createReadStream(path), `filein=${path}`),
@@ -42,6 +37,6 @@ const OutStream = class {
     stinput:  new InStream(process.stdin, 'stinput'),
     stoutput: new OutStream(process.stdout, 'stoutput'),
     sterror:  new OutStream(process.stderr, 'sterror')
-  })));
+  });
   await caller('shen.x.launcher.main')(toList(['shen', 'repl']));
 })();

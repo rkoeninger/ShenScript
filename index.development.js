@@ -1,5 +1,5 @@
 const Shen = require('./lib/shen.js');
-const { StringInStream, onReady } = require('./lib/utils.js');
+const { StringInStream, fetchRead, onReady } = require('./lib/utils.js');
 
 (async () => {
   try {
@@ -7,9 +7,7 @@ const { StringInStream, onReady } = require('./lib/utils.js');
     const start = now();
     console.log('creating shen environment...');
 
-    const openRead = async path => new StringInStream(await (await fetch(path)).text());
-    const options = { async: true, target: 'web', openRead, InStream: StringInStream };
-    window.$ = await new Shen(options);
+    window.$ = await new Shen({ openRead: fetchRead, InStream: StringInStream });
     const message = () => `shen environment created in ${now() - start}ms.`;
 
     onReady(() => {

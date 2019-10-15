@@ -18,8 +18,8 @@ module.exports = env => ({
     ]
   },
   output: {
-    path: path.resolve(__dirname, 'dist/' + env.mode),
-    filename: 'shen-script.js'
+    path: path.resolve(__dirname, 'dist/'),
+    filename: env.mode === 'development' ? 'shen-script.js' : 'shen-script.min.js'
   },
   stats: {
     warningsFilter: w => w.includes('the request of a dependency is an expression')

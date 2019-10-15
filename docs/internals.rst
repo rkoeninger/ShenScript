@@ -203,6 +203,42 @@ These functions are callable from Shen to give access to the implementation deta
    :returns:         A JavaScript boolean.
    :throws:          Error if argument is not a Shen boolean.
 
+.. function:: (shen-script.array->list X)
+
+   Converts a JavaScript array to a cons list.
+
+   :param array X: A JavaScript array.
+   :returns:       A Shen list.
+
+.. function:: (shen-script.array->list+ X Tail)
+
+   Converts a JavaScript array to a cons list with a specified value for the tail of the last cons.
+
+   :param array X:  A JavaScript array.
+   :param any Tail: Specific final tail value.
+   :returns:        A Shen list.
+
+.. function:: (shen-script.array->list-tree X)
+
+   Converts a tree of nested JavaScript arrays to a tree of nested cons lists.
+
+   :param array X: A JavaScript array with elements that may be arrays.
+   :returns:       A Shen list with elements that will be lists.
+
+.. function:: (shen-script.list->array X)
+
+   Converts cons list to JavaScript array.
+
+   :param array X: A Shen list.
+   :returns:       A JavaScript array.
+
+.. function:: (shen-script.list->array-tree X)
+
+   Converts tree of nested cons lists to tree of nested JavaScript arrays.
+
+   :param array X: A Shen list with elements that may be lists.
+   :returns:       A JavaScript array with elements that will be arrays.
+
 AST Construction Functions
 --------------------------
 

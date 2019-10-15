@@ -1,4 +1,5 @@
-const Shen = require('./index.js');
+require('./index.js');
+const { onReady } = require('./lib/utils.js');
 
 (async () => {
   try {

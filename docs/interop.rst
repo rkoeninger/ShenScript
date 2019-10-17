@@ -1171,6 +1171,46 @@ Functions for building elements and interacting with the DOM.
    :param node Child:  DOM Node to replace :shen:`Target` with.
    :returns:           Empty list.
 
+Local Storage Functions
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Functions for getting and setting keys in Local Storage.
+
+.. function:: (local-storage.clear)
+
+   Removes all entries for the current domain.
+
+   :returns: Empty list.
+
+.. function:: (local-storage.get Key)
+
+   Gets value for given string key. Can check :shen:`local-storage.has?` first to make sure value exists.
+
+   :param string Key: Key to fetch value for.
+   :returns:          Value for key, or empty list if it does not exist.
+
+.. function:: (local-storage.has? Key)
+
+   Returns :shen:`true` if value is set for given key.
+
+   :param string Key: Key to check.
+   :returns:          A Shen boolean.
+
+.. function:: (local-storage.remove Key)
+
+   Deletes value for given key.
+
+   :param string Key: Key to delete.
+   :returns:          Empty list.
+
+.. function:: (local-storage.set Key Value)
+
+   Sets value for given key.
+
+   :param string Key: Key to save value under.
+   :param any Value:  Value to assign.
+   :returns:          The assigned value.
+
 Node-specific Interop
 ---------------------
 

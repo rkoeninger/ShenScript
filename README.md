@@ -34,8 +34,10 @@ First, run `npm install` as you would with any other Node project. Then run the 
 | `render-kernel` | Translates the kernel sources to JavaScript and stores under `kernel/js/`.                                        |
 | `test-kernel`   | Runs the test suite that comes with the Shen kernel.                                                              |
 | `test-frontend` | Runs `mocha` tests for helper and interop functions.                                                              |
-| `bundle-dev`    | Applies babel transforms and webpack's into web-deployable bundle under `dist/development`.                       |
-| `bundle`        | Builds minified bundle in production mode under `dist/production`.                                                |
+| `bundle-dev`    | Applies babel transforms and webpack's into web-deployable bundle.                                                |
+| `bundle`        | Builds bundle in production mode.                                                                                 |
+| `bundle-min`    | Builds minified production bundle.                                                                                |
+| `bundles`       | Generates all bundles.                                                                                            |
 | `lint`          | If you make changes, run `lint` to check adherence to style and code quality.                                     |
 
 ## Running

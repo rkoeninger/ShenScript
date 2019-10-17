@@ -5,6 +5,7 @@ module.exports = env => ({
   mode: env.mode,
   entry: env.mode === 'development' ? './index.development.js' : './index.js',
   optimization: {
+    minimize: !!env.min,
     minimizer: [
       new TerserPlugin({
         terserOptions: {
@@ -30,7 +31,7 @@ module.exports = env => ({
   },
   output: {
     path: path.resolve(__dirname, 'dist/'),
-    filename: env.mode === 'development' ? 'shen-script.js' : 'shen-script.min.js'
+    filename: `shen-script${env.mode === 'development' ? '.dev' : env.min ? '.min' : ''}.js`
   },
   stats: {
     warningsFilter: w => w.includes('the request of a dependency is an expression')

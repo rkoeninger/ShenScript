@@ -672,6 +672,23 @@ Typed Standard Functions
 
    :param number Duration: Time in milliseconds to sleep.
 
+JSON Functions
+--------------
+
+.. function:: (json.parse String)
+
+   :js:`JSON.parse`.
+
+   :param string String: Serialized JavaScript value.
+   :returns:             Object parsed from :shen:`String`.
+
+.. function:: (json.str Value)
+
+   :js:`JSON.stringify`.
+
+   :param any Value: JavaScript value to serialize.
+   :returns:         :shen:`Value` serialized to string.
+
 Object Construction, Member Access
 ----------------------------------
 

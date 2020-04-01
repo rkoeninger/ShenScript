@@ -21,6 +21,7 @@
     "eslint": "^5.16.0",
     "follow-redirects": "^1.9.0",
     "kind-of": "^6.0.3",
+    "minimist": "^1.2.5",
     "mocha": "^5.2.0",
     "mocha-each": "^1.2.0",
     "parsimmon": "^1.13.0",

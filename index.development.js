@@ -1,4 +1,4 @@
-require('./index.js');
+const { Shen } = require('./index.js');
 const { onReady } = require('./lib/utils.js');
 
 (async () => {

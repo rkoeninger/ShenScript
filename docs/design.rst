@@ -86,11 +86,11 @@ Tail-call optimization is required by the Shen standard and Shen code make proli
 
 In ShenScript, tail calls are handled dynamically using `trampolines <https://en.wikipedia.org/wiki/Trampoline_(computing)>`_. When a function is built by the transpiler, the lexical position of expressions are tracked as being in head or tail position. Function calls in head position are a simple invocation and the result is settled; calls in tail position are bounced.
 
-settle
-  Settling is the process of taking a value that might be a :js:`Trampoline`, checking if it's a tramoline, and if it is, running it. The result of running the trampoline is checked if it's a trampoline, and if so, that is run and this process is repeated until the final result is a non-trampoline value, which is returned.
-
 bounce
   Bouncing a function call means making a trampoline from a reference to the function and the list of arguments and returning. The function will actually be invoked when the trampoline is settled at some point later.
+
+settle
+  Settling is the process of taking a value that might be a :js:`Trampoline`, checking if it's a tramoline, and if it is, running it. The result of running the trampoline is checked if it's a trampoline, and if so, that is run and this process is repeated until the final result is a non-trampoline value, which is returned.
 
 Generation of Syntax
 ====================

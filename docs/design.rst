@@ -51,7 +51,7 @@ do
 Shen Booleans vs JavaScript Booleans
 ------------------------------------
 
-Shen uses the symbols :shen:`true` and :shen:`false` for booleans and does not have truthy or falsy semantics like JavaScript or other Lisps. This can make things tricky since Shen's :shen:`true` and :shen:`false` will always be considered :js:`true` by JavaScript, and in JavaScript, anything not falsy will count as :js:`true` and :js:`false`.
+Shen uses the symbols :shen:`true` and :shen:`false` for booleans and does not have truthy or falsy semantics like JavaScript or other Lisps. This can make things tricky since Shen's :shen:`true` and :shen:`false` will always be considered :js:`true` by JavaScript, and in JavaScript, anything not `falsy <https://developer.mozilla.org/en-US/docs/Glossary/Falsy>`_ will count as :js:`true`.
 
 The KLambda-to-JavaScript transpiler does not actually consider booleans to be their own datatype, it treats them as any other symbol.
 
